@@ -1,21 +1,17 @@
-  
- {% extends "base.html"%}
- 
- {% block content %}
- 
   <div class="modal hide fade" id="signup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
 
       <h3 id="myModalLabel">Signup</h3>
     </div>
-      <div class="modal-body">    
-      <form id="modal-frm-signup" class="form-horizontal" data-remote="true" action="/flux/signup" method="post">
+
+    <form class="form-horizontal">
+      <div class="modal-body">
         <div class="control-group">
           <label class="control-label" for="inputName">Name</label>
 
           <div class="controls">
-            <input type="text" id="inputName" placeholder="Name">
+            <input type="text" id="inputEmail" placeholder="Name">
           </div>
         </div>
 
@@ -26,16 +22,54 @@
             <input type="text" id="inputEmail" placeholder="Email">
           </div>
         </div>
-        <input type="submit" style="visibility:hidden">
-      </form>
       </div>
 
       <div class="modal-footer">
         <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-        <button id="modal-btn-signup" class="btn btn-primary">Signup</button>
+        <button id="btn-signup" type="submit" class="btn btn-primary">Signup</button>
       </div>
+    </form>
   </div>
 
+<script>
+
+$('#btn-signup').click(function(){
+	var items = [];
+	var count = 0;
+	
+	$('#todo-list > li').each(function() {
+	    
+	    var item = $.trim($(this).children('span').html());
+	    if (item != "") {
+		items.push(item);
+		count = count+1;
+	    }
+	});
+	
+	if (count >0) {
+	    
+	    $('#create-list').fadeOut();
+	    
+	    $('#todo-list > li').each(function(){
+		if ($.trim($(this).children('input').val()) == "") {
+		    $(this).fadeOut();
+		}
+	    });
+	    
+	    var name = $.trim($('#name').val());
+	    
+	    if (name == "My todo list") {
+		name = "";
+	    }
+
+	$.post('/', {items: JSON.stringify(items),name: name},function(responseText){
+	    
+		    window.location.replace('/'+responseText);
+	});
+	}	
+    });
+
+</script>
 
 <div class="modal hide fade" id="login" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
           <div class="modal-header">
@@ -155,59 +189,3 @@
            <p><a class="btn btn-primary" data-toggle="modal" href="#signup">Sign up &raquo;</a></p>
        </div>
    </div>
-   
-{% endblock %}
-
-{% block javascript %}
-<script>
-
-  $('#modal-btn-signup').on('click', function(e){
-    // We don't want this to act as a link so cancel the link action
-    e.preventDefault();
-
-    // Find form and submit it
-    $('#modal-frm-signup').submit();
-  });
-
-
-  $('#modal-frm-signup').on('submit',function(e){
-    
-    e.preventDefault();
-  
-  
-	var items = [];
-        
-        
-	$('#modal-frm-signup input').filter('[type="text"]').each(function(){
-            
-            var item = {};
-            
-            item[ $(this).attr('id') ] = $(this).val();
-            items.push(item);
-          
-        });
-
-        
-        //each(function(){
-        // alert($(this).attr('value'));
-        //});
-	$.ajax( {
-          type: 'POST',
-          url: 'signup',
-          data: JSON.stringify(items),
-          success: function(responseText){
-	    
-		 alert(responseText); //   window.location.replace('/'+responseText);
-                }
-        });
-	
-  
-  
-  
-  });
-	
-</script>
-
-{% endblock %}
-
-
