@@ -9,16 +9,16 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
-- url: /css
+- url: /flux/css
   static_dir: css
 
-- url: /js
+- url: /flux/js
   static_dir: js
 
-- url: /img
+- url: /flux/img
   static_dir: img
 
-- url: .*
+- url: /flux/.*
   script: main.app
 
 libraries:
