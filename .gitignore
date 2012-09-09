@@ -1,2 +1,4 @@
 .DS*
 *.pyc
+latest.zip*
+commit.msg
