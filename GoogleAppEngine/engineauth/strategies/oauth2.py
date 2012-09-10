@@ -14,7 +14,7 @@ import cPickle as pickle
 from engineauth.strategies.base import BaseStrategy
 import httplib2
 from oauth2client.client import OAuth2WebServerFlow
-
+import logging
 
 __author__ = 'kyle.finley@gmail.com (Kyle Finley)'
 
@@ -46,6 +46,7 @@ class OAuth2Strategy(BaseStrategy):
         if flow is None:
             self.raise_error('And Error has occurred. Please try again.')
         req.credentials = flow.step2_exchange(req.params)
+        
         user_info = self.user_info(req)
         profile = self.get_or_create_profile(
             auth_id=user_info['auth_id'],

@@ -1,9 +1,7 @@
 import os
+
 ON_DEV = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 
-def webapp_add_wsgi_middleware(app):
-    from engineauth import middleware
-    return middleware.AuthMiddleware(app)
 
 engineauth = {
     'secret_key': 'shaisd8f9as8d9fashd89fahsd9f8asdf9as8df9sa8dfa9schJKSHDAJKSHDJAsd9a8sd9sa',
@@ -44,3 +42,8 @@ engineauth['provider.twitter'] = {
     'client_id': 'XUnK5wVc7SqtgzUEMlz7A',
     'client_secret': 'cgHnklcRDtR0zANufH1PnqUfhmgh0Dep2YpsYpo8JA',
 }
+
+
+def webapp_add_wsgi_middleware(app):
+    from engineauth import middleware
+    return middleware.AuthMiddleware(app,engineauth)

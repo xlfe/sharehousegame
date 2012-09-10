@@ -1,8 +1,8 @@
   
- 
+ {% extends "base.html" %}
  {% block content %}
  
-   <div class="modal hide fade" id="signup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal hide fade" id="connect" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
      <div class="modal-header">
        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
 
@@ -11,10 +11,9 @@
 
      <div class="modal-body">
       
-      <h4>Sign up using one of the following services:</h4>
+      <h4 id="call-to-action">Sign up using one of the following services:</h4>
       
-      {% set providers = [('google', '/auth/google'), ('facebook', '/auth/facebook'), ('twitter', '/auth/twitter'),
-      ('github','/auth/github'),('linkedin','/auth/linkedin'),('yahoo','/auth/yahoo'),('paypal','/auth/paypal')] -%}
+      {% set providers = [('facebook', '/auth/facebook'), ('google', '/auth/google'),('twitter','/auth/twitter')] -%}
       {% for p, u in providers %}
         <a href="{{ u }}" class="btn span2" style="margin-bottom:10px"><img src="/img/{{ p }}.png" /></a>
       {% endfor %}
@@ -25,34 +24,6 @@
      </div>
    </div>
 
-   <div class="modal hide fade" id="login" tabindex="-2" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-     <div class="modal-header">
-       <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
-
-       <h3 id="myModalLabel">Login</h3>
-     </div>
-
-     <div class="modal-body">
-       <form id="modal-frm-login" class="form-horizontal" data-remote="true" action="/login" method="post">
-         <div class="control-group">
-           <label class="control-label" for="inputName">Name</label>
-
-           <div class="controls">
-             <input type="text" id="inputName" placeholder="Name">
-           </div>
-         </div>
-
-         <div id="hidden-login" style="display:none;">
-           <input type="submit">
-         </div>
-       </form>
-     </div>
-
-     <div class="modal-footer">
-       <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-       <button class="btn btn-primary">Login</button>
-     </div>
-   </div>
 
 <div class="modal hide" id="why" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-header">
@@ -132,7 +103,7 @@
    <div class="hero-unit">
        <h1>The Sharehouse Game</h1>
        <p>Take the pain out of sharehouse living!</p>
-       <p><a class="btn btn-info btn-large">Watch the video</a> <a href="#signup" data-toggle="modal" class="btn btn-primary btn-large">Sign up &raquo;</a></p>
+       <p><a class="btn btn-info btn-large">Watch the video</a> <a id="signup" href="#connect" data-toggle="modal" class="btn btn-primary btn-large">Sign up &raquo;</a></p>
    </div>
 
    <!-- Example row of columns -->
@@ -155,7 +126,7 @@
        <div class="span4">
            <h2>Ready?</h2>
            <p>Like the sound of all that? If you sign up now (while we're in beta) it's free for life, and we'd love to hear your feed-back and suggestions to help make the game even better! Signing up is quick and easy, so let's get started! </p>
-           <p><a class="btn btn-primary" data-toggle="modal" href="#signup">Sign up &raquo;</a></p>
+           <p><a id="signup" class="btn btn-primary" data-toggle="modal" href="#connect">Sign up &raquo;</a></p>
        </div>
    </div>
    
@@ -164,42 +135,17 @@
 {% block javascript %}
 <script>
 
-function signup() {
-      post_form('signup','#signup form input','[type="text"]','hidden-signup');
-}
-
-  $('#signup .btn-primary').on('click', function(e){
-    signup();
-  });
-  //for some reason, i cant get forms with multiple inputs to submit upon enter.. so its done manually using jquery
-  $('#signup form').on('submit',function(e){
-    e.preventDefault();
-  });
-  
- $('#signup input').keyup(function(e){
-    if (e.which ==13){
-      signup();
+  $('#login').on('click', function(e){
+      $('#connect #myModalLabel').text('Sign in:');
+      $('#connect #call-to-action').text("Select the service you've registered with");
     }
-  });
+  );
   
-  function login(){
-      post_form('login','#login form input','[type="text"]','hidden-login');                   
-  }
-
-  $('#login .btn-primary').on('click', function(e){
-    login();
-  });
-  
-  $('#login form').on('submit',function(e){
-    e.preventDefault();
-  });
-
-  $('#login input').keyup(function(e){
-    if (e.which ==13){
-      login();
-    }
-  });
-                            
+  $('#signup').on('click',function(e){
+      $('#connect #myModalLabel').text('Join the game:');
+      $('#connect #call-to-action').text('Select your preferred service to connect with:');
+    
+    });
    
 	
 </script>

@@ -3,6 +3,7 @@ import webapp2
 from webapp2_extras import jinja2
 from engineauth import models
 from google.appengine.ext import ndb
+from house import get_house
 
 
 class Jinja2Handler(webapp2.RequestHandler):
@@ -43,14 +44,26 @@ class PageHandler(Jinja2Handler):
         session = self.request.session if self.request.session else None
         user = self.request.user if self.request.user else None
         profiles = None
+        name = None
         if user:
             profile_keys = [ndb.Key('UserProfile', p) for p in user.auth_ids]
             profiles = ndb.get_multi(profile_keys)
-        self.render_template('base.html', {
+            template = 'home.html'
+            name = profiles[0].displayName
+        else:
+            template = 'not_logged_in.html'
+            
+        self.render_template(template, {
             'user': user,
+            'name': name,
             'session': session,
             'profiles': profiles,
         })
+        
+    def logout(self):        
+        self.response.delete_cookie('_eauth')
+        self.redirect('/')
+
 
 def wipe_datastore():
     users = models.User.query().fetch()

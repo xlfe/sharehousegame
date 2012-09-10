@@ -5,7 +5,7 @@ from engineauth.config import load_config
 import re
 from webob import Response
 from webob import Request
-
+import logging
 class EngineAuthResponse(Response):
 
     def _save_session(self):
@@ -151,12 +151,7 @@ class AuthMiddleware(object):
         return resp(environ, start_response)
 
     def _load_strategy(self, provider):
-        try:
             strategy_location = self._config[
                                 'provider.{0}'.format(provider)]['class_path']
             return utils.import_class(strategy_location)
-        except Exception, e:
-            raise(Exception, "You must provide a location for the {0} "\
-                             "strategy. Add a 'location' key to the "\
-                             "'provider.{0}' config dict".format(provider))
 

@@ -30,11 +30,11 @@ class BaseStrategy(object):
         req.provider_config = self.config['provider.{0}'.format(req.provider)]
         # TODO: This area needs to be reworked. There needs to be
         # a better way to handle errors
-        try:
-            redirect_uri = self.handle_request(req)
-        except Exception, e:
-            req.add_message(e.message, level='error')
-            redirect_uri = self.config['login_uri']
+        #try:
+        redirect_uri = self.handle_request(req)
+        #except Exception, e:
+        #    req.add_message(e.message, level='error')
+        #    redirect_uri = self.config['login_uri']
         resp = webob.exc.HTTPTemporaryRedirect(location=redirect_uri)
 
         resp.request = req

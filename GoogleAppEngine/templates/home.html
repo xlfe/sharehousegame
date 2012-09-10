@@ -1,0 +1,44 @@
+  
+ {% extends "base.html" %}
+ {% block content %}
+       
+       
+   <div class="hero-unit">
+       <h1>Welcome {{ name }}</h1>
+       <p>Take the pain out of sharehouse living!</p>
+   </div>
+
+   <!-- Example row of columns -->
+   <div class="row">
+       <div class="span4">
+           <h2>Why?</h2>
+           <p>Living in a sharehouse isn’t easy. Even with just two housemates, it gets rather
+             difficult to agree on who will do which shared job (such as cleaning the microwave), who’s turn
+             it is to take out the trash (not mine, I did it for like the last four months) and who drank
+             all my milk.</p>
+           <p><a class="btn" data-toggle="modal" href="#why">More &raquo;</a></p>
+       </div>
+       <div class="span4">
+           <h2>How?</h2>
+           <p>The sharehouse problem arises because it's typically difficulty coordinating between housemates and remembering
+           who's turn it is to take out the trash, how much you owe Mitch for the shopping from last week and whether you
+           needed to buy eggs or just butter.</p>
+           <p><a class="btn" data-toggle="modal" href="#how">More &raquo;</a></p>
+      </div>
+       <div class="span4">
+           <h2>Ready?</h2>
+           <p>Like the sound of all that? If you sign up now (while we're in beta) it's free for life, and we'd love to hear your feed-back and suggestions to help make the game even better! Signing up is quick and easy, so let's get started! </p>
+           <p><a id="signup" class="btn btn-primary" data-toggle="modal" href="#connect">Sign up &raquo;</a></p>
+       </div>
+   </div>
+   
+{% endblock %}
+
+{% block javascript %}
+<script>
+	
+</script>
+
+{% endblock %}
+
+

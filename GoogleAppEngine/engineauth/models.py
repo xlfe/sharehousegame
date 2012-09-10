@@ -15,7 +15,7 @@ from engineauth import config
 from google.appengine.ext import ndb
 from webapp2_extras import securecookie
 from webapp2_extras import security
-
+import logging
 
 
 class Error(Exception):
@@ -32,6 +32,7 @@ class UserProfile(ndb.Expando):
     any additional information specific to a strategy.
     """
     _default_indexed = False
+    displayName = ndb.StringProperty(indexed=False)
     user_info = ndb.JsonProperty(indexed=False, compressed=True)
     credentials = ndb.PickleProperty(indexed=False)
 
@@ -44,6 +45,8 @@ class UserProfile(ndb.Expando):
         if profile is None:
             profile = cls(id=auth_id)
         profile.user_info = user_info
+        #logging.error(user_info)
+        profile.displayName = user_info['info']['displayName']
         profile.populate(**kwargs)
         profile.put()
         return profile
@@ -385,10 +388,14 @@ class User(ndb.Expando):
     def _get_or_create(cls, auth_id, emails, **kwarg):
         assert isinstance(emails, list), 'Emails must be a list'
         user = cls._find_user(auth_id, emails)
-#        if user and emails is not None:
-#            user._add_emails(emails)
         if user is None:
             user = cls._create_user(auth_id, **kwarg)
+        if emails is not None:
+            for email in emails:
+                if user.email is None:
+                    user.email = email['value']
+                    user.put()
+                user.add_email(email['value'])
         return user
 
     @classmethod
@@ -396,6 +403,7 @@ class User(ndb.Expando):
         assert isinstance(profile, UserProfile), \
             'You must pass an instance of type engineauth.models.UserProfile.'
         emails = profile.user_info.get('info').get('emails') or []
+        logging.error(emails)
         return cls._get_or_create(profile.key.id(), emails)
 
 

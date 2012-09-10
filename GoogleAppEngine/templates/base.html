@@ -33,11 +33,9 @@
             
                     {% if user %}
             
-                        <a href="logout" class="btn btn-small btn-warning pull-right">Logout</a>
+                        <a href="/logout" class="btn btn-small btn-warning pull-right">Logout</a>
                     {% else %}
-                          
-                    
-                        <a href="#login" class="btn btn-small btn-success pull-right" data-toggle="modal" >Login</a>
+                        <a id="login" href="#connect" class="btn btn-small btn-success pull-right" data-toggle="modal" >Login</a>
                     {% endif %}
                     
                     <a class="brand" href="#">The Sharehouse Game
@@ -79,16 +77,10 @@
   <div class="wrapper">
       <div class="container">
         
-        {% if user %}
-            
-            
+             
            {% block content %}
            {% endblock %}
-        {% else %}
-            
-            {% include "not_logged_in.html" %}
-        
-        {% endif %}
+           
         </div> <!-- /container -->
     </div>
   

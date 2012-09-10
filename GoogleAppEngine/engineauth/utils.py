@@ -21,7 +21,7 @@ def load_config(default_values, user_values):
         if k not in config:
             config[k] = v
     return config
-
+import logging
 def import_class(full_path):
     path_split = full_path.split('.')
     path = ".".join(path_split[:-1])
