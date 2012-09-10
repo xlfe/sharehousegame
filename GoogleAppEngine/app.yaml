@@ -9,18 +9,21 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
-- url: /flux/css
+- url: /css
   static_dir: css
 
-- url: /flux/js
+- url: /js
   static_dir: js
 
-- url: /flux/img
+- url: /img
   static_dir: img
 
-- url: /flux/.*
+- url: /.*
   script: main.app
 
 libraries:
 - name: webapp2
   version: "2.5.1"
+
+- name: jinja2
+  version: "latest"
