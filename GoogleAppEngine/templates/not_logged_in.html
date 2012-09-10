@@ -3,53 +3,71 @@
  
  {% block content %}
  
-  <div class="modal hide fade" id="signup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-header">
-      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+   <div class="modal hide fade" id="signup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+     <div class="modal-header">
+       <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
 
-      <h3 id="myModalLabel">Signup</h3>
-    </div>
-      <div class="modal-body">    
-      <form id="modal-frm-signup" class="form-horizontal" data-remote="true" action="/flux/signup" method="post">
-        <div class="control-group">
-          <label class="control-label" for="inputName">Name</label>
+       <h3 id="myModalLabel">Signup</h3>
+     </div>
 
-          <div class="controls">
-            <input type="text" id="inputName" placeholder="Name">
-          </div>
-        </div>
+     <div class="modal-body">
+       <form class="form-horizontal" data-remote="True" action="/flux/signup" method="post">
+         <div class="control-group">
+           <label class="control-label" for="inputName">Name</label>
 
-        <div class="control-group">
-          <label class="control-label" for="inputEmail">Email</label>
+           <div class="controls">
+             <input type="text" id="inputName" placeholder="Name">
+           </div>
+         </div>
 
-          <div class="controls">
-            <input type="text" id="inputEmail" placeholder="Email">
-          </div>
-        </div>
-        <input type="submit" style="visibility:hidden">
-      </form>
-      </div>
+         <div class="control-group">
+           <label class="control-label" for="inputEmail">Email</label>
 
-      <div class="modal-footer">
-        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-        <button id="modal-btn-signup" class="btn btn-primary">Signup</button>
-      </div>
-  </div>
+           <div class="controls">
+             <input type="text" id="inputEmail" placeholder="Email">
+           </div>
+         </div>
 
+         <div id="hidden-signup" style="display:none;">
+           <input type="submit">
+         </div>
+       </form>
+     </div>
 
-<div class="modal hide fade" id="login" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
-            <h3 id="myModalLabel">Login </h3>
-          </div>
-          <div class="modal-body">
-            <p>One fine body…</p>
-          </div>
-          <div class="modal-footer">
-            <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-            <button class="btn btn-primary">Login</button>
-          </div>
-        </div>
+     <div class="modal-footer">
+       <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+       <button class="btn btn-primary">Signup</button>
+     </div>
+   </div>
+
+   <div class="modal hide fade" id="login" tabindex="-2" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+     <div class="modal-header">
+       <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+
+       <h3 id="myModalLabel">Login</h3>
+     </div>
+
+     <div class="modal-body">
+       <form id="modal-frm-login" class="form-horizontal" data-remote="true" action="/flux/login" method="post">
+         <div class="control-group">
+           <label class="control-label" for="inputName">Name</label>
+
+           <div class="controls">
+             <input type="text" id="inputName" placeholder="Name">
+           </div>
+         </div>
+
+         <div id="hidden-login" style="display:none;">
+           <input type="submit">
+         </div>
+       </form>
+     </div>
+
+     <div class="modal-footer">
+       <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+       <button class="btn btn-primary">Login</button>
+     </div>
+   </div>
 
 <div class="modal hide" id="why" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-header">
@@ -161,50 +179,43 @@
 {% block javascript %}
 <script>
 
-  $('#modal-btn-signup').on('click', function(e){
-    // We don't want this to act as a link so cancel the link action
-    e.preventDefault();
+function signup() {
+      post_form('signup','#signup form input','[type="text"]','hidden-signup');
+}
 
-    // Find form and submit it
-    $('#modal-frm-signup').submit();
+  $('#signup .btn-primary').on('click', function(e){
+    signup();
+  });
+  //for some reason, i cant get forms with multiple inputs to submit upon enter.. so its done manually using jquery
+  $('#signup form').on('submit',function(e){
+    e.preventDefault();
+  });
+  
+ $('#signup input').keyup(function(e){
+    if (e.which ==13){
+      signup();
+    }
+  });
+  
+  function login(){
+      post_form('login','#login form input','[type="text"]','hidden-login');                   
+  }
+
+  $('#login .btn-primary').on('click', function(e){
+    login();
+  });
+  
+  $('#login form').on('submit',function(e){
+    e.preventDefault();
   });
 
-
-  $('#modal-frm-signup').on('submit',function(e){
-    
-    e.preventDefault();
-  
-  
-	var items = [];
-        
-        
-	$('#modal-frm-signup input').filter('[type="text"]').each(function(){
-            
-            var item = {};
-            
-            item[ $(this).attr('id') ] = $(this).val();
-            items.push(item);
-          
-        });
-
-        
-        //each(function(){
-        // alert($(this).attr('value'));
-        //});
-	$.ajax( {
-          type: 'POST',
-          url: 'signup',
-          data: JSON.stringify(items),
-          success: function(responseText){
-	    
-		 alert(responseText); //   window.location.replace('/'+responseText);
-                }
-        });
-	
-  
-  
-  
+  $('#login input').keyup(function(e){
+    if (e.which ==13){
+      login();
+    }
   });
+                            
+   
 	
 </script>
 

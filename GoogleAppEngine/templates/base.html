@@ -32,7 +32,7 @@
                 <div class="container">
             
                     {% if is_logged_in %}
-                        <a href="#logout" class="btn btn-small btn-warning pull-right" data-toggle="modal" >Logout</a>
+                        <a href="logout" class="btn btn-small btn-warning pull-right">Logout</a>
                     {% else %}
                           
                     
@@ -96,6 +96,7 @@
         <script src="js/main.js"></script>
         
         <script src="js/vendor/jquery.debug.js"></script>
+        
         {% block javascript %}
         {% endblock %}
 
