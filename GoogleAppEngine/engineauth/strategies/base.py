@@ -122,7 +122,7 @@ class BaseStrategy(object):
                 ],
                 "accounts": [
                     {
-                        "domain": self.provider,
+                        "domain": self.provider,    
                         "userid": user['id']
                     }
                 ],

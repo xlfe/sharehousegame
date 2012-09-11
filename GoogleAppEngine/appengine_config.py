@@ -31,11 +31,12 @@ if False:
     # Google Plus Authentication
     engineauth['provider.google'] = {
         'client_id': '840756081077.apps.googleusercontent.com',
-        'client_secret': 'CaMwLi7W0_ooWGO0SVFUA000',
+        'client_secret': 'LNBjyiDqbahsZHqqV8JeK5T5',
         'api_key': 'AIzaSyBB1EsdXFonzadeY0N2L2Pn7GWlr1NlyHI',
         'scope': 'https://www.googleapis.com/auth/plus.me',
     }
-    
+
+if False:
     # Twitter Authentication
     engineauth['provider.twitter'] = {
         'client_id': 'XUnK5wVc7SqtgzUEMlz7A',

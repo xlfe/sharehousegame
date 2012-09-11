@@ -12,7 +12,6 @@
     :license: Apache Sotware License, see LICENSE for details.
     
     AuthProvider
-    AuthToken
     UserEmail
     User
     Session
@@ -55,85 +54,6 @@ class AuthProvider(ndb.Expando):
         auth_token.populate(**kwargs)
         auth_token.put()
         return auth_token
-
-class AuthToken(ndb.Model):
-    """Stores validation tokens for users (not currently used?)."""
-
-    created = ndb.DateTimeProperty(auto_now_add=True)
-    updated = ndb.DateTimeProperty(auto_now=True)
-    user = ndb.StringProperty(required=True, indexed=False)
-    subject = ndb.StringProperty(required=True)
-    token = ndb.StringProperty(required=True)
-
-    @classmethod
-    def get_key(cls, user, subject, token):
-        """Returns a token key.
-
-        :param user:
-            User unique ID.
-        :param subject:
-            The subject of the key. Examples:
-
-            - 'auth'
-            - 'signup'
-        :param token:
-            Randomly generated token.
-        :returns:
-            ``model.Key`` containing a string id in the following format:
-            ``{user_id}.{subject}.{token}``
-        """
-        logging.error('AuthToken get_key {0}'.format(user))
-        return ndb.Key(cls, '%s.%s.%s' % (str(user), subject, token))
-
-    @classmethod
-    def create(cls, user, subject, token=None):
-        """Creates a new token for the given user.
-
-        :param user:
-            User unique ID.
-        :param subject:
-            The subject of the key. Examples:
-
-            - 'auth'
-            - 'signup'
-        :param token:
-            Optionally an existing token may be provided.
-            If None, a random token will be generated.
-        :returns:
-            The newly created :class:`UserToken`.
-        """
-        user = str(user)
-        token = token or security.generate_random_string(entropy=128)
-        key = cls.get_key(user, subject, token)
-        entity = cls(key=key, user=user, subject=subject, token=token)
-        entity.put()
-        logging.error('AuthToken create_key {0}'.format(user))
-        return entity
-
-    @classmethod
-    def get(cls, user=None, subject=None, token=None):
-        """Fetches a user token.
-
-        :param user:
-            User unique ID.
-        :param subject:
-            The subject of the key. Examples:
-
-            - 'auth'
-            - 'signup'
-        :param token:
-            The existing token needing verified.
-        :returns:
-            A :class:`UserToken` or None if the token does not exist.
-        """
-        logging.error('auth token get {0}'.format(user))        
-        if user and subject and token:
-            return cls.get_key(user, subject, token).get()
-
-        assert subject and token, \
-            u'subject and token must be provided to AuthToken.get().'
-        return cls.query(cls.subject == subject, cls.token == token).get()
-
 
 class UserEmail(ndb.Model):
     user_id = ndb.StringProperty(indexed=True)

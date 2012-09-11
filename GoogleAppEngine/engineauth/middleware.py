@@ -139,6 +139,7 @@ class AuthMiddleware(object):
             if provider:
                 req.provider = provider
                 req.provider_params = provider_params
+                logging.error(provider_params)
                 # load the desired strategy class
                 strategy_class = self._load_strategy(provider)
                 resp = req.get_response(strategy_class(self.app, self._config))
