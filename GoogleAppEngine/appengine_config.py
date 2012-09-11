@@ -2,7 +2,6 @@ import os
 
 ON_DEV = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 
-
 engineauth = {
     'secret_key': 'shaisd8f9as8d9fashd89fahsd9f8asdf9as8df9sa8dfa9schJKSHDAJKSHDJAsd9a8sd9sa',
     'user_model': 'engineauth.models.User',
@@ -28,22 +27,18 @@ engineauth['provider.facebook'] = {
     'scope': 'email',
     }
 
+if False:
+    # Google Plus Authentication
+    engineauth['provider.google'] = {
+        'client_id': '840756081077.apps.googleusercontent.com',
+        'client_secret': 'CaMwLi7W0_ooWGO0SVFUA000',
+        'api_key': 'AIzaSyBB1EsdXFonzadeY0N2L2Pn7GWlr1NlyHI',
+        'scope': 'https://www.googleapis.com/auth/plus.me',
+    }
+    
+    # Twitter Authentication
+    engineauth['provider.twitter'] = {
+        'client_id': 'XUnK5wVc7SqtgzUEMlz7A',
+        'client_secret': 'cgHnklcRDtR0zANufH1PnqUfhmgh0Dep2YpsYpo8JA',
+    }
 
-# Google Plus Authentication
-engineauth['provider.google'] = {
-    'client_id': '840756081077.apps.googleusercontent.com',
-    'client_secret': 'CaMwLi7W0_ooWGO0SVFUA000',
-    'api_key': 'AIzaSyBB1EsdXFonzadeY0N2L2Pn7GWlr1NlyHI',
-    'scope': 'https://www.googleapis.com/auth/plus.me',
-}
-
-# Twitter Authentication
-engineauth['provider.twitter'] = {
-    'client_id': 'XUnK5wVc7SqtgzUEMlz7A',
-    'client_secret': 'cgHnklcRDtR0zANufH1PnqUfhmgh0Dep2YpsYpo8JA',
-}
-
-
-def webapp_add_wsgi_middleware(app):
-    from engineauth import middleware
-    return middleware.AuthMiddleware(app,engineauth)

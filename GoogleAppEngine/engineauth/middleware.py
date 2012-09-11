@@ -6,6 +6,7 @@ import re
 from webob import Response
 from webob import Request
 import logging
+
 class EngineAuthResponse(Response):
 
     def _save_session(self):

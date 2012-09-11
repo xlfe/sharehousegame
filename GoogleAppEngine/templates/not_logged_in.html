@@ -1,28 +1,33 @@
   
  {% extends "base.html" %}
  {% block content %}
- 
-   <div class="modal hide fade" id="connect" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-     <div class="modal-header">
-       <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+<div class="modal hide fade" id="connect" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
 
-       <h3 id="myModalLabel">Join the game:</h3>
-     </div>
-
-     <div class="modal-body">
-      
-      <h4 id="call-to-action">Sign up using one of the following services:</h4>
-      
-      {% set providers = [('facebook', '/auth/facebook'), ('google', '/auth/google'),('twitter','/auth/twitter')] -%}
-      {% for p, u in providers %}
-        <a href="{{ u }}" class="btn span2" style="margin-bottom:10px"><img src="/img/{{ p }}.png" /></a>
-      {% endfor %}
+    <h3 id="myModalLabel">Sign up</h3>
   </div>
-      
-     <div class="modal-footer">
-       <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-     </div>
+
+  <div class="modal-body">
+    <h4 id="facebook">Use your Facebook account</h4>
+    <div class="row">
+      {% set providers = [('facebook', '/auth/facebook'), ]-%}
+       {% for p, u in providers %}
+         <a href="{{ u }}" class="btn span2 offset1" style=""><img src="/img/{{ p }}.png" /></a>
+       {% endfor %}
    </div>
+   <hr>
+    <h4 id="local">Or create an account</h4>
+    <div class="row">
+   
+     
+      
+    </div>
+  </div> 
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+  </div>
+</div>
 
 
 <div class="modal hide" id="why" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -142,8 +147,8 @@
   );
   
   $('#signup').on('click',function(e){
-      $('#connect #myModalLabel').text('Join the game:');
-      $('#connect #call-to-action').text('Select your preferred service to connect with:');
+     // $('#connect #myModalLabel').text('Join the game:');
+     // $('#connect #call-to-action').text('You can either connect using Facebook:');
     
     });
    

@@ -145,7 +145,7 @@ class BaseStrategy(object):
         _abstract()
 
     def get_or_create_profile(self, auth_id, user_info, **kwargs):
-        return models.UserProfile.get_or_create(auth_id, user_info, **kwargs)
+        return models.AuthProvider.get_or_create(auth_id, user_info, **kwargs)
 
     def handle_request(self, req):
         _abstract()

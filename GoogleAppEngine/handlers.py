@@ -46,16 +46,14 @@ class PageHandler(Jinja2Handler):
         profiles = None
         name = None
         if user:
-            profile_keys = [ndb.Key('UserProfile', p) for p in user.auth_ids]
+            profile_keys = [ndb.Key('AuthProvider', p) for p in user.auth_ids]
             profiles = ndb.get_multi(profile_keys)
             template = 'home.html'
-            name = profiles[0].displayName
         else:
             template = 'not_logged_in.html'
             
         self.render_template(template, {
             'user': user,
-            'name': name,
             'session': session,
             'profiles': profiles,
         })
@@ -67,11 +65,12 @@ class PageHandler(Jinja2Handler):
 
 def wipe_datastore():
     users = models.User.query().fetch()
-    profiles = models.UserProfile.query().fetch()
-    tokens = models.UserToken.query().fetch()
+    profiles = models.AuthProvider.query().fetch()
+    emails = models.UserEmail.query().fetch()
+    tokens = models.AuthToken.query().fetch()
     sessions = models.Session.query().fetch()
 
-    for t in [users, profiles, tokens, sessions]:
+    for t in [users, profiles, emails, tokens, sessions]:
         for i in t:
             i.key.delete()
 

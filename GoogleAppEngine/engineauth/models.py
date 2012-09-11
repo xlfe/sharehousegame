@@ -10,6 +10,14 @@
 
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
+    
+    AuthProvider
+    AuthToken
+    UserEmail
+    User
+    Session
+    
+    
 """
 from engineauth import config
 from google.appengine.ext import ndb
@@ -26,13 +34,12 @@ class DuplicatePropertyError(Error):
         self.values = value
         self.msg = u'duplicate properties(s) were found.'
 
-class UserProfile(ndb.Expando):
+class AuthProvider(ndb.Expando):
     """
-    ``ndb.Expando`` is used to store the user_info object as well as
-    any additional information specific to a strategy.
+    AuthProvider stores the authentication credentials (eg from Facebook)
+    for a User - each user may have multiple AuthProviders
     """
     _default_indexed = False
-    displayName = ndb.StringProperty(indexed=False)
     user_info = ndb.JsonProperty(indexed=False, compressed=True)
     credentials = ndb.PickleProperty(indexed=False)
 
@@ -41,18 +48,16 @@ class UserProfile(ndb.Expando):
         """
 
         """
-        profile = cls.get_by_id(auth_id)
-        if profile is None:
-            profile = cls(id=auth_id)
-        profile.user_info = user_info
-        #logging.error(user_info)
-        profile.displayName = user_info['info']['displayName']
-        profile.populate(**kwargs)
-        profile.put()
-        return profile
+        auth_token = cls.get_by_id(auth_id)
+        if auth_token is None:
+            auth_token = cls(id=auth_id)
+        auth_token.user_info = user_info
+        auth_token.populate(**kwargs)
+        auth_token.put()
+        return auth_token
 
-class UserToken(ndb.Model):
-    """Stores validation tokens for users."""
+class AuthToken(ndb.Model):
+    """Stores validation tokens for users (not currently used?)."""
 
     created = ndb.DateTimeProperty(auto_now_add=True)
     updated = ndb.DateTimeProperty(auto_now=True)
@@ -77,6 +82,7 @@ class UserToken(ndb.Model):
             ``model.Key`` containing a string id in the following format:
             ``{user_id}.{subject}.{token}``
         """
+        logging.error('AuthToken get_key {0}'.format(user))
         return ndb.Key(cls, '%s.%s.%s' % (str(user), subject, token))
 
     @classmethod
@@ -101,6 +107,7 @@ class UserToken(ndb.Model):
         key = cls.get_key(user, subject, token)
         entity = cls(key=key, user=user, subject=subject, token=token)
         entity.put()
+        logging.error('AuthToken create_key {0}'.format(user))
         return entity
 
     @classmethod
@@ -119,11 +126,12 @@ class UserToken(ndb.Model):
         :returns:
             A :class:`UserToken` or None if the token does not exist.
         """
+        logging.error('auth token get {0}'.format(user))        
         if user and subject and token:
             return cls.get_key(user, subject, token).get()
 
         assert subject and token, \
-            u'subject and token must be provided to UserToken.get().'
+            u'subject and token must be provided to AuthToken.get().'
         return cls.query(cls.subject == subject, cls.token == token).get()
 
 
@@ -164,7 +172,9 @@ class UserEmail(ndb.Model):
 
 
 class User(ndb.Expando):
-    """Stores user authentication credentials or authorization ids."""
+    """The user is the actual individual.
+    AuthProvider(s) authenticate each user (for example Facebook)
+    """
     email_model = UserEmail
 
     created = ndb.DateTimeProperty(auto_now_add=True)
@@ -400,15 +410,15 @@ class User(ndb.Expando):
 
     @classmethod
     def get_or_create_by_profile(cls, profile):
-        assert isinstance(profile, UserProfile), \
+        assert isinstance(profile, AuthProvider), \
             'You must pass an instance of type engineauth.models.UserProfile.'
         emails = profile.user_info.get('info').get('emails') or []
-        logging.error(emails)
+        #logging.error(emails)
         return cls._get_or_create(profile.key.id(), emails)
 
 
     def add_profile(self, profile):
-        assert isinstance(profile, UserProfile),\
+        assert isinstance(profile, AuthProvider),\
             'You must pass an instance of type engineauth.models.UserProfile.'
         return self._add_auth_id(profile.key.id())
 
@@ -421,7 +431,7 @@ class Session(ndb.Model):
 
     @staticmethod
     def _generate_sid():
-        return security.generate_random_string(entropy=128)
+        return security.generate_random_string(entropy=256)
 
     @staticmethod
     def _serializer():

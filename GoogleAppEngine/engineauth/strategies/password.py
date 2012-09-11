@@ -43,10 +43,10 @@ class PasswordStrategy(BaseStrategy):
         :raise:
         """
         password = kwargs.pop('password')
-        profile = models.UserProfile.get_by_id(auth_id)
+        profile = models.AuthProvider.get_by_id(auth_id)
         if profile is None:
             # Create profile
-            profile = models.UserProfile.get_or_create(auth_id, user_info,
+            profile = models.AuthProvider.get_or_create(auth_id, user_info,
                 password=security.generate_password_hash(password, length=12))
         # Check password
         if not security.check_password_hash(password, profile.password):
