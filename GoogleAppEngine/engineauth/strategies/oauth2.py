@@ -1,14 +1,3 @@
-"""
-    engineauth.strategies.oauth2
-    ============================
-
-    OAuth2 Authentication Strategy
-    :copyright: (c) 2011 Kyle Finley.
-    :license: Apache Sotware License, see LICENSE for details.
-
-    :copyright: (c) 2010 Google Inc.
-    :license: Apache Software License, see LICENSE for details.
-"""
 from __future__ import absolute_import
 import cPickle as pickle
 from engineauth.strategies.base import BaseStrategy
@@ -16,7 +5,6 @@ import httplib2
 from oauth2client.client import OAuth2WebServerFlow
 import logging
 
-__author__ = 'kyle.finley@gmail.com (Kyle Finley)'
 
 
 def _abstract():
@@ -48,17 +36,18 @@ class OAuth2Strategy(BaseStrategy):
         req.credentials = flow.step2_exchange(req.params)
         
         user_info = self.user_info(req)
-        profile = self.get_or_create_profile(
+        auth_token = self.get_or_create_authtoken(
             auth_id=user_info['auth_id'],
             user_info=user_info,
             credentials=req.credentials)
-        req.load_user_by_profile(profile)
+        req.associate_user_with_auth_token(auth_token)
         return req.get_redirect_uri()
 
     def handle_request(self, req):
-        self.callback_uri = '{0}{1}/{2}/callback'.format(req.host_url,
-            self.config['base_uri'], req.provider)
+        self.callback_uri = '{0}{1}/{2}/callback'.format(req.host_url,self.config['base_uri'], req.provider)
+        
         self.session_key = '_auth_strategy:{0}'.format(req.provider)
+        
         req.flow = OAuth2WebServerFlow(
             req.provider_config.get('client_id'),
             req.provider_config.get('client_secret'),
@@ -66,6 +55,7 @@ class OAuth2Strategy(BaseStrategy):
             auth_uri=self.options['auth_uri'],
             token_uri=self.options['token_uri'],
         )
+        
         if not req.provider_params:
             return self.start(req)
         else:
