@@ -11,11 +11,24 @@
   <div class="modal-body">
     <h4 id="facebook">Use your Facebook account</h4>
     <div class="row">
+      <div class="span">
       {% set providers = [('facebook', '/auth/facebook'), ]-%}
        {% for p, u in providers %}
          <a href="{{ u }}" class="btn span2 offset1" style=""><img src="/img/{{ p }}.png" /></a>
        {% endfor %}
-   </div>
+      </div>
+    </div>
+    
+      <div class="row" id="privacy-blurb">
+        <hr>
+        <div class="span">
+       <p>We'll respect your privacy:</p>
+       <ul>
+        <li>we wont't share your personal information with <em>any</em> third parties</li>
+        <li>we will explicitly ask your permission before we do anything that might annoy you</li>
+       </ul>
+        </div>
+      </div>
     {% if show_create_account %}
    <hr>
     <h4 id="local">Or create an account</h4>
@@ -42,11 +55,11 @@
   <div class="modal-body">
     
      <p>Living in a disfunctional sharehouse is not fun (for most people at least!).
-     The Sharehouse Game helps solve these sharehouse problems in a fun and easy way!</p>
+      Sharehouse Game helps solve these sharehouse problems in a fun and easy way!</p>
     
     <hr>
       
-     <p>Some of the problems The Sharehouse Game solves:</p>
+     <p>Some of the problems Sharehouse Game solves:</p>
       
     <h4>Co-ordination problem</h4>
     
@@ -85,7 +98,7 @@
   </div>
 
   <div class="modal-body">
-    <p>The Sharehouse Game does a few things:</p>
+    <p>Sharehouse Game does a few things:</p>
     
     <p><strong>Points</strong>: You get points for completing tasks. Yep. Real world points.</p>
     
@@ -108,8 +121,8 @@
        
        
    <div class="hero-unit">
-       <h1>The Sharehouse Game</h1>
-       <p>Take the pain out of sharehouse living!</p>
+       <h1>Sharehouse Game</h1>
+       <p>Takes the pain out of sharehouse living!</p>
        <p><a class="btn btn-info btn-large">Watch the video</a> <a id="signup" href="#connect" data-toggle="modal" class="btn btn-primary btn-large">Sign up &raquo;</a></p>
    </div>
 
@@ -131,8 +144,8 @@
            <p><a class="btn" data-toggle="modal" href="#how">More &raquo;</a></p>
       </div>
        <div class="span4">
-           <h2>Ready?</h2>
-           <p>Like the sound of all that? If you sign up now (while we're in beta) it's free for life, and we'd love to hear your feed-back and suggestions to help make the game even better! Signing up is quick and easy, so let's get started! </p>
+           <h2>Are you game?</h2>
+           <p>Like the sound of all that? We're currently in beta, and we'd really love to hear your feed-back and suggestions to help make the Game even better! Signing up is quick and easy, so let's get started! </p>
            <p><a id="signup" class="btn btn-primary" data-toggle="modal" href="#connect">Sign up &raquo;</a></p>
        </div>
    </div>
@@ -145,12 +158,14 @@
   $('#login').on('click', function(e){
       $('#connect #myModalLabel').text('Sign in:');
       $('#connect #call-to-action').text("Select the service you've registered with");
+      $('#connect #privacy-blurb').hide();
     }
   );
   
-  $('#signup').on('click',function(e){
-     // $('#connect #myModalLabel').text('Join the game:');
-     // $('#connect #call-to-action').text('You can either connect using Facebook:');
+  $('#signup').live('click',function(e){
+     $('#connect #myModalLabel').text('Sign up');
+     $('#connect #call-to-action').text('Use your Facebook account');
+     $('#connect #privacy-blurb').show();
     
     });
    
