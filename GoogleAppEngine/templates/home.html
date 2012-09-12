@@ -3,35 +3,47 @@
  {% block content %}
        
        
-   <div class="hero-unit">
-       <h1>Welcome {{ name }}</h1>
-       <p>Take the pain out of sharehouse living!</p>
-   </div>
+    <div class="container-fluid">
+ 
+    <div class="row-fluid">
+     
+     <div class="span2">
+      <br/>
+      <hr>
+      <ul class="nav nav-list">
+       
+        {% set menu_links = [
+        ('Dashboard', '','icon-home'),
+        ('Rent and bills','rentbills','icon-list-alt'),
+        ('Tasks','tasks','icon-check'),
+        ('Shopping','shopping','icon-shopping-cart'),
+          ('Profile','profile','icon-user'),
+                            ('Settings','settings','icon-wrench'),
+        
+        ]-%}
+       {% for name, link, icon in menu_links %}
+         
+         {% if link == page_base %}
+           <li class="active"><a href="/{{ link }}"><i class="{{ icon }} icon-white"></i> {{ name }} </a></li>
+           {% else %}
+             <li><a href="/{{ link }}"><i class="{{ icon }} icon-black"></i> {{ name }} </a></li>
+           {% endif %}
+           
+         
+       {% endfor %}
+       
+    </ul>
+    <hr>
+    </div>
+     <div class="span10">
+      {% block main %}
+        
+      {% endblock %}
+     </div>
 
-   <!-- Example row of columns -->
-   <div class="row">
-       <div class="span4">
-           <h2>Why?</h2>
-           <p>Living in a sharehouse isn’t easy. Even with just two housemates, it gets rather
-             difficult to agree on who will do which shared job (such as cleaning the microwave), who’s turn
-             it is to take out the trash (not mine, I did it for like the last four months) and who drank
-             all my milk.</p>
-           <p><a class="btn" data-toggle="modal" href="#why">More &raquo;</a></p>
-       </div>
-       <div class="span4">
-           <h2>How?</h2>
-           <p>The sharehouse problem arises because it's typically difficulty coordinating between housemates and remembering
-           who's turn it is to take out the trash, how much you owe Mitch for the shopping from last week and whether you
-           needed to buy eggs or just butter.</p>
-           <p><a class="btn" data-toggle="modal" href="#how">More &raquo;</a></p>
-      </div>
-       <div class="span4">
-           <h2>Ready?</h2>
-           <p>Like the sound of all that? If you sign up now (while we're in beta) it's free for life, and we'd love to hear your feed-back and suggestions to help make the game even better! Signing up is quick and easy, so let's get started! </p>
-           <p><a id="signup" class="btn btn-primary" data-toggle="modal" href="#connect">Sign up &raquo;</a></p>
-       </div>
    </div>
    
+   </div>
 {% endblock %}
 
 {% block javascript %}

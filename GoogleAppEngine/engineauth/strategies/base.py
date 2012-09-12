@@ -61,8 +61,7 @@ class BaseStrategy(object):
         
         if existing_at and existing_user:
             #if the user is logged on, and the at is for that user, do nothing
-            if existing_at.parent() == existing_user:
-                logging.error('Existing user and at')
+            if existing_at.user_id == existing_user._get_id():
                 return existing_at
             else:
                 raise Exception('Access token already assigned to another user')

@@ -53,7 +53,6 @@ class EngineAuthRequest(Request):
         if self.session is not None and self.session.user_id:
             self.user = self._get_user_class().get_by_id(int(self.session.user_id))
             if self.user is None:
-                # TODO: If the user_id from the session returns no user,
                 # then remove it.
                 pass
         else:

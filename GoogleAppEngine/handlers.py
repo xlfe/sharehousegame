@@ -14,6 +14,7 @@ class Jinja2Handler(webapp2.RequestHandler):
     """
     @webapp2.cached_property
     def jinja2(self):
+        logging.error('im here')
         return jinja2.get_jinja2(app=self.app)
 
     def get_messages(self, key='_messages'):
@@ -26,6 +27,9 @@ class Jinja2Handler(webapp2.RequestHandler):
         messages = self.get_messages()
         if messages:
             template_values.update({'messages': messages})
+            
+        template_values['page_base'] = self.request.route.name
+        
         self.response.write(self.jinja2.render_template(
             template_name, **template_values))
 
@@ -39,28 +43,52 @@ class Jinja2Handler(webapp2.RequestHandler):
 
 import logging
 
-class PageHandler(Jinja2Handler):
+from functools import wraps
 
-    def root(self):
+def check_user(fn):
+    @wraps(fn)  
+    def wrapper(self, *args, **kwargs):
+        
+      user = self.request.user if self.request.user else None
+      
+      if not user:
+          self.render_template('not_logged_in.html')
+          return
+        
+      return fn(self,*args, **kwargs)
+    return wrapper
+    
+
+class PageHandler(Jinja2Handler):
+    
+    @check_user    
+    def dashboard(self):
         session = self.request.session if self.request.session else None
         user = self.request.user if self.request.user else None
-        auth_tokens = None
-        if user:
-            logging.error(user.key.flat())
-            auth_tokens = models.AuthProvider.query(ancestor=user._get_key())
-            template = 'home.html'
-        else:
-            template = 'not_logged_in.html'
-            
-        self.render_template(template, {
-            'user': user,
-            'session': session,
-            'auth_tokens': auth_tokens,
-        })
+        auth_tokens = models.AuthProvider.query(ancestor=user._get_key())
+      
+        self.render_template('dashboard.html',{'user':user})
         
+    @check_user
+    def profile(self):
+        
+        user = self.request.user if self.request.user else None
+        self.render_template('profile.html',{'user':user})
+    
+    @check_user
+    def rentbills(self):
+        self.profile()
+    
+    
     def logout(self):        
-        self.response.delete_cookie('_eauth')
+        session=self.request.session if self.request.session else None
+        if session is not None:
+            session.user_id=None
+            session.put()
         self.redirect('/')
+
+
+
 
 
 def wipe_datastore():

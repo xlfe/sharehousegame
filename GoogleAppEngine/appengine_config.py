@@ -25,7 +25,7 @@ else:
 engineauth['provider.facebook'] = {
     'client_id': FACEBOOK_APP_KEY,
     'client_secret': FACEBOOK_APP_SECRET,
-    'scope': 'email',
+    'scope': 'email,user_location,user_birthday,publish_actions',
     }
 
 if False:
