@@ -16,13 +16,6 @@ class EngineAuthResponse(Response):
         if self.request.session_hash == session.hash():
             return session
         session.put()
-        # If we have a user_id we want to updated the
-        # session to use the user_id as the key.
-        if session.user_id is not None:
-            session_id = session.key.id()
-            if session_id != session.user_id:
-                session = models.Session.upgrade_to_user_session(
-                    session_id, session.user_id)
         self.set_cookie('_eauth', session.serialize())
         return self
 
@@ -35,6 +28,7 @@ class EngineAuthRequest(Request):
     ResponseClass = EngineAuthResponse
 
     def _load_session(self):
+        #Check if we have an existing session
         value = self.cookies.get('_eauth')
         session = None
         if value:
@@ -53,10 +47,7 @@ class EngineAuthRequest(Request):
         return self
 
     def _get_user_class(self):
-        try:
-            return utils.import_class(self._config['user_model'])
-        except Exception:
-            return models.User
+        return models.User
 
     def _load_user(self):
         if self.session is not None and self.session.user_id:
@@ -69,16 +60,13 @@ class EngineAuthRequest(Request):
             self.user = None
         return self
 
-    def _load_user_by_profile(self, profile):
-        # if the user is logged in update that user with the profile details
-        if self.user:
-            self.user.add_profile(profile)
-        # else get or create a user based on the profile
-        else:
-            self.user = self._get_user_class().get_or_create_by_profile(profile)
-        # Add user to session
-        self.session.user_id = self.user.get_id()
-    load_user_by_profile = _load_user_by_profile
+    def _get_user_from_auth_token(self, auth_token):
+        """Match a session to an auth token"""
+        
+        self.user = models.User._get_user_from_id(auth_token.user_id)
+        self.session.user_id = self.user._get_id()
+        
+    get_user_from_auth_token = _get_user_from_auth_token
 
     def _add_message(self, message, level=None, key='_messages'):
         if not self.session.data.get(key):

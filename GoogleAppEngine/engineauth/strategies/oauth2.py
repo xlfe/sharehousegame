@@ -36,11 +36,12 @@ class OAuth2Strategy(BaseStrategy):
         req.credentials = flow.step2_exchange(req.params)
         
         user_info = self.user_info(req)
-        auth_token = self.get_or_create_authtoken(
+        auth_token = self.get_or_create_auth_token(
             auth_id=user_info['auth_id'],
             user_info=user_info,
-            credentials=req.credentials)
-        req.associate_user_with_auth_token(auth_token)
+            credentials=req.credentials,
+            user=req.user)
+        req.get_user_from_auth_token(auth_token)
         return req.get_redirect_uri()
 
     def handle_request(self, req):

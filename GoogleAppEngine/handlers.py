@@ -37,17 +37,17 @@ class Jinja2Handler(webapp2.RequestHandler):
         self.response.headers.add_header('content-type', 'application/json', charset='utf-8')
         self.response.out.write(json)
 
+import logging
 
 class PageHandler(Jinja2Handler):
 
     def root(self):
         session = self.request.session if self.request.session else None
         user = self.request.user if self.request.user else None
-        profiles = None
-        name = None
+        auth_tokens = None
         if user:
-            profile_keys = [ndb.Key('AuthProvider', p) for p in user.auth_ids]
-            profiles = ndb.get_multi(profile_keys)
+            logging.error(user.key.flat())
+            auth_tokens = models.AuthProvider.query(ancestor=user._get_key())
             template = 'home.html'
         else:
             template = 'not_logged_in.html'
@@ -55,7 +55,7 @@ class PageHandler(Jinja2Handler):
         self.render_template(template, {
             'user': user,
             'session': session,
-            'profiles': profiles,
+            'auth_tokens': auth_tokens,
         })
         
     def logout(self):        

@@ -3,7 +3,7 @@ from webob import Request
 import webob
 from engineauth import models
 from engineauth.middleware import EngineAuthRequest
-
+import logging
 
 class Error(Exception):
     """Base user exception."""
@@ -52,17 +52,38 @@ class BaseStrategy(object):
         """
         _abstract()
 
-    def get_or_create_authprovider(self, user,auth_id, user_info, **kwargs):
+    def get_or_create_auth_token(self, auth_id, user_info, credentials,user):
         """Callback where we've got an Auth Token from our provider
         and we need to decide what to do with it"""
         
+        existing_at = models.AuthProvider.get_by_auth_id(auth_id)
+        existing_user = user
+        
+        if existing_at and existing_user:
+            #if the user is logged on, and the at is for that user, do nothing
+            if existing_at.parent() == existing_user:
+                logging.error('Existing user and at')
+                return existing_at
+            else:
+                raise Exception('Access token already assigned to another user')
         
         
+        if existing_at and not existing_user:
+            logging.error('Existing at but no existing user')
+            return existing_at
         
-        
-        
-        return models.AuthProvider.get_or_create(user,auth_id, user_info, **kwargs)
-
+        if existing_user and not existing_at:
+            logging.error('Existing user but no existing at, creating one')
+            return models.AuthProvider._create(existing_user,auth_id,user_info,credentials)
+            
+        if not existing_user and not existing_at:
+            logging.error('creating both user and at')
+            new_user = models.User._create()
+            return models.AuthProvider._create(new_user,auth_id,user_info,credentials)
+            
+        raise Exception('Logic failure in get_or_create_auth_token')
+                
+    
     def handle_request(self, req):
         _abstract()
 

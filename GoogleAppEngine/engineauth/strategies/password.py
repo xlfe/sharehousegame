@@ -67,5 +67,5 @@ class PasswordStrategy(BaseStrategy):
             auth_id=user_info['auth_id'],
             user_info=user_info,
             password=password)
-        req.load_user_by_profile(profile)
+        req.associate_user_with_auth_token(auth_token)
         return req.get_redirect_uri()

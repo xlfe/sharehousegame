@@ -35,11 +35,7 @@ class DuplicatePropertyError(Error):
 
 class User(ndb.Model):
     """
-    The user is the actual individual.
-    Parent to 
-        AuthProvider(s) authenticate a user (for example Facebook)
-        UserProperties (not yet implemented)
-    """
+    The user is the actual individual"""
     
     _default_indexed=False
     created = ndb.DateTimeProperty(auto_now_add=True)
@@ -48,21 +44,29 @@ class User(ndb.Model):
     display_name = ndb.StringProperty()
 
     #authenticated = ndb.BooleanProperty(default=False)
-
+    
     def _get_id(self):
         """Returns this user's unique ID, which can be an integer or string."""
         return str(self.key.id())
     
-    @classmethod
-    def _get_user_from_child(cls, child):
-        """Gets a user based on its child entity (ie a property or authtoken)
-        """
-        return cls.get_by_id(child.parent())
+    def _get_key(self):
+        """gets the key for the user (ID and entity type)"""
+        return self.key
     
-    def _add_auth_token(cls, auth_token):
+    @classmethod
+    def _create(cls):
         
-        auth_token
-
+        new_user = cls()
+        new_user.put()
+        return new_user
+    
+    
+    @classmethod
+    def _get_user_from_id(cls, id):
+        """Gets a user based on their ID"""
+        
+        return cls.get_by_id(int(id))
+    
 
 
 class AuthProvider(ndb.Model):
@@ -71,21 +75,31 @@ class AuthProvider(ndb.Model):
     for a User - each user may have multiple AuthProviders
     """
     _default_indexed = False
+    user_id = ndb.StringProperty(indexed=True)
     user_info = ndb.JsonProperty(indexed=False, compressed=True)
-#    credentials = ndb.PickleProperty(indexed=False)
+    credentials = ndb.PickleProperty()
 
     @classmethod
-    def get_user_create(cls,user_id, auth_id,user_info):
-        """Create an auth_token for a specified user"""
+    def _get_by_auth_id(cls, auth_id):
+        """Returns a AuthToken based on a auth_id."""
+        
+        return cls.get_by_id(id=auth_id)
+    get_by_auth_id = _get_by_auth_id
+
+    @classmethod
+    def _create(cls,user, auth_id,user_info,credentials):
+        """Create an auth_token, must specify a user_id"""
         
         auth_token = cls.get_by_id(id=auth_id)
         
-        if auth_token is None:
-            #create a new token
-            auth_token = cls(id=auth_id)
-            auth_token.user_info = user_info
-            auth_token.put()
+        if auth_token is not None:
+            raise Exception('Trying to create a duplicate auth token')
             
+        auth_token = cls(id=auth_id,user_id=user._get_id())
+        auth_token.user_info = user_info
+        auth_token.credentials = credentials
+        auth_token.put()
+        
         return auth_token
     
     @staticmethod
@@ -142,32 +156,17 @@ class AuthProvider(ndb.Model):
     #        self.put()
     #        return self
     #
-    #@classmethod
-    #def _get_by_auth_id(cls, auth_id):
-    #    """Returns a user object based on a auth_id.
-    #
-    #    :param auth_id:
-    #        String representing a unique id for the user. Examples:
-    #
-    #        - own:username
-    #        - google:username
-    #    :returns:
-    #        A user object.
-    #    """
-    #    return cls.query(cls.auth_ids == auth_id).get()
-    #get_by_auth_id = _get_by_auth_id
+    
 
 
 
 class Session(ndb.Model):
     _default_indexed = False
     
-    session_id = ndb.StringProperty(indexed=True)
     created = ndb.DateTimeProperty(auto_now_add=True)
     last_seen = ndb.DateTimeProperty(auto_now=True)
     user_id = ndb.StringProperty()
     data = ndb.PickleProperty(compressed=True, default={}) #used by oauth
-
 
     @staticmethod
     def _generate_sid():
@@ -187,7 +186,7 @@ class Session(ndb.Model):
         return hash(str(self))
 
     def serialize(self):
-        values = self.to_dict(include=['session_id', 'user_id'])
+        values = {'session_id': str(self.key.id())}
         return self._serializer().serialize('_eauth', values)
 
     @classmethod
@@ -197,7 +196,7 @@ class Session(ndb.Model):
     @classmethod
     def get_by_value(cls, value):
         v = cls.deserialize(value)
-        sid = v.get('session_id')   
+        sid = v.get('session_id')
         return cls.get_by_sid(sid) if sid else None
 
     @classmethod
@@ -206,17 +205,18 @@ class Session(ndb.Model):
 
     @classmethod
     def upgrade_to_user_session(cls, session_id, user_id):
-        session = cls.get_by_sid(session_id)
-        session.user_id = user_id
-        session.put()
-        return session
+        old_session = cls.get_by_sid(session_id)
+        old_session.key.delete()
+        new_session = cls(id=session_id,user_id=user_id)
+        new_session.put()
+        return new_session
 
     @classmethod
     def create(cls):
         """Create a session (never happens if we already know who the user is)"""
-        
+        logging.error('creating new session')
         session_id = cls._generate_sid()
-        session = cls(session_id=session_id)
+        session = cls(id=session_id)
         session.put()
         return session
 

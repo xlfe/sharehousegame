@@ -5,6 +5,7 @@ ON_DEV = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 engineauth = {
     'secret_key': 'shaisd8f9as8d9fashd89fahsd9f8asdf9as8df9sa8dfa9schJKSHDAJKSHDJAsd9a8sd9sa',
     'user_model': 'engineauth.models.User',
+    'debug':ON_DEV
 }
 
 engineauth['provider.auth'] = {
