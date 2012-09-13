@@ -48,20 +48,13 @@ def check_user(fn):
     @wraps(fn)  
     def wrapper(self, *args, **kwargs):
         
-        user = self.request.user if self.request.user else None
+      user = self.request.user if self.request.user else None
       
-        if not user:
-            self.render_template('not_logged_in.html')
-            return
-          
-        house = House.get_house_by_user(user)
+      if not user:
+          self.render_template('not_logged_in.html')
+          return
         
-        if house is None:
-            #new user, hasn't setup a house yet -> setup wizzard
-            self.render_template('house_wizzard.html',{'user':user})
-            return
-        
-        return fn(self,*args, **kwargs)
+      return fn(self,*args, **kwargs)
     return wrapper
     
 
@@ -72,8 +65,21 @@ class PageHandler(Jinja2Handler):
         session = self.request.session if self.request.session else None
         user = self.request.user if self.request.user else None
         #auth_tokens = models.AuthProvider.query(ancestor=user._get_key())
+        
+        house = House.get_house_by_user(user)
+        
+        if house is None:
+            #new user, hasn't setup a house yet -> setup wizzard
+            self.redirect('/house-wizzard')
       
         self.render_template('dashboard.html',{'user':user})
+    
+    @check_user
+    def house_wiz(self):
+        
+        user = self.request.user
+        step = self.request.get('step')
+        self.render_template('house_wizzard.html',{'user':user,'step':step})
     
     @check_user
     def profile(self):

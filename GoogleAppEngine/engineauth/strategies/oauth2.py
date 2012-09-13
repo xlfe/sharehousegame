@@ -42,6 +42,19 @@ class OAuth2Strategy(BaseStrategy):
             credentials=req.credentials,
             user=req.user)
         req.get_user_from_auth_token(auth_token)
+        
+        updated=False
+        if req.user.display_name is None:
+            req.user.display_name = user_info['info']['displayName']
+            updated=True
+        if req.user.primary_email is None:
+            req.user.primary_email = user_info['info']['emails'][0]['value']
+            updated=True
+            
+        if updated:
+            req.user.put()
+
+        
         return req.get_redirect_uri()
 
     def handle_request(self, req):

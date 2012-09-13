@@ -1,0 +1,149 @@
+
+{% extends "home.html" %}
+
+{%block main %}
+
+
+    <div class="row">
+        <div class="span9 offset1"><h3>Setup: Your sharehouse</h3></div>
+    </div>
+    
+    <hr>
+    
+    <form class="form-horizontal" id="house-setup">
+        <div class="row">
+            <div class="span9">
+  
+                {% set house_options = [
+                     ('Sharehouse Name', 'houseName','Eg. 42 Awesome Street'),
+                     ]-%}
+                    {% for name, id, placeholder in house_options %}  
+  
+                    <div class="control-group">
+                      <label class="control-label" for="{{id}}">{{name}}</label>
+                      <div class="controls">
+                        <input type="text" id="{{id}}" placeholder="{{placeholder}}">
+                      </div>
+                    </div>
+                {% endfor %}
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="span9">
+         <div class="control-group">
+            <label class="control-label"><strong>Housemates:</strong></label>
+         </div>
+         
+         <div class="control-group" id="housemates">
+            
+        </div>
+        <div class="control-group">
+            <div class="controls">
+            <a href="#" id="add_hm"><i class="icon-black icon-plus-sign"></i> Add another housemate</a>
+            </div>
+        </div>
+    </div>
+    </div>
+  
+  
+  <div class="control-group">
+    <div class="controls">
+      <button type="submit" class="btn btn-success">Save &raquo;</button>
+    </div>
+  </div>
+</form>
+        
+        </div>
+    </div>
+        
+        
+ {%endblock%}
+ 
+ {% block javascript %}
+     
+     <script>
+        
+        var hm_id = 0;
+        
+        function add_hm_row(name,email) {
+        
+            var id = hm_id;
+        
+            
+            $('<div class="control-label"><strong>'+(id+1)+'</strong></div>' +
+            '<div class="controls" style="margin-bottom:10px">'+
+            '<input type="text" class="input-medium" id="hm'+id+'_name" placeholder="Name" value="'+name+'" />&nbsp;' +
+            '<input type="text" id="email_hm_'+id+'" placeholder="Email" value="'+email+'" />' +
+                '</div>')
+            .slideDown()
+            .appendTo('#housemates');
+            
+            hm_id += 1;
+           
+            
+        }
+        
+        add_hm_row('{{user.display_name}}','{{user.primary_email}}');
+        add_hm_row('','');
+        
+        $('#add_hm').live('click',function(){
+            add_hm_row('','');
+        })
+        
+        function check_insert_input() {
+            var any_text = false;
+            
+            $('#housemates > div.controls:last > input').each(function(){
+                if ($.trim($(this).val()) != "") {
+                    any_text = true;
+                }
+            });
+            
+            if (any_text) {
+                add_hm_row('','');
+            }
+        }
+
+        $("#housemates > div.controls").live('keyup','input', function() {
+            setTimeout(check_insert_input,250);
+            
+        });
+        
+        function IsEmail(email) {
+             var regex = /^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+             return regex.test(email);
+        }
+        
+        $('#housemates > div.controls > input').live('blur','[id^=email_]',function(){
+            $(this).debug();
+            
+            if (IsEmail($(this).val())){
+            
+                $(this).addClass("inputSuccess");
+                
+            } else {
+            
+                $(this).addClass("inputError");
+                
+            }
+        });
+
+        
+        $('#house-setup').live('submit',function(e){
+        
+            e.preventDefault();
+            
+          
+                $('#house-setup input').debug();
+                
+        
+        });
+        
+        
+        
+        
+        
+        
+     </script>
+ {% endblock %}

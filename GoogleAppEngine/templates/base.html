@@ -45,16 +45,20 @@
                             
                             {% if user %}
                            <div class="btn-group">
-  <a class="active dropdown-toggle" data-toggle="dropdown" href="#">
-    <button class="btn-inverse btn"><i class="icon-white icon-globe"></i></button> </a>
-  <ul class="dropdown-menu">
-  <li> <a>Notification one</a></li>
-  <li> <a>Notification one</a></li>
-  <li> <a>Notification one</a></li>
-  <li> <a>Notification one</a></li>
-  <li> <a>Notification one</a></li>
-  </ul>
-</div>   
+                            
+                            <button class="btn-inverse btn">
+                                {{user.display_name}} </button>
+                            <button class="btn btn-inverse dropdown-toggle" data-toggle="dropdown">
+                                <i class="icon-white icon-globe"></i>
+                            </button> 
+                                <ul class="dropdown-menu">
+                                <li> <a>Notification one</a></li>
+                                <li> <a>Notification one</a></li>
+                                <li> <a>Notification one</a></li>
+                                <li> <a>Notification one</a></li>
+                                <li> <a>Notification one</a></li>
+                                </ul>
+                              </div>   
                             {% endif %}
                             
                            
