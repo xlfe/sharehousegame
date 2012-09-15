@@ -22,7 +22,7 @@
                     <div class="control-group">
                       <label class="control-label" for="{{id}}">{{name}}</label>
                       <div class="controls">
-                        <input type="text" id="{{id}}" placeholder="{{placeholder}}">
+                        <input type="text" form="house-setup" name="{{id}}" placeholder="{{placeholder}}">
                       </div>
                     </div>
                 {% endfor %}
@@ -49,7 +49,7 @@
   
   <div class="control-group">
     <div class="controls">
-      <button type="submit" class="btn btn-success">Save &raquo;</button>
+      <button type="submit" form="house-setup" class="btn btn-success">Save &raquo;</button>
     </div>
   </div>
 </form>
@@ -73,8 +73,8 @@
             $('<div class="control-group">' +
             '<div class="control-label"><strong>'+(id+1)+'</strong></div>' +
             '<div class="controls">'+
-            '<input type="text" class="input-medium" id="hm'+id+'_name" placeholder="Name" value="'+name+'" />&nbsp;' +
-            '<input type="text" id="email_hm_'+id+'" placeholder="Email" value="'+email+'" />' +
+            '<input type="text" form="house-setup" class="input-medium" name="hm'+id+'_name" placeholder="Name" value="'+name+'" />&nbsp;' +
+            '<input type="text" form="house-setup" name="email_hm_'+id+'" placeholder="Email" value="'+email+'" />' +
                 '</div></div>')
             .slideDown()
             .appendTo('#housemates');
@@ -115,7 +115,7 @@
              ///^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
              return regex.test(email);
         }
-        var errors_found = false;
+        var errors_found = true;
         
         function success_error(what,which,message){
             $(what).parent().parent().removeClass('success');
@@ -132,7 +132,7 @@
             }
         }
         
-        $('#housemates > div.control-group > div.controls > input[id^=email]').live('blur','',function(){
+        $('#housemates > div.control-group > div.controls > input[name^=email]:not(:last)').live('blur','',function(){
             
             if ($(this).prev().val() == "") {
                 success_error(this,'error');
@@ -150,7 +150,7 @@
             
             var prev_emails = new Array();
             
-            $('#housemates input[id^=email]').each(function(){
+            $('#housemates input[name^=email]').each(function(){
                 var email = $.trim($(this).val())
 
                 for(var i=0; i<prev_emails.length; i++){
@@ -165,14 +165,63 @@
             
             return true;
         });
+        
+        function remove_on_text(what) {
+
+            if ($.trim($(what).val()) != "") {
+                   
+                       $(what).parent().children('span').remove();
+                       $(what).parent().parent().removeClass('error');
+                }
+        }
+        
+        function check_housename() {
+        
+             var what = $('#house-setup input[name=houseName]');
+            
+            if ($.trim(what.val()) == "") {
+                what.parent().parent().addClass('error');
+                $('<span class="help-inline">Please enter a name for your house</span>').insertAfter($(what)).fadeIn();
+                
+                $(what).on('keyup','',function(){remove_on_text(this)});
+                
+                return false;
+            }
+            return true;
+        }
 
         
         $('#house-setup').live('submit',function(e){
         
             e.preventDefault();
-            
+            var validation_failed = false;
+           if (check_housename() == false) {
+                validation_failed = true;
+           }
+           
           
-                $('#house-setup input').debug();
+           var what = $('#house-setup input[name=hm1_name]');
+           if ($.trim(what.val()) == "") {
+                what.parent().parent().addClass('error');
+                $('<span class="help-inline">Please enter your housemates details</span>').insertAfter($(what.next())).fadeIn();
+                
+                $(what).on('keyup','',function(){remove_on_text(this)});
+                validation_failed = true;
+                
+           }
+            
+            if (errors_found == true || validation_failed == true) {
+            
+                $('#house-setup button').addClass('btn-error');
+                $('#house-setup button').removeClass('btn-success');
+                
+            } else {
+                $('#house-setup button').addClass('btn-success');
+                $('#house-setup button').removeClass('btn-error');
+                
+            }
+            
+            post_form('/api?what=house-setup','form#house-setup','#housemates');
                 
         
         });

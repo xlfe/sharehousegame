@@ -4,6 +4,7 @@ from webapp2_extras import jinja2
 from engineauth import models
 from google.appengine.ext import ndb
 from house import House
+import json
 
 class Jinja2Handler(webapp2.RequestHandler):
     """
@@ -63,7 +64,63 @@ def check_user(fn):
         
         return fn(self,*args, **kwargs)
     return wrapper
+
+
+def parse_form_data(data):
+        
+        if len(data) == 0:
+            return
+        
+        form_data = {}
+        data = json.loads(data)
+        
+        for item in data:
+            for k,v in item.items():
+                form_data[k] = v
+        
+        
+        return form_data
+
+
+class API(webapp2.RequestHandler):
     
+    def api(self):
+        
+        resp = {'redirect':''}
+        user = self.request.user if self.request.user else None
+        
+        if user:
+            
+            what = self.request.get('what')
+            
+            if what == "house-setup":
+                
+                name = self.request.get('houseName')
+                
+                housemates = []
+                i = 0
+                
+                while True:
+                    hm_name,hm_email = self.request.get('hm{0}_name'.format(i),None),self.request.get('hm{0}_email'.format(i),None)
+                    
+                    if not (hm_name or hm_email):
+                        break
+                    
+                    if len(hm_name) > 0:
+                        housemates.append([hm_name,hm_email])
+                    i+=1
+                    
+                
+                
+                
+                resp = {
+                    'redirect':'/',
+                    'success':'House created {0} with {1} housemates'.format(name,i)
+                }
+        
+        self.response.out.write(json.dumps(resp)) #self.request.params)
+
+        
 
 class PageHandler(Jinja2Handler):
     

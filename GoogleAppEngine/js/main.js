@@ -1,22 +1,11 @@
 
 
-  function post_form(action,select,filter,response_object){
+  function post_form(action,form,response_object){
     
-	var items = [];
-        
-	$(select).filter(filter).each(function(){
-            
-            var item = {};
-            
-            item[ $(this).attr('id') ] = $(this).val();
-            items.push(item);
-          
-        });
-
 	$.ajax( {
           type: 'POST',
           url: action,
-          data: {form_data:JSON.stringify(items)},
+          data: $(form).serialize(),
           dataType: "json",
           success: function(responseText){
             
@@ -26,7 +15,7 @@
             if (response['success'] != "") {
                 message = $('<div class="alert alert-success"><strong>Success!</strong> ' +
                   response['success'] +
-                  '.</div>').fadeIn('fast').insertAfter($("#"+response_object));
+                  '.</div>').fadeIn('fast').insertAfter($(response_object));
 
             }
             
