@@ -48,7 +48,7 @@ class OAuth2Strategy(BaseStrategy):
             req.user.display_name = user_info['info']['displayName']
             updated=True
         if req.user.primary_email is None:
-            req.user.primary_email = user_info['info']['emails'][0]['value']
+            req.user.primary_email = user_info['info']['email']
             updated=True
             
         if updated:

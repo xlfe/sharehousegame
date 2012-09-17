@@ -13,7 +13,7 @@
       <ul class="nav nav-list">
        
         {% set menu_links = [
-        ('Your house', '','icon-home'),
+        ( house.name|truncate(length=18, killwords=False, end='...'), '','icon-home'),
         ('Rent and bills','rentbills','icon-list-alt'),
         ('Tasks','tasks','icon-check'),
         ('Shopping','shopping','icon-shopping-cart'),

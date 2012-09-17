@@ -72,6 +72,7 @@ class User(ndb.Model):
         new_user = cls()
         new_user.put()
         new_user.insert_points_transaction(points=100,desc='Joined Sharehouse Game!')
+        logging.info('New user signed up - userid:{0}'.format(cls._get_id()))
         return new_user
     
     def points_log(self):
@@ -124,6 +125,7 @@ class AuthProvider(ndb.Model):
     user_id = ndb.IntegerProperty(indexed=True)
     user_info = ndb.JsonProperty(indexed=False, compressed=True)
     credentials = ndb.PickleProperty()
+    password_hash = ndb.StringProperty(indexed=False)
 
     @classmethod
     def _get_by_auth_id(cls, auth_id):
@@ -133,17 +135,16 @@ class AuthProvider(ndb.Model):
     get_by_auth_id = _get_by_auth_id
 
     @classmethod
-    def _create(cls,user, auth_id,user_info,credentials):
+    def _create(cls, user, auth_id, **kwargs):
         """Create an auth_token, must specify a user_id"""
         
         auth_token = cls.get_by_id(id=auth_id)
         
-        if auth_token is not None:
+        if auth_token:
             raise Exception('Trying to create a duplicate auth token')
             
         auth_token = cls(id=auth_id,user_id=user._get_id())
-        auth_token.user_info = user_info
-        auth_token.credentials = credentials
+        auth_token.populate(kwargs)
         auth_token.put()
         
         return auth_token
