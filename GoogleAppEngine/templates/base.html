@@ -47,18 +47,29 @@
                            <div class="btn-group">
                             
                             <button class="btn-inverse btn">
-                                {{user.display_name}} </button>
+                                    <span title="Your current points balance" class="label label-success">
+                                        {{ user.points_balance() }} pts</span>
+                                    <span>{{user.display_name}}</span>
+                            </button>
                             <button class="btn btn-inverse dropdown-toggle" data-toggle="dropdown">
                                 <i class="icon-white icon-globe"></i>
                             </button> 
                                 <ul class="dropdown-menu">
-                                <li> <a>Notification one</a></li>
-                                <li> <a>Notification one</a></li>
-                                <li> <a>Notification one</a></li>
-                                <li> <a>Notification one</a></li>
-                                <li> <a>Notification one</a></li>
+                                    
+                                    {% for p in user.points_log() %}
+                                    
+                                    <li> <a title="{{p.when}}">
+                                    {%if p.points > 0 %}
+                                        <span class="label label-success">
+                                    {%else%}
+                                        <span class="label label-warning">
+                                    {%endif%}
+                                    {{p.points}}</span> {{p.desc}}
+                                
+                                    </a></li>
+                                {%endfor%}
                                 </ul>
-                              </div>   
+                              </div>
                             {% endif %}
                             
                            

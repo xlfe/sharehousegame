@@ -14,3 +14,8 @@ indexes:
   ancestor: yes
   properties:
   - name: when
+
+- kind: Points
+  ancestor: yes
+  properties:
+  - name: when
