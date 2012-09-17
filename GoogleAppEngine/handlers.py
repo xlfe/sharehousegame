@@ -3,8 +3,10 @@ import webapp2
 from webapp2_extras import jinja2
 from engineauth import models
 from google.appengine.ext import ndb
-from house import House
+from house import House,HouseUser,HouseLog,add_house_event
 import json
+import logging
+from functools import wraps
 
 class Jinja2Handler(webapp2.RequestHandler):
     """
@@ -41,9 +43,6 @@ class Jinja2Handler(webapp2.RequestHandler):
         self.response.headers.add_header('content-type', 'application/json', charset='utf-8')
         self.response.out.write(json)
 
-import logging
-
-from functools import wraps
 
 def check_user(fn):
     @wraps(fn)  
@@ -55,7 +54,7 @@ def check_user(fn):
             self.render_template('not_logged_in.html')
             return
           
-        house = House.get_house_by_user(user)
+        house = user._get_house_id()
         
         if house is None:
             #new user, hasn't setup a house yet -> setup wizzard
@@ -95,26 +94,37 @@ class API(webapp2.RequestHandler):
             
             if what == "house-setup":
                 
+                if user._get_house_id():
+                    return
+                
+                
                 name = self.request.get('houseName')
                 
                 housemates = []
                 i = 0
                 
                 while True:
-                    hm_name,hm_email = self.request.get('hm{0}_name'.format(i),None),self.request.get('hm{0}_email'.format(i),None)
+                    hm_name,hm_email = self.request.get('hm{0}_name'.format(i),None),self.request.get('email_hm_{0}'.format(i),None)
                     
                     if not (hm_name or hm_email):
                         break
                     
                     if len(hm_name) > 0:
-                        housemates.append([hm_name,hm_email])
+                        hu = HouseUser(name = hm_name,email=hm_email)
+                        housemates.append(hu)
                     i+=1
                     
+                if len(housemates) > 0:
+                    house = House(name = name,users=housemates)
+                    house.put()
+                    
+                user.house_id = house.get_house_id()
+                user.put()
                 
-                
+                add_house_event(user.house_id,user._get_id(),'setup the house',None)
                 
                 resp = {
-                    'redirect':'/',
+                    'redirect':'',
                     'success':'House created {0} with {1} housemates'.format(name,i)
                 }
         
@@ -125,23 +135,12 @@ class API(webapp2.RequestHandler):
 class PageHandler(Jinja2Handler):
     
     @check_user    
-    def dashboard(self):
-        session = self.request.session if self.request.session else None
-        user = self.request.user if self.request.user else None
-        #auth_tokens = models.AuthProvider.query(ancestor=user._get_key())
-      
-        self.render_template('dashboard.html',{'user':user})
-    
-    @check_user
-    def profile(self):
-        
-        user = self.request.user if self.request.user else None
-        self.render_template('profile.html',{'user':user})
-    
-    @check_user
-    def rentbills(self):
-        self.profile()
-    
+    def main(self):
+        session = self.request.session
+        user = self.request.user
+        house = House._get_house_by_id(user._get_house_id())
+
+        self.render_template('{0}.html'.format(self.request.route.name),{'user':user,'house':house})
     
     def logout(self):        
         session=self.request.session if self.request.session else None

@@ -5,9 +5,56 @@
 
 
     <div class="row">
-        <div class="span5 offset1"><h1> your sharehouse</h1>
+        <div class="span5 offset1"><h1> {{house.name}} </h1>    </div>
+    </div>
+    
+    <div class="row">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+
+
+        {% for u in house.users %}
+            <tr>
+                <td></td>
+                <td>{{u.name}}</td>
+                <td></td>
+            </tr>
+        {%endfor%}
+            </tbody>
+        </table>        
+    </div>
+    
+    <div class="row">
+        <div class="span5 offset1"><h3>Recent activity</h3></div>
+    </div>
+    <div class="row">
+         <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>When</th>
+                    <th>What</th>
+                </tr>
+            </thead>
+            <tbody>
+
+            {% for a in house.recent_activity() %}
         
-        </div>
+            <tr>
+                <td>{{a.when}}</td>
+                <td>{{a.who}} {{a.desc}}</td>
+            </tr>
+        {%endfor%}
+            </tbody>
+        </table>   
+       
+        
     </div>
         
         

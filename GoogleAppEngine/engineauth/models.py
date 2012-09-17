@@ -42,6 +42,7 @@ class User(ndb.Model):
     updated = ndb.DateTimeProperty(auto_now=True)
     primary_email = ndb.StringProperty(indexed=True)
     display_name = ndb.StringProperty()
+    house_id = ndb.StringProperty()
 
     #authenticated = ndb.BooleanProperty(default=False)
     
@@ -49,9 +50,18 @@ class User(ndb.Model):
         """Returns this user's unique ID, which can be an integer or string."""
         return str(self.key.id())
     
+    def _get_house_id(self):
+        return self.house_id
+    
     def _get_key(self):
         """gets the key for the user (ID and entity type)"""
         return self.key
+    
+    @classmethod
+    def _get_first_name(cls,user_id):
+        
+        user = cls._get_user_from_id(user_id)
+        return user.display_name.split(' ')[0]
     
     @classmethod
     def _create(cls):
