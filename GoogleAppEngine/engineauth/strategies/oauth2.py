@@ -36,6 +36,7 @@ class OAuth2Strategy(BaseStrategy):
         req.credentials = flow.step2_exchange(req.params)
         
         user_info = self.user_info(req)
+                
         auth_token = self.get_or_create_auth_token(
             auth_id=user_info['auth_id'],
             user_info=user_info,

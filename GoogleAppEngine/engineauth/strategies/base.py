@@ -50,6 +50,12 @@ class BaseStrategy(object):
         existing_at = models.AuthProvider.get_by_auth_id(auth_id)
         existing_user = user
         
+        duplicate_user = models.User._get_user_from_email(user_info['info']['email'])
+        
+        if duplicate_user:
+            if existing_at.user_id != duplicate_user._get_id():
+                return self.raise_error('Please login before attempting to add a second authentication method to your account.')
+        
         if existing_at and existing_user:
             #if the user is logged on, and the at is for that user, do nothing
             if existing_at.user_id == existing_user._get_id():
@@ -79,4 +85,4 @@ class BaseStrategy(object):
         
     def raise_error(self,error):
         logging.error(error)
-        pass
+        raise Exception(error)

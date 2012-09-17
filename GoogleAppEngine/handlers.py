@@ -58,7 +58,7 @@ def check_user(fn):
         
         if house is None:
             #new user, hasn't setup a house yet -> setup wizzard
-            self.render_template('house_wizzard.html',{'user':user})
+            self.render_template('house_wizzard.html',{'user':user,'house':{'name':'Your House'}})
             return
         
         return fn(self,*args, **kwargs)
@@ -115,6 +115,9 @@ class API(webapp2.RequestHandler):
                     if len(hm_name) > 0:
                         
                         if hm_name == my_name or hm_email == my_email:
+                            if my_name.strip() == "":
+                                user.display_name = hm_name
+                            
                             i+=1
                             continue
                         else:
@@ -122,7 +125,7 @@ class API(webapp2.RequestHandler):
                         housemates.append(hu)
                     i+=1
                 
-                if len(housemates) > 1:
+                if len(housemates) > 0:
                     hse = house.House(name = name,invited_users=housemates,users=[user._get_id()])
                     hse.put()
                     

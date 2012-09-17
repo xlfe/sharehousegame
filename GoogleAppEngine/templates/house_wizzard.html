@@ -3,19 +3,22 @@
 
 {%block main %}
 
+    <ul class="nav nav-tabs" id="tabs">
+      <li class="active"><a href="#new">Setup a new sharehouse</a></li>
+      <li><a href="#existing">Join an existing sharehouse</a></li>
+    </ul>
+ 
+    <div class="tab-content">
+      <div class="tab-pane active" id="new">
 
-    <div class="row">
-        <div class="span9 offset1"><h3>Setup: Your sharehouse</h3></div>
-    </div>
-    
-    <hr>
+
     
     <form class="form-horizontal" id="house-setup">
         <div class="row">
             <div class="span9">
   
                 {% set house_options = [
-                     ('Sharehouse Name', 'houseName','Eg. 42 Awesome Street'),
+                     ('House Name', 'houseName','Eg. 42 Awesome Street'),
                      ]-%}
                     {% for name, id, placeholder in house_options %}  
   
@@ -26,37 +29,39 @@
                       </div>
                     </div>
                 {% endfor %}
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="span9">
-         <div class="control-group">
-            <label class="control-label"><strong>Housemates:</strong></label>
-         </div>
-         
-         <div class="control-group" id="housemates">
-            
-        </div>
-        <div class="control-group">
-            <div class="controls">
-            <a href="#" id="add_hm"><i class="icon-black icon-plus-sign"></i> Add another housemate</a>
             </div>
         </div>
-    </div>
-    </div>
+    
+        <div class="row">
+          <div class="span9">
+            <div class="control-group">
+              <label class="control-label"><strong>Housemates:</strong></label>
+            </div>
+            <div class="control-group" id="housemates">
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <a href="#" id="add_hm"><i class="icon-black icon-plus-sign"></i> Add another housemate</a>
+                </div>
+            </div>
   
-  
-  <div class="control-group">
-    <div class="controls">
-      <button type="submit" form="house-setup" class="btn btn-success">Save &raquo;</button>
-    </div>
-  </div>
-</form>
         
+            <div class="control-group">
+              <div class="controls">
+                <button type="submit" form="house-setup" class="btn btn-success">Save &raquo;</button>
+              </div>
+            </div>
         </div>
-    </div>
+          </div>
+      </form>
+              
+      </div>
+      <div class="tab-pane" id="existing">
         
+      </div>
+  
+</div>
+
         
  {%endblock%}
  
@@ -208,6 +213,16 @@
                 validation_failed = true;
                 
            }
+           
+           var what = $('#house-setup input[name=hm0_name]');
+            if ($.trim(what.val()) == "") {
+                what.parent().parent().addClass('error');
+                $('<span class="help-inline">Please enter your details</span>').insertAfter($(what.next())).fadeIn();
+                
+                $(what).on('keyup','',function(){remove_on_text(this)});
+                validation_failed = true;
+                
+           }
             
             if (errors_found == true || validation_failed == true) {
             
@@ -226,7 +241,12 @@
         });
         
         
-        
+  
+  
+  $('#tabs a').click(function (e) {
+  e.preventDefault();
+  $(this).tab('show');
+})
         
         
         

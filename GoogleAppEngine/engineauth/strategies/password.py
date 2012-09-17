@@ -13,9 +13,8 @@ from __future__ import absolute_import
 from engineauth import models
 from engineauth.strategies.base import BaseStrategy
 from webapp2_extras import security
+import logging
 
-
-__author__ = 'kyle.finley@gmail.com (Kyle Finley)'
 
 
 class PasswordStrategy(BaseStrategy):
@@ -23,10 +22,10 @@ class PasswordStrategy(BaseStrategy):
     def user_info(self, req):
         user_info = {
             'email' : req.POST['email']
-            ,'displayName':req.POST['name']
+            #,'displayName':req.POST['name']
         }
         
-        auth_id = models.AuthProvider.generate_auth_id(req.provider, email)
+        auth_id = models.AuthProvider.generate_auth_id(req.provider, user_info['email'])
         
         return {
             'auth_id': auth_id,
@@ -37,7 +36,8 @@ class PasswordStrategy(BaseStrategy):
         """
         
         """
-        password_hash = security.generate_password_hash(kwargs.pop('password'), length=64)
+        pepper='IOASJoasjdioajsd(A*S9a8sd9hasudhasih2i1h2ueh1*A(S*D('
+        password = kwargs.pop('password')        
         existing_user = kwargs.pop('user')
         
         auth_token = models.AuthProvider._get_by_auth_id(auth_id)
@@ -46,7 +46,8 @@ class PasswordStrategy(BaseStrategy):
             # We haven't seen this email address used to authenticate before
             
             # Check for an existing user with this email address as their primary email address
-            duplicate_user = models.User.query(primary_email = user_info['email'])
+            duplicate_user = models.User._get_user_from_email(user_info['email'])
+            logging.error(duplicate_user)
             
             if duplicate_user:
                 #if the existing user is not the logged in user, don't continue
@@ -58,15 +59,16 @@ class PasswordStrategy(BaseStrategy):
                 associate_user = existing_user
             else:
                 associate_user = models.User._create()
-                associate_user.display_name = user_info['displayName']
+             #   associate_user.display_name = user_info['displayName']
                 associate_user.primary_email = user_info['email']
                 associate_user.put()
-            
+                
+            password_hash = security.generate_password_hash(password=password,pepper=pepper)
             auth_token = models.AuthProvider._create(user=associate_user,auth_id=auth_id,user_info=user_info,password_hash=password_hash)
         else:
             #Check the password hash against what we've got...
             
-            if not security.check_password_hash(password, profile.password):
+            if not security.check_password_hash(password,auth_token.password_hash,pepper):
                 return self.raise_error('We were unable to log you on using the supplied email address and password.')
         
         return auth_token
@@ -92,7 +94,7 @@ class PasswordStrategy(BaseStrategy):
         user_info = self.user_info(req)
         auth_token = self.get_or_create_auth_token(
             auth_id=user_info['auth_id'],
-            user_info=user_info,
+            user_info=user_info['info'],
             password=password,
             user=req.user)
         req._get_user_from_auth_token(auth_token)

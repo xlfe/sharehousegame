@@ -1,0 +1,9 @@
+
+Add email notification and verification
+
+add persistent variable to show if joining and existing sharehouse
+add data model to backup existing sharehouse (ie maybe a password or something?)
+
+
+Add some way of the auth mechanism knowing if they are attempting to sign in or join
+-> if you click facebook after login but you meant to use email, then you'll create a new account...

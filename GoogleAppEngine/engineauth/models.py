@@ -72,7 +72,7 @@ class User(ndb.Model):
         new_user = cls()
         new_user.put()
         new_user.insert_points_transaction(points=100,desc='Joined Sharehouse Game!')
-        logging.info('New user signed up - userid:{0}'.format(cls._get_id()))
+        logging.info('New user signed up - userid:{0}'.format(new_user._get_id()))
         return new_user
     
     def points_log(self):
@@ -105,6 +105,16 @@ class User(ndb.Model):
         """Gets a user based on their ID"""
         
         return cls.get_by_id(int(id))
+        
+    @classmethod
+    def _get_user_from_email(cls,email):
+        """returns a user based on their primary email"""
+        try:
+            return cls.query(cls.primary_email == email).iter().next()
+        except StopIteration:
+            return None
+        
+        
     
 class Points(ndb.Model):
     _default_indexed=False
@@ -144,7 +154,7 @@ class AuthProvider(ndb.Model):
             raise Exception('Trying to create a duplicate auth token')
             
         auth_token = cls(id=auth_id,user_id=user._get_id())
-        auth_token.populate(kwargs)
+        auth_token.populate(**kwargs)
         auth_token.put()
         
         return auth_token
