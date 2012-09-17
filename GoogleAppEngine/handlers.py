@@ -127,13 +127,13 @@ class API(webapp2.RequestHandler):
                     hse.put()
                     
                 user.house_id = hse.get_house_id()
-                user.insert_points_transaction(100,'Setting up your sharehouse')
                 user.put()
                 
-                hse.add_house_event(user._get_id(),'setup the house',None)
+                user.insert_points_transaction(points=100,desc='Setup your sharehouse')
+                hse.add_house_event(user_id=user._get_id(),desc='setup the house',points=100)
                 
                 resp = {
-                    'redirect':'',
+                    'redirect':'?home',
                     'success':'House created {0} with {1} housemates'.format(name,i)
                 }
         
@@ -148,7 +148,7 @@ class PageHandler(Jinja2Handler):
         session = self.request.session
         user = self.request.user
         hse = house.House._get_house_by_id(user._get_house_id())
-        
+
         self.render_template('{0}.html'.format(self.request.route.name if self.request.route.name != '' else 'dashboard'),{'user':user,'house':hse})
     
     def logout(self):        

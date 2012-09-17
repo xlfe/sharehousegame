@@ -1,0 +1,9 @@
+
+{% macro points(pts) -%}
+  {%if pts > 0 %}
+    <span class="label label-success">
+  {%else%}
+    <span class="label label-warning">
+  {%endif%}
+  {{pts}} pts</span>
+{%- endmacro %}

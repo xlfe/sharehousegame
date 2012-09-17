@@ -71,6 +71,7 @@ class User(ndb.Model):
         
         new_user = cls()
         new_user.put()
+        new_user.insert_points_transaction(points=100,desc='Joined Sharehouse Game!')
         return new_user
     
     def points_log(self):
@@ -120,7 +121,7 @@ class AuthProvider(ndb.Model):
     for a User - each user may have multiple AuthProviders
     """
     _default_indexed = False
-    user_id = ndb.StringProperty(indexed=True)
+    user_id = ndb.IntegerProperty(indexed=True)
     user_info = ndb.JsonProperty(indexed=False, compressed=True)
     credentials = ndb.PickleProperty()
 
@@ -210,7 +211,7 @@ class Session(ndb.Model):
     
     created = ndb.DateTimeProperty(auto_now_add=True)
     last_seen = ndb.DateTimeProperty(auto_now=True)
-    user_id = ndb.StringProperty()
+    user_id = ndb.IntegerProperty()
     data = ndb.PickleProperty(compressed=True, default={}) #used by oauth
 
     @staticmethod

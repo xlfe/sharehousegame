@@ -9,9 +9,6 @@ class InvitedUser(ndb.Model):
     email = ndb.StringProperty()
     invited = ndb.DateTimeProperty()
     
-    def points_balance(self):
-        return 'Not signed up yet'
-
 
 class House(ndb.Model):
     created = ndb.DateTimeProperty(auto_now_add = True, indexed=False)
@@ -35,13 +32,14 @@ class House(ndb.Model):
             a = {'who':models.User._get_first_name(h.user_id)
                  ,'when':prettydate(h.when)
                  ,'desc':h.desc
+                 ,'points':h.points
                  ,'link':h.link}
             ra.append(a)
             
         return ra
     
-    def add_house_event(self,user_id,desc,link):
-        hl = HouseLog(parent=self.key,user_id=user_id,desc=desc,link=link)
+    def add_house_event(self,user_id,desc,points,link=None):
+        hl = HouseLog(parent=self.key,user_id=user_id,points=points,desc=desc,link=link)
         hl.put()
     
     def get_users(self):
@@ -58,6 +56,7 @@ class HouseLog(ndb.Model):
     when = ndb.DateTimeProperty(auto_now_add=True,indexed=True)
     desc = ndb.StringProperty(indexed=False)
     link = ndb.StringProperty(indexed=False)
+    points = ndb.IntegerProperty(indexed=False)
 
         
     

@@ -1,3 +1,5 @@
+{% import 'helpers/points.html' as points_helper %}
+
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
@@ -47,8 +49,7 @@
                            <div class="btn-group">
                             
                             <button class="btn-inverse btn">
-                                    <span title="Your current points balance" class="label label-success">
-                                        {{ user.points_balance() }} pts</span>
+                                    {{ points_helper.points(user.points_balance()) }}
                                     <span>{{user.display_name}}</span>
                             </button>
                             <button class="btn btn-inverse dropdown-toggle" data-toggle="dropdown">
@@ -59,12 +60,8 @@
                                     {% for p in user.points_log() %}
                                     
                                     <li> <a title="{{p.when}}">
-                                    {%if p.points > 0 %}
-                                        <span class="label label-success">
-                                    {%else%}
-                                        <span class="label label-warning">
-                                    {%endif%}
-                                    {{p.points}}</span> {{p.desc}}
+                                   
+                                    {{ points_helper.points(p.points) }} {{p.desc}}
                                 
                                     </a></li>
                                 {%endfor%}

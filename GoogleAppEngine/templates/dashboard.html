@@ -14,7 +14,6 @@
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th></th>
                     <th>Name</th>
                     <th>Points</th>
                 </tr>
@@ -23,18 +22,16 @@
                 
         {% for u in house.get_users() %}
             <tr>
-                <td></td>
                 <td>{{u.get_first_name()}}</td>
-                <td>{{u.points_balance()}}</td>
+                <td>{{ points_helper.points(u.points_balance())}}</td>
             </tr>
         {%endfor%}
 
 
         {% for u in house.invited_users %}
             <tr>
-                <td></td>
                 <td>{{u.name}}</td>
-                <td>{{u.points_balance()}}</td>
+                <td>Hasn't joined the game yet (<a>remind</a>)</td>
             </tr>
         {%endfor%}
             </tbody>
@@ -56,7 +53,7 @@
         
             <tr>
                 <td>{{a.when}}</td>
-                <td>{{a.who}} {{a.desc}}</td>
+                <td>{{ points_helper.points(a.points) }} {{a.who}} {{a.desc}}</td>
             </tr>
         {%endfor%}
             </tbody>
