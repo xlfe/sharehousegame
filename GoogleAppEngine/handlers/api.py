@@ -3,32 +3,32 @@ import webapp2
 import json
 import logging
 import session
-from models import house,user
+from models import authprovider,house,user
 
 
 
 class API(webapp2.RequestHandler):
     
-    @session.user
+    @session.manage_user
     def api(self):
         
         resp = {'redirect':''}
-        user = self.request.user if self.request.user else None
+        session_user = self.request.session.user
         
-        if user:
+        if session_user:
             
             what = self.request.get('what')
             
             if what == "house-setup":
                 
-                if user._get_house_id():
+                if session_user._get_house_id():
                     logging.error('User already has house_id, should not be in house setup userid {0}'.format(user._get_id()))
                     return
                 
                 name = self.request.get('houseName')
                 
-                my_name = user.display_name
-                my_email = user.primary_email
+                my_name = session_user.display_name
+                my_email = session_user.primary_email
                 
                 housemates = []
                 i = 0
@@ -43,7 +43,7 @@ class API(webapp2.RequestHandler):
                         
                         if hm_name == my_name or hm_email == my_email:
                             if not my_name or my_name.strip() == "":
-                                user.display_name = hm_name
+                                session_user.display_name = hm_name
                             
                             i+=1
                             continue
@@ -53,14 +53,14 @@ class API(webapp2.RequestHandler):
                     i+=1
                 
                 if len(housemates) > 0:
-                    hse = house.House(name = name,invited_users=housemates,users=[user._get_id()])
+                    hse = house.House(name = name,invited_users=housemates,users=[session_user._get_id()])
                     hse.put()
                     
-                user.house_id = hse.get_house_id()
-                user.put()
+                session_user.house_id = hse.get_house_id()
+                session_user.put()
                 
-                user.insert_points_transaction(points=100,desc='Setup your sharehouse')
-                hse.add_house_event(user_id=user._get_id(),desc='setup the house',points=100)
+                session_user.insert_points_transaction(points=100,desc='Setup your sharehouse')
+                hse.add_house_event(user_id=session_user._get_id(),desc='setup the house',points=100)
                 
                 resp = {
                     'redirect':'?home',
@@ -74,8 +74,8 @@ class API(webapp2.RequestHandler):
 
 def wipe_datastore():
     w = [
-#        models.AuthProvider.query().fetch()
-        house.House.query().fetch()
+        authprovider.AuthProvider.query().fetch()
+    ,   house.House.query().fetch()
     ,   house.HouseLog.query().fetch()
     ,   user.Points.query().fetch()
     ,   session.Session.query().fetch()
@@ -85,6 +85,7 @@ def wipe_datastore():
     for t in w:
         for i in t:
             i.key.delete()
+            print i.key
 
 class WipeDSHandler(webapp2.RequestHandler):
 

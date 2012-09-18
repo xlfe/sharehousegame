@@ -18,8 +18,7 @@ class EngineAuthRequest(webapp2.Request):
     def _get_user_from_auth_token(self, auth_token):
         """Match a session to an auth token"""
         
-        self.user = models.User._get_user_from_id(auth_token.user_id)
-        self.session.user_id = self.user._get_id()
+   
         
     get_user_from_auth_token = _get_user_from_auth_token
 

@@ -1,6 +1,7 @@
 from google.appengine.ext import ndb
 
 from shg_utils import prettydate
+from models import user as _user
 
 class InvitedUser(ndb.Model):
     _default_indexed=False
@@ -29,7 +30,7 @@ class House(ndb.Model):
         ra = []
         
         for h in HouseLog.query(ancestor=self.key).order(HouseLog.when):
-            a = {'who':models.User._get_first_name(h.user_id)
+            a = {'who':_user.User._get_first_name(h.user_id)
                  ,'when':prettydate(h.when)
                  ,'desc':h.desc
                  ,'points':h.points
@@ -45,7 +46,7 @@ class House(ndb.Model):
     def get_users(self):
         user_list = []
         for u in self.users:
-            user_list.append(models.User._get_user_from_id(u))
+            user_list.append(_user.User._get_user_from_id(u))
         return user_list
             
         

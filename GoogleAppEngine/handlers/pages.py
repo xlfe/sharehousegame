@@ -5,7 +5,7 @@ from google.appengine.ext import ndb
 import json
 import logging
 import session
-import models
+from models import house
 
 class Jinja2Handler(webapp2.RequestHandler):
     """
@@ -53,18 +53,26 @@ class PageHandler(Jinja2Handler):
     
     @session.manage_user    
     def main(self):
+        
         session = self.request.session
-        user = self.request.user
-        hse = house.House._get_house_by_id(user._get_house_id())
+        
+        if not session.user:
+            self.render_template('not_logged_in.html')
+            return
+          
+        hse_id = self.request.session.user._get_house_id()
+        
+        if hse_id is None:
+            #new user, hasn't setup a house yet -> setup wizzard
+            self.render_template('house_wizzard.html',{'user':session.user,'house':{'name':'Your House'}})
+            return
+        
+        hse = house.House._get_house_by_id(hse_id)
 
-        self.render_template('{0}.html'.format(self.request.route.name if self.request.route.name != '' else 'dashboard'),{'user':user,'house':hse})
+        self.render_template('{0}.html'.format(self.request.route.name if self.request.route.name != '' else 'dashboard'),
+                             {'user':session.user,'house':hse})
     
-    def logout(self):        
-        session=self.request.session if self.request.session else None
-        if session is not None:
-            session.user_id=None
-            session.put()
-        self.redirect('/')
+ 
 
 
 

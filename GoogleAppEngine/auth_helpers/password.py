@@ -13,8 +13,16 @@ from __future__ import absolute_import
 from webapp2_extras import security
 import webapp2
 import logging
+from models import authprovider, user as _user
 
 class PasswordAuth(webapp2.RequestHandler):
+    
+    
+    @property
+    def options(self):
+        return {
+            'provider':'password'
+        }
 
     def user_info(self, req):
         user_info = {
@@ -22,7 +30,7 @@ class PasswordAuth(webapp2.RequestHandler):
             #,'displayName':req.POST['name']
         }
         
-        auth_id = models.AuthProvider.generate_auth_id(req.provider, user_info['email'])
+        auth_id = authprovider.AuthProvider.generate_auth_id(self.options['provider'], user_info['email'])
         
         return {
             'auth_id': auth_id,
@@ -37,31 +45,31 @@ class PasswordAuth(webapp2.RequestHandler):
         password = kwargs.pop('password')        
         existing_user = kwargs.pop('user')
         
-        auth_token = models.AuthProvider._get_by_auth_id(auth_id)
+        auth_token = authprovider.AuthProvider._get_by_auth_id(auth_id)
         
         if auth_token is None:
             # We haven't seen this email address used to authenticate before
             
             # Check for an existing user with this email address as their primary email address
-            duplicate_user = models.User._get_user_from_email(user_info['email'])
+            duplicate_user = _user.User._get_user_from_email(user_info['email'])
             logging.error(duplicate_user)
             
             if duplicate_user:
                 #if the existing user is not the logged in user, don't continue
                 if duplicate_user != existing_user:
-                    return self.raise_error('Please login before attempting to add a second authentication method to your account.')
+                    raise Exception('Please login before attempting to add a second authentication method to your account.')
             
             #There is no-one registered using this email address, so lets continue
             if existing_user:
                 associate_user = existing_user
             else:
-                associate_user = models.User._create()
+                associate_user = _user.User._create()
              #   associate_user.display_name = user_info['displayName']
                 associate_user.primary_email = user_info['email']
                 associate_user.put()
                 
             password_hash = security.generate_password_hash(password=password,pepper=pepper)
-            auth_token = models.AuthProvider._create(user=associate_user,auth_id=auth_id,user_info=user_info,password_hash=password_hash)
+            auth_token = authprovider.AuthProvider._create(user=associate_user,auth_id=auth_id,user_info=user_info,password_hash=password_hash)
         else:
             #Check the password hash against what we've got...
             
@@ -70,7 +78,7 @@ class PasswordAuth(webapp2.RequestHandler):
         
         return auth_token
 
-    def handle_request(self, req):
+    def auth_start(self, req):
         
         #when /auth/password is called this is where the request ends up
         #auth flow:
@@ -93,7 +101,9 @@ class PasswordAuth(webapp2.RequestHandler):
             auth_id=user_info['auth_id'],
             user_info=user_info['info'],
             password=password,
-            user=req.user)
+            user=req.session.user)
+        
+        
         req._get_user_from_auth_token(auth_token)
         #req.associate_user_with_auth_token(auth_token)
         return req.get_redirect_uri()

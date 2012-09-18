@@ -1,111 +1,103 @@
 import webapp2
-import models
+import webob
 from handlers import session
-from google.appengine.ext import ndb
-from auth import facebook,password
+from auth_helpers import facebook,password
+import logging
+from models import user as _user
+from models import authprovider
 
 auth_secret_key = 'shaisd8f9as8d9fashd89fahsd9f8asdf9as8df9sa8dfa9schJKSHDAJKSHDJAsd9a8sd9sa'
 
-class AuthProvider(ndb.Model):
-    """
-    AuthProvider stores the authentication credentials (eg from Facebook)
-    for a User - each user may have multiple AuthProviders
-    """
-    _default_indexed = False
-    user_id = ndb.IntegerProperty(indexed=True)
-    user_info = ndb.JsonProperty(indexed=False, compressed=True)
-    credentials = ndb.PickleProperty()
-    password_hash = ndb.StringProperty(indexed=False)
-
-    @classmethod
-    def _get_by_auth_id(cls, auth_id):
-        """Returns a AuthToken based on a auth_id."""
-        
-        return cls.get_by_id(id=auth_id)
-    get_by_auth_id = _get_by_auth_id
-
-    @classmethod
-    def _create(cls, user, auth_id, **kwargs):
-        """Create an auth_token, must specify a user_id"""
-        
-        auth_token = cls.get_by_id(id=auth_id)
-        
-        if auth_token:
-            raise Exception('Trying to create a duplicate auth token')
-            
-        auth_token = cls(id=auth_id,user_id=user._get_id())
-        auth_token.populate(**kwargs)
-        auth_token.put()
-        
-        return auth_token
-    
-    @staticmethod
-    def generate_auth_id(provider, uid, subprovider=None):
-        """Standardized generator for auth_ids
-        """
-        if subprovider is not None:
-            provider = '{0}#{1}'.format(provider, subprovider)
-        return '{0}:{1}'.format(provider, uid)
- 
 
 class AuthHandler(webapp2.RequestHandler):
     
-    @session.manage_session
+    providers = {'facebook':facebook.FacebookAuth
+                   ,'password':password.PasswordAuth}
+ 
+    
+    @session.manage_user
     def begin(self,provider):
         """Starts the authentication transaction"""
         
-        providers = {'facebook':facebook.FacebookAuth
-                     ,'password':password.PasswordAuth}
- 
-        if provider in providers:
-            redirect_uri = providers[provider].auth_start(self)
+        if provider in self.providers:
+            redirect_uri = self.providers[provider]().auth_start(self.request)
         else:
             raise Exception('Unknown auth provider')
-
+            
         resp = webob.exc.HTTPTemporaryRedirect(location=redirect_uri)
+        
+        return self.request.get_response(resp)
+        
+    @session.manage_user
+    def callback(self,provider):
+        
+        if provider in self.providers:
+            credentials,user_info = self.providers[provider]().auth_callback(self.request)
+        else:
+            raise Exception('unknown auth provider')
+        
+        at_user = self.get_user(
+            auth_id=user_info['auth_id'],
+            user_info=user_info,
+            credentials=credentials,
+            user=self.request.session.user)
+        
+        self.request.session.user_id = at_user._get_id()
+        self.request.session.put()
+        
+        resp = webob.exc.HTTPTemporaryRedirect(location='/')
+        
+        return self.request.get_response(resp)
+        
 
-        resp.request = req
-        return resp(environ, start_response)
+    def get_user(self, auth_id, user_info, credentials, user):
+        """
+        Return the user associated with the auth token, or create a user and
+        associate them with the token and return them"""
         
+        existing_at = authprovider.AuthProvider.get_by_auth_id(auth_id)
+        session_user = user
         
+        db_user = _user.User._get_user_from_email(user_info['info']['email'])
         
-        
-        
-
-    def get_or_create_auth_token(self, auth_id, user_info, credentials, user):
-        """Callback where we've got an Auth Token from our provider
-        and we need to decide what to do with it"""
-        
-        existing_at = models.AuthProvider.get_by_auth_id(auth_id)
-        existing_user = user
-        
-        duplicate_user = models.User._get_user_from_email(user_info['info']['email'])
-        
-        if duplicate_user:
-            if existing_at.user_id != duplicate_user._get_id():
-                return self.raise_error('Please login before attempting to add a second authentication method to your account.')
-        
-        if existing_at and existing_user:
+        if db_user and not existing_at:
+            if not session_user or session_user._get_id() != db_user._get_id():
+                raise Exception('Please login before attempting to add a second authentication method to your account.')
+    
+        if existing_at and session_user:
             #if the user is logged on, and the at is for that user, do nothing
-            if existing_at.user_id == existing_user._get_id():
-                return existing_at
+            if existing_at.user_id == session_user._get_id():
+                return session_user
             else:
                 raise Exception('Access token already assigned to another user')
         
-        if existing_at and not existing_user:
-            #User has already signed up, and is logging on
-            return existing_at
+        if existing_at and not session_user:
+            #Access token exists, but the user is not logged on
+            return _user.User._get_user_from_id(existing_at.user_id)
         
-        if existing_user and not existing_at:
+        if session_user and not existing_at:
             #User is adding an authentication method
-            logging.error('Existing user but no existing at, creating one')
-            return models.AuthProvider._create(existing_user,auth_id,user_info,credentials)
+            logging.info('Existing user but no existing at, creating one')
+            new_at = models.authprovider.AuthProvider._create(user=session_user,auth_id=auth_id,user_info=user_info,credentials=credentials)
+            return session_user
             
-        if not existing_user and not existing_at:
+        if not session_user and not existing_at:
             #New user/new access token
-            new_user = models.User._create()
-            return models.AuthProvider._create(new_user,auth_id,user_info,credentials)
+            new_user = models.user.User._create()
+            new_user.primary_email = user_info['info']['email']
+            new_user.display_name = user_info['info']['displayName']
+            new_user.put()
+            new_at = models.authprovider.AuthProvider._create(user=new_user,auth_id=auth_id,user_info=user_info,credentials=credentials)
+            return new_user
             
         raise Exception('Logic failure in get_or_create_auth_token')
+    
+    @session.manage_user
+    def logout(self):        
+        session=self.request.session
+        if session is not None:
+            session.user_id=None
+            session.put()
+        self.redirect('/')
                 
     

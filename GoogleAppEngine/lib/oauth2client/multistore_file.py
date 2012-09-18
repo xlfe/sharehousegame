@@ -32,23 +32,16 @@ The format of the stored data is like so:
 __author__ = 'jbeda@google.com (Joe Beda)'
 
 import base64
-import fcntl
+import errno
 import logging
 import os
 import threading
 
-try:  # pragma: no cover
-  import simplejson
-except ImportError:  # pragma: no cover
-  try:
-    # Try to import from django, should work on App Engine
-    from django.utils import simplejson
-  except ImportError:
-    # Should work for Python2.6 and higher.
-    import json as simplejson
-
-from client import Storage as BaseStorage
-from client import Credentials
+from anyjson import simplejson
+from oauth2client.client import Storage as BaseStorage
+from oauth2client.client import Credentials
+from oauth2client import util
+from locked_file import LockedFile
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +60,7 @@ class NewerCredentialStoreError(Error):
   pass
 
 
+@util.positional(4)
 def get_credential_storage(filename, client_id, user_agent, scope,
                            warn_on_readonly=True):
   """Get a Storage instance for a credential.
@@ -82,11 +76,11 @@ def get_credential_storage(filename, client_id, user_agent, scope,
     An object derived from client.Storage for getting/setting the
     credential.
   """
-  filename = os.path.realpath(os.path.expanduser(filename))
+  filename = os.path.expanduser(filename)
   _multistores_lock.acquire()
   try:
     multistore = _multistores.setdefault(
-        filename, _MultiStore(filename, warn_on_readonly))
+        filename, _MultiStore(filename, warn_on_readonly=warn_on_readonly))
   finally:
     _multistores_lock.release()
   if type(scope) is list:
@@ -97,14 +91,14 @@ def get_credential_storage(filename, client_id, user_agent, scope,
 class _MultiStore(object):
   """A file backed store for multiple credentials."""
 
+  @util.positional(2)
   def __init__(self, filename, warn_on_readonly=True):
     """Initialize the class.
 
     This will create the file if necessary.
     """
-    self._filename = filename
+    self._file = LockedFile(filename, 'r+b', 'rb')
     self._thread_lock = threading.Lock()
-    self._file_handle = None
     self._read_only = False
     self._warn_on_readonly = warn_on_readonly
 
@@ -167,35 +161,41 @@ class _MultiStore(object):
       """
       self._multistore._update_credential(credentials, self._scope)
 
+    def locked_delete(self):
+      """Delete a credential.
+
+      The Storage lock must be held when this is called.
+
+      Args:
+        credentials: Credentials, the credentials to store.
+      """
+      self._multistore._delete_credential(self._client_id, self._user_agent,
+          self._scope)
+
   def _create_file_if_needed(self):
     """Create an empty file if necessary.
 
     This method will not initialize the file. Instead it implements a
     simple version of "touch" to ensure the file has been created.
     """
-    if not os.path.exists(self._filename):
+    if not os.path.exists(self._file.filename()):
       old_umask = os.umask(0177)
       try:
-        open(self._filename, 'a+').close()
+        open(self._file.filename(), 'a+b').close()
       finally:
         os.umask(old_umask)
 
   def _lock(self):
     """Lock the entire multistore."""
     self._thread_lock.acquire()
-    # Check to see if the file is writeable.
-    if os.access(self._filename, os.W_OK):
-      self._file_handle = open(self._filename, 'r+')
-      fcntl.lockf(self._file_handle.fileno(), fcntl.LOCK_EX)
-    else:
-      # Cannot open in read/write mode. Open only in read mode.
-      self._file_handle = open(self._filename, 'r')
+    self._file.open_and_lock()
+    if not self._file.is_locked():
       self._read_only = True
       if self._warn_on_readonly:
         logger.warn('The credentials file (%s) is not writable. Opening in '
                     'read-only mode. Any refreshed credentials will only be '
-                    'valid for this run.' % self._filename)
-    if os.path.getsize(self._filename) == 0:
+                    'valid for this run.' % self._file.filename())
+    if os.path.getsize(self._file.filename()) == 0:
       logger.debug('Initializing empty multistore file')
       # The multistore is empty so write out an empty file.
       self._data = {}
@@ -210,9 +210,7 @@ class _MultiStore(object):
 
   def _unlock(self):
     """Release the lock on the multistore."""
-    if not self._read_only:
-      fcntl.lockf(self._file_handle.fileno(), fcntl.LOCK_UN)
-    self._file_handle.close()
+    self._file.unlock_and_close()
     self._thread_lock.release()
 
   def _locked_json_read(self):
@@ -224,8 +222,8 @@ class _MultiStore(object):
       The contents of the multistore decoded as JSON.
     """
     assert self._thread_lock.locked()
-    self._file_handle.seek(0)
-    return simplejson.load(self._file_handle)
+    self._file.file_handle().seek(0)
+    return simplejson.load(self._file.file_handle())
 
   def _locked_json_write(self, data):
     """Write a JSON serializable data structure to the multistore.
@@ -238,9 +236,9 @@ class _MultiStore(object):
     assert self._thread_lock.locked()
     if self._read_only:
       return
-    self._file_handle.seek(0)
-    simplejson.dump(data, self._file_handle, sort_keys=True, indent=2)
-    self._file_handle.truncate()
+    self._file.file_handle().seek(0)
+    simplejson.dump(data, self._file.file_handle(), sort_keys=True, indent=2)
+    self._file.file_handle().truncate()
 
   def _refresh_data_cache(self):
     """Refresh the contents of the multistore.
@@ -349,6 +347,23 @@ class _MultiStore(object):
     """
     key = (cred.client_id, cred.user_agent, scope)
     self._data[key] = cred
+    self._write()
+
+  def _delete_credential(self, client_id, user_agent, scope):
+    """Delete a credential and write the multistore.
+
+    This must be called when the multistore is locked.
+
+    Args:
+      client_id: The client_id for the credential
+      user_agent: The user agent for the credential
+      scope: The scope(s) that this credential covers
+    """
+    key = (client_id, user_agent, scope)
+    try:
+      del self._data[key]
+    except KeyError:
+      pass
     self._write()
 
   def _get_storage(self, client_id, user_agent, scope):
