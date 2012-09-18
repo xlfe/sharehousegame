@@ -1,5 +1,5 @@
 from google.appengine.ext import ndb
-from engineauth import models
+
 from shg_utils import prettydate
 
 class InvitedUser(ndb.Model):

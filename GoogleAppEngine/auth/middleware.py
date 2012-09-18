@@ -12,58 +12,8 @@ def import_class(full_path):
     return getattr(mod, klass[0])
 
 
-
-class EngineAuthResponse(webapp2.Response):
-
-    def _save_session(self):
-        session = self.request.session
-        # Compare the hash that we set in load_session to the current one.
-        # We only save the session and cookie if this value has changed.
-        if self.request.session_hash == session.hash():
-            return session
-        session.put()
-        self.set_cookie('_eauth', session.serialize())
-        return self
-
-    def _save_user(self):
-        pass
-
-
 class EngineAuthRequest(webapp2.Request):
 
-    ResponseClass = EngineAuthResponse
-
-    def _load_session(self):
-        #Check if we have an existing session
-        value = self.cookies.get('_eauth')
-        session = None
-        if value:
-            session = models.Session.get_by_value(value)
-        if session is not None:
-            # Create a hash for later comparison,
-            # to determine if a put() is required
-            session_hash = session.hash()
-        else:
-            session = models.Session.create()
-            # set this to False to ensure a cookie
-            # is saved later in the response.
-            session_hash = '0'
-        self.session = session
-        self.session_hash = session_hash
-        return self
-
-    def _get_user_class(self):
-        return models.User
-
-    def _load_user(self):
-        if self.session is not None and self.session.user_id:
-            self.user = self._get_user_class().get_by_id(int(self.session.user_id))
-            if self.user is None:
-                # then remove it.
-                pass
-        else:
-            self.user = None
-        return self
 
     def _get_user_from_auth_token(self, auth_token):
         """Match a session to an auth token"""
@@ -100,24 +50,9 @@ class EngineAuthRequest(webapp2.Request):
             return self._config['success_uri']
     get_redirect_uri = _get_redirect_uri
 
-    def _set_globals(self, environ):
-#        environ['ea.config'] = req.config
-        environ['ea.session'] = self.session
-        environ['ea.user'] = self.user
-        
-    def handle_exception(self,request, response, e):
-        logging.error('handle exception in middleware')
-        return self.app.handle_exception(request,response,e)
-
-
 
 class AuthMiddleware(object):
     
-    def __init__(self, app, config):
-        self.app = app
-        self._config = config
-        self._url_parse_re = re.compile(r'%s/([^\s/]+)/*(\S*)' % (self._config['base_uri']))
-
     def __call__(self, environ, start_response):
         """Called by WSGI when a request comes in.
         Parameters:	
@@ -129,16 +64,9 @@ class AuthMiddleware(object):
                 An iterable with the response to return to the client."""
 
         
-        if environ['PATH_INFO'].startswith('/_ah/'):
-            
-            # If the request is to the admin, call the parent app's __call__
-            return self.app(environ, start_response)
-            
         # load session
         req = EngineAuthRequest(environ)
         req._config = self._config
-        req._load_session()
-        req._load_user()
         req._set_redirect_uri()
         resp = None
         # If the requesting url is for engineauth load the strategy
@@ -161,11 +89,3 @@ class AuthMiddleware(object):
         resp._save_session()
         return resp(environ, start_response)
 
-    def _load_strategy(self, provider):
-            strategy_location = self._config[
-                                'provider.{0}'.format(provider)]['class_path']
-            return import_class(strategy_location)
-
-    def handle_exception(self,request, response, e):
-        logging.error('handle exception in middleware')
-        return self.app.handle_exception(request,response,e)

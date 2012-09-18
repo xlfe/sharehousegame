@@ -13,11 +13,12 @@ from __future__ import absolute_import
 from engineauth import models
 from engineauth.strategies.base import BaseStrategy
 from webapp2_extras import security
+import webapp2
 import logging
 
 
 
-class PasswordStrategy(BaseStrategy):
+class PasswordAuth(webapp2.RequestHandler):
 
     def user_info(self, req):
         user_info = {
