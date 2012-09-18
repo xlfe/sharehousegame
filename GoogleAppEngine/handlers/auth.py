@@ -2,7 +2,8 @@ import webapp2
 import models
 from handlers import session
 from google.appengine.ext import ndb
-from auth import password,facebook
+from auth import facebook,password
+
 auth_secret_key = 'shaisd8f9as8d9fashd89fahsd9f8asdf9as8df9sa8dfa9schJKSHDAJKSHDJAsd9a8sd9sa'
 
 class AuthProvider(ndb.Model):
@@ -54,7 +55,7 @@ class AuthHandler(webapp2.RequestHandler):
         """Starts the authentication transaction"""
         
         providers = {'facebook':facebook.FacebookAuth
-                     ,'password':password.PasswordStrategy}
+                     ,'password':password.PasswordAuth}
  
         if provider in providers:
             redirect_uri = providers[provider].auth_start(self)
