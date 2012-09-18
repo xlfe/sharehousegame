@@ -29,10 +29,15 @@ class OAuth2Strategy(BaseStrategy):
         return authorize_url
 
     def callback(self, req):
-        if req.GET.get('error'): return req.GET.get('error')
+        
+        if req.GET.get('error'):
+            return req.GET.get('error')
+            
         flow = pickle.loads(str(req.session.data.get(self.session_key)))
+        
         if flow is None:
             self.raise_error('And Error has occurred. Please try again.')
+        
         req.credentials = flow.step2_exchange(req.params)
         
         user_info = self.user_info(req)
@@ -42,6 +47,7 @@ class OAuth2Strategy(BaseStrategy):
             user_info=user_info,
             credentials=req.credentials,
             user=req.user)
+        
         req.get_user_from_auth_token(auth_token)
         
         updated=False

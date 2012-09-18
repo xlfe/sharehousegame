@@ -730,7 +730,7 @@ class OAuth2WebServerFlow(Flow):
         token_expiry = datetime.datetime.utcnow() + datetime.timedelta(
             seconds=int(d['expires_in']))
 
-      logger.info('Successfully retrieved access token: %s' % content)
+      #logger.info('Successfully retrieved access token: %s' % content)
       return OAuth2Credentials(access_token, self.client_id,
                                self.client_secret, refresh_token, token_expiry,
                                self.token_uri, self.user_agent)

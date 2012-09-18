@@ -16,7 +16,6 @@ class Jinja2Handler(webapp2.RequestHandler):
     """
     @webapp2.cached_property
     def jinja2(self):
-        logging.error('im here')
         return jinja2.get_jinja2(app=self.app)
 
     def get_messages(self, key='_messages'):
@@ -42,6 +41,12 @@ class Jinja2Handler(webapp2.RequestHandler):
     def json_response(self, json):
         self.response.headers.add_header('content-type', 'application/json', charset='utf-8')
         self.response.out.write(json)
+        
+#    def handle_exception(self,exception,debug_mode):
+ #       
+  #      logging.error('Ooops {0} {1}'.format(exception,debug_mode))
+   #     return
+        
 
 
 def check_user(fn):
@@ -65,23 +70,7 @@ def check_user(fn):
     return wrapper
 
 
-def parse_form_data(data):
-        
-        if len(data) == 0:
-            return
-        
-        form_data = {}
-        data = json.loads(data)
-        
-        for item in data:
-            for k,v in item.items():
-                form_data[k] = v
-        
-        
-        return form_data
-
-
-class API(webapp2.RequestHandler):
+class API(Jinja2Handler):
     
     def api(self):
         
@@ -115,7 +104,7 @@ class API(webapp2.RequestHandler):
                     if len(hm_name) > 0:
                         
                         if hm_name == my_name or hm_email == my_email:
-                            if my_name.strip() == "":
+                            if not my_name or my_name.strip() == "":
                                 user.display_name = hm_name
                             
                             i+=1
@@ -166,13 +155,16 @@ class PageHandler(Jinja2Handler):
 
 
 def wipe_datastore():
-    users = models.User.query().fetch()
-    profiles = models.AuthProvider.query().fetch()
-    emails = models.UserEmail.query().fetch()
-    tokens = models.AuthToken.query().fetch()
-    sessions = models.Session.query().fetch()
+    w = [
+        models.AuthProvider.query().fetch()
+    ,   house.House.query().fetch()
+    ,   house.HouseLog.query().fetch()
+    ,   models.Points.query().fetch()
+    ,   models.Session.query().fetch()
+    ,   models.User.query().fetch() ]
+    
 
-    for t in [users, profiles, emails, tokens, sessions]:
+    for t in w:
         for i in t:
             i.key.delete()
 
@@ -181,5 +173,6 @@ class WipeDSHandler(webapp2.RequestHandler):
     def get(self):
         # TODO: discover why importing deferred outside of a
         # function causes problems with jinja2 filters.
-        from google.appengine.ext import deferred
-        deferred.defer(wipe_datastore)
+        #from google.appengine.ext import deferred
+        #deferred.defer(wipe_datastore)
+        wipe_datastore()

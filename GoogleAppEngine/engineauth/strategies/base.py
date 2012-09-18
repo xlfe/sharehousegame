@@ -1,5 +1,4 @@
-import threading
-from webob import Request
+import webapp2
 import webob
 from engineauth import models
 from engineauth.middleware import EngineAuthRequest
@@ -8,21 +7,21 @@ import logging
 def _abstract():
     raise NotImplementedError('You need to override this function')
 
+class BaseStrategy(webapp2.Response):
 
-class BaseStrategy(object):
-
-    def __init__(self, app, config=None):
+    def __init__(self, app, config):
         self.app = app
         self.config = config
 
     def __call__(self, environ, start_response):
-        
         req = EngineAuthRequest(environ)
         
         req._config = self.config
         
         req.provider_config = self.config['provider.{0}'.format(req.provider)]
         
+        
+        #call the parent class's handle_request
         redirect_uri = self.handle_request(req)
         
         resp = webob.exc.HTTPTemporaryRedirect(location=redirect_uri)
@@ -83,6 +82,3 @@ class BaseStrategy(object):
     def handle_request(self, req):
         _abstract()
         
-    def raise_error(self,error):
-        logging.error(error)
-        raise Exception(error)

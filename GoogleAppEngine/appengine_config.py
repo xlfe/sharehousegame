@@ -5,13 +5,17 @@ ON_DEV = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 engineauth = {
     'secret_key': 'shaisd8f9as8d9fashd89fahsd9f8asdf9as8df9sa8dfa9schJKSHDAJKSHDJAsd9a8sd9sa',
     'user_model': 'engineauth.models.User',
+    'base_uri': '/auth',
+#    'login_uri': '/login'
+    'success_uri': '/',
+    'user_model': 'engineauth.models.User',
     'debug':ON_DEV
 }
 
-engineauth['provider.auth'] = {
-    'user_model': 'engineauth.models.User',
-    'session_backend': 'datastore',
-}
+#engineauth['provider.auth'] = {
+#    'user_model': 'engineauth.models.User',
+#    'session_backend': 'datastore',
+#}
 
 if ON_DEV:
     # Facebook settings for Development
@@ -23,10 +27,15 @@ else:
     FACEBOOK_APP_SECRET = '723495fb4110a97f36178e0233a77b19'
 
 engineauth['provider.facebook'] = {
+    'class_path': 'engineauth.strategies.facebook.FacebookStrategy',
     'client_id': FACEBOOK_APP_KEY,
     'client_secret': FACEBOOK_APP_SECRET,
     'scope': 'email,user_location,user_birthday,publish_actions',
     }
+
+engineauth['provider.password'] = {
+    'class_path': 'engineauth.strategies.password.PasswordStrategy',
+}
 
 if False:
     # Google Plus Authentication

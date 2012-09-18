@@ -1,13 +1,19 @@
 from __future__ import absolute_import
 from engineauth import models
-from engineauth import utils
-from engineauth.config import load_config
 import re
-from webob import Response
-from webob import Request
 import logging
+import webapp2
 
-class EngineAuthResponse(Response):
+def import_class(full_path):
+    path_split = full_path.split('.')
+    path = ".".join(path_split[:-1])
+    klass = path_split[-1:]
+    mod = __import__(path, fromlist=[klass])
+    return getattr(mod, klass[0])
+
+
+
+class EngineAuthResponse(webapp2.Response):
 
     def _save_session(self):
         session = self.request.session
@@ -23,7 +29,7 @@ class EngineAuthResponse(Response):
         pass
 
 
-class EngineAuthRequest(Request):
+class EngineAuthRequest(webapp2.Request):
 
     ResponseClass = EngineAuthResponse
 
@@ -98,19 +104,36 @@ class EngineAuthRequest(Request):
 #        environ['ea.config'] = req.config
         environ['ea.session'] = self.session
         environ['ea.user'] = self.user
+        
+    def handle_exception(self,request, response, e):
+        logging.error('handle exception in middleware')
+        return self.app.handle_exception(request,response,e)
+
 
 
 class AuthMiddleware(object):
-    def __init__(self, app, config=None):
+    
+    def __init__(self, app, config):
         self.app = app
-        self._config = load_config(config)
-        self._url_parse_re = re.compile(r'%s/([^\s/]+)/*(\S*)' %
-                                        (self._config['base_uri']))
+        self._config = config
+        self._url_parse_re = re.compile(r'%s/([^\s/]+)/*(\S*)' % (self._config['base_uri']))
 
     def __call__(self, environ, start_response):
-        # If the request is to the admin, return
+        """Called by WSGI when a request comes in.
+        Parameters:	
+                    environ: A WSGI environment.
+                    start_response: A callable accepting a status code, a list
+                                    of headers and an optional exception context
+                                    to start the response.
+        Returns:	
+                An iterable with the response to return to the client."""
+
+        
         if environ['PATH_INFO'].startswith('/_ah/'):
+            
+            # If the request is to the admin, call the parent app's __call__
             return self.app(environ, start_response)
+            
         # load session
         req = EngineAuthRequest(environ)
         req._config = self._config
@@ -126,11 +149,10 @@ class AuthMiddleware(object):
             if provider:
                 req.provider = provider
                 req.provider_params = provider_params
-                logging.error(provider_params)
                 # load the desired strategy class
-                strategy_class = self._load_strategy(provider)
-                resp = req.get_response(strategy_class(self.app, self._config))
+                resp = req.get_response(application=strategy_class(self.app, self._config))
                 if resp.request is None:
+                    logging.error('resp.request is none')
                     # TODO: determine why this is necessary.
                     resp.request = req
         if resp is None:
@@ -142,5 +164,8 @@ class AuthMiddleware(object):
     def _load_strategy(self, provider):
             strategy_location = self._config[
                                 'provider.{0}'.format(provider)]['class_path']
-            return utils.import_class(strategy_location)
+            return import_class(strategy_location)
 
+    def handle_exception(self,request, response, e):
+        logging.error('handle exception in middleware')
+        return self.app.handle_exception(request,response,e)
