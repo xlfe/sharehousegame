@@ -5,7 +5,7 @@ from google.appengine.ext import ndb
 import json
 import logging
 import session
-from models import house
+from models import house, authprovider
 
 class Jinja2Handler(webapp2.RequestHandler):
     """
@@ -59,6 +59,11 @@ class PageHandler(Jinja2Handler):
         if not session.user:
             self.render_template('not_logged_in.html')
             return
+        
+        if not session.user.verified_email:
+            self.render_template('actions/verify_email.html',{'user':session.user})
+            return
+        
           
         hse_id = self.request.session.user._get_house_id()
         

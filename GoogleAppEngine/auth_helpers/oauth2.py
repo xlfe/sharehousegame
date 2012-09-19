@@ -4,6 +4,7 @@ import httplib2
 import webapp2
 from oauth2client.client import OAuth2WebServerFlow
 import logging
+from models import authprovider
 
 class OAuth2(webapp2.RequestHandler):
 
@@ -48,5 +49,8 @@ class OAuth2(webapp2.RequestHandler):
         req.credentials = flow.step2_exchange(req.params)
         user_info = self.user_info(req)
         
-        return req.credentials,user_info
+        return {
+            'credentials':req.credentials,
+            'user_info':user_info
+            }
         

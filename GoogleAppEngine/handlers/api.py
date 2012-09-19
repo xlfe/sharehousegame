@@ -28,7 +28,7 @@ class API(webapp2.RequestHandler):
                 name = self.request.get('houseName')
                 
                 my_name = session_user.display_name
-                my_email = session_user.primary_email
+                my_email = None
                 
                 housemates = []
                 i = 0
