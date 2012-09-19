@@ -93,8 +93,7 @@ class PasswordAuth(webapp2.RequestHandler):
         password = req.POST['password']
         email = req.POST['email']
         if not password or not email:
-            return self.raise_error('Please provide a valid email '
-                                    'and a password.')
+            raise Exception('Please provide a valid email and a password.')
         
         user_info = self.user_info(req)
         auth_token = self.get_or_create_auth_token(
