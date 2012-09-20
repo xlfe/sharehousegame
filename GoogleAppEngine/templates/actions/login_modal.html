@@ -1,0 +1,59 @@
+
+<div class="modal hide fade" id="login" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+	<h3 id="myModalLabel">Login</h3>
+    </div>
+
+    <div class="modal-body">
+	<div class="row">
+	    <form class="form-horizontal" action="/auth/password" method="POST">
+		<div class="control-group">
+		    <label class="control-label" for="inputEmail">Email</label>
+		    <div class="controls">
+			<input type="text" name="email" placeholder="Email">
+		    </div>
+		</div>
+		<div class="control-group">
+		    <label class="control-label">Password</label>
+		    <div class="controls">
+			<input type="password" name="password" placeholder="Password">
+		    </div>
+		</div>
+		<div class="control-group">
+		    <div class="controls">
+			<button type="submit" class="btn btn-success">Login &raquo;</button>
+		    </div>
+		</div>
+	    </form>
+	</div>
+	<hr>
+	<div class="row">
+	    <div class="span">
+		<p>
+		    Login using Facebook:
+		    <i rel="tooltip" title="If you'd like to add Facebook as a login option, sign into your account using
+		    your email and password above, and click 'Add Facebook' once you're logged in." class="fb-hover icon-black icon-info-sign"></i>
+		</p>
+		<a href="/auth/facebook" class="btn span2 offset1" style=""><img src="/img/facebook.png" /></a>
+	    </div>
+	</div>
+    </div> 
+    <div class="modal-footer">
+	<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+    </div>
+</div>
+
+<script>
+    $('#tabs a').click(function (e) {
+	e.preventDefault();
+	$(this).tab('show');
+    });
+    
+    $('.fb-hover').tooltip({
+        placement:'right'
+    });
+
+    
+</script>
+

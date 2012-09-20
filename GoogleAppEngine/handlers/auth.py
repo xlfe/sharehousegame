@@ -1,17 +1,37 @@
 import webapp2
 import webob
 from handlers import session
-from auth_helpers import facebook,password
+from auth_helpers import facebook
 import logging
 import json
 from models import user as _user
 from models import authprovider
 from webapp2_extras import security
 from google.appengine.ext import ndb
-from shg_utils import password_pepper
+import shg_utils
 from handlers.jinja import Jinja2Handler
 
-auth_secret_key = 'shaisd8f9as8d9fashd89fahsd9f8asdf9as8df9sa8dfa9schJKSHDAJKSHDJAsd9a8sd9sa'
+class PasswordAuth(Jinja2Handler):
+    
+    error_msg = 'We were unable to log you on using the supplied email address and password.'
+    
+    @session.manage_user
+    def start(self):
+        password = self.request.POST['password']
+        email = self.request.POST['email']
+        auth_id = authprovider.AuthProvider.generate_auth_id('password',email)
+        
+        auth_token = authprovider.AuthProvider._get_by_auth_id(auth_id)
+        
+        if auth_token is None:
+	    raise Exception(self.error_msg)
+    
+        if not security.check_password_hash(password=password,pwhash=auth_token.password_hash,pepper=shg_utils.password_pepper):
+	    raise Exception(self.error_msg)
+        
+        self.request.session.upgrade_to_user_session(auth_token.user_id)
+        
+        return self.redirect('/')
 
 
 class FacebookAuth(webapp2.RequestHandler):
