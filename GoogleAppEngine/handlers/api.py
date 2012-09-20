@@ -4,12 +4,13 @@ import json
 import logging
 import session
 from models import authprovider,house,user
+from google.appengine.ext import ndb
+from handlers.jinja import Jinja2Handler
 
-
-
-class API(webapp2.RequestHandler):
+class API(Jinja2Handler):
     
     @session.manage_user
+    @ndb.transactional(xg=True)
     def api(self):
         
         resp = {'redirect':''}
@@ -22,13 +23,11 @@ class API(webapp2.RequestHandler):
             if what == "house-setup":
                 
                 if session_user._get_house_id():
-                    logging.error('User already has house_id, should not be in house setup userid {0}'.format(user._get_id()))
-                    return
+                    raise Exception('User already has house_id, should not be in house setup')
                 
                 name = self.request.get('houseName')
                 
                 my_name = session_user.display_name
-                my_email = None
                 
                 housemates = []
                 i = 0
@@ -40,10 +39,11 @@ class API(webapp2.RequestHandler):
                         break
                     
                     if len(hm_name) > 0:
+			
+			if i == 0:
                         
-                        if hm_name == my_name or hm_email == my_email:
-                            if not my_name or my_name.strip() == "":
-                                session_user.display_name = hm_name
+			    if hm_name != session_user.display_name:
+                                session_user.display_name = hm_name.strip()
                             
                             i+=1
                             continue
@@ -63,11 +63,12 @@ class API(webapp2.RequestHandler):
                 hse.add_house_event(user_id=session_user._get_id(),desc='setup the house',points=100)
                 
                 resp = {
-                    'redirect':'?home',
+                    'redirect':'/dashboard',
                     'success':'House created {0} with {1} housemates'.format(name,i)
                 }
         
-        self.response.out.write(json.dumps(resp)) #self.request.params)
+        return self.json_response(json.dumps(resp)) #self.request.params)
+	
 
 
 

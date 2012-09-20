@@ -38,6 +38,7 @@ class FacebookAuth(webapp2.RequestHandler):
     
     @session.manage_user
     def start(self):
+	
         redirect_uri = facebook.FacebookAuth().auth_start(self.request)
         
         resp = webob.exc.HTTPTemporaryRedirect(location=redirect_uri)
@@ -63,15 +64,15 @@ class FacebookAuth(webapp2.RequestHandler):
             at_user = self.request.session.user
                 
             if not at_user:
-                at_user = _user.User._create(name=callback['user_info']['displayName'])
+	        raise Exception('Sorry your Facebook account is not assocaited with a Sharehouse Game account. Please login to your Sharehouse Game account using your email/password you setup when you joined, and then click the add Facebook button.')
+	
+                #at_user = _user.User._create(name=callback['user_info']['displayName'])
             
             new_at = authprovider.AuthProvider._create(user=at_user,auth_id=auth_id,user_info=callback['user_info'],credentials=callback['credentials'])
                 
-            self.request.session.upgrade_to_user_session(at_user._get_id())
+            #self.request.session.upgrade_to_user_session(at_user._get_id())
         
-        resp = webob.exc.HTTPTemporaryRedirect(location='/')
-        
-        return self.request.get_response(resp)
+        return self.redirect('/')
     
         
 class AuthLogout(webapp2.RequestHandler):
@@ -104,7 +105,7 @@ class AuthSignup(Jinja2Handler):
             raise Exception('Error email already exists in system')
         
         
-        password_hash = security.generate_password_hash(password=password,pepper=password_pepper)
+        password_hash = security.generate_password_hash(password=password,pepper=shg_utils.password_pepper)
         token = _user.EmailHash.create(name=name,email=email,password_hash=password_hash)
         
         token.send_email(self.request.host_url,'new_user')
