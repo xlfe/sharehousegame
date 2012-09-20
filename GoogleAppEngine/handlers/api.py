@@ -78,6 +78,7 @@ def wipe_datastore():
     ,   house.House.query().fetch()
     ,   house.HouseLog.query().fetch()
     ,   user.Points.query().fetch()
+    ,   user.EmailHash.query().fetch()
     ,   session.Session.query().fetch()
     ,   user.User.query().fetch() ]
     

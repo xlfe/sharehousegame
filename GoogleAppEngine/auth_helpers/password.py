@@ -14,6 +14,7 @@ from webapp2_extras import security
 import webapp2
 import logging
 from models import authprovider, user as _user
+import shg_utils
 
 class PasswordAuth(webapp2.RequestHandler):
     
@@ -41,7 +42,6 @@ class PasswordAuth(webapp2.RequestHandler):
         """
         
         """
-        pepper='IOASJoasjdioajsd(A*S9a8sd9hasudhasih2i1h2ueh1*A(S*D('
         password = kwargs.pop('password')        
         existing_user = kwargs.pop('user')
         
@@ -68,7 +68,7 @@ class PasswordAuth(webapp2.RequestHandler):
                 associate_user.primary_email = user_info['email']
                 associate_user.put()
                 
-            password_hash = security.generate_password_hash(password=password,pepper=pepper)
+            password_hash = security.generate_password_hash(password=password,pepper=shg_utils.password_pepper)
             auth_token = authprovider.AuthProvider._create(user=associate_user,auth_id=auth_id,user_info=user_info,password_hash=password_hash)
         else:
             #Check the password hash against what we've got...

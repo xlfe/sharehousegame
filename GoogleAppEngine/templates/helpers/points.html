@@ -1,9 +1,9 @@
 
 {% macro points(pts) -%}
   {%if pts > 0 %}
-    <span class="label label-success">
+    <span class="badge badge-warning">
   {%else%}
-    <span class="label label-warning">
+    <span class="badge badge-important">
   {%endif%}
   {{pts}} pts</span>
 {%- endmacro %}

@@ -17,8 +17,6 @@ class OAuth2(webapp2.RequestHandler):
     def auth_start(self,request):
         
         provider = self.options['provider']
-        callback_uri = '{0}/auth/{1}/callback'.format(request.host_url,provider)
-        
         
         flow = OAuth2WebServerFlow(            
             self.options['client_id'],
@@ -26,24 +24,26 @@ class OAuth2(webapp2.RequestHandler):
             self.options['scope'],
             auth_uri=self.options['auth_uri'],
             token_uri=self.options['token_uri'],
+            redirect_uri='{0}/auth/{1}/callback'.format(request.host_url,provider)
         )
         
         flow.params['state'] = request.path_url
-        authorize_url = flow.step1_get_authorize_url(callback_uri)
-        logging.error(flow)
+        authorize_url = flow.step1_get_authorize_url()
+
         request.session.data[self.options['session_key']] = pickle.dumps(flow)
         request.session.put()
+
         return authorize_url
 
     def auth_callback(self, req):
         
         if req.GET.get('error'):
-            return req.GET.get('error')
+            raise Exception(req.GET.get('error'))
         
         flow = pickle.loads(str(req.session.data.get(self.options['session_key'])))
         
         if flow is None:
-            self.raise_error('And Error has occurred. Please try again.')
+            raise Exception('And Error has occurred. Please try again.')
         
         #Oauth2 Credentials Object
         req.credentials = flow.step2_exchange(req.params)

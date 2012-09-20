@@ -3,8 +3,13 @@ import webob
 from handlers import session
 from auth_helpers import facebook,password
 import logging
+import json
 from models import user as _user
 from models import authprovider
+from webapp2_extras import security
+from google.appengine.ext import ndb
+from shg_utils import password_pepper
+from handlers.jinja import Jinja2Handler
 
 auth_secret_key = 'shaisd8f9as8d9fashd89fahsd9f8asdf9as8df9sa8dfa9schJKSHDAJKSHDJAsd9a8sd9sa'
 
@@ -58,5 +63,38 @@ class AuthLogout(webapp2.RequestHandler):
             session.user_id=None
             session.put()
         self.redirect('/')
+
+class AuthSignup(Jinja2Handler):
+    
+    @ndb.transactional(xg=True)
+    def post(self):
+        
+        name = self.request.get('name')
+        email = self.request.get('email')
+        password = self.request.get('password')
+        
+        if not name or not email or not password:
+            raise Exception('Error not all values passed')
             
+        auth_id = authprovider.AuthProvider.generate_auth_id('password', email)
+            
+        matched_at = authprovider.AuthProvider.get_by_auth_id(auth_id)
+        
+        if matched_at:
+            raise Exception('Error email already exists in system')
+        
+        
+        password_hash = security.generate_password_hash(password=password,pepper=password_pepper)
+        token = _user.EmailHash.create(name=name,email=email,password_hash=password_hash)
+        
+        token.send_email(self.request.host_url,'new_user')
+        
+        resp = {
+                    'redirect':'/static/email-sent',
+                    'success': 'Validation email sent'
+                }
+        
+        self.json_response(json.dumps(resp))
+    
+        return
     

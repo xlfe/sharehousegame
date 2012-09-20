@@ -26,7 +26,7 @@
                 }
                 
                 setTimeout(function(){
-                    window.location.replace('/' + response['redirect']); 
+                    window.location.replace(response['redirect']); 
                     },timeout);
             
                  }
