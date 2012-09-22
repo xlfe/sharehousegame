@@ -5,7 +5,7 @@
    
 
 <header class="jumbotron masthead subhead">
-  <div class="container">
+  <div class="container">    
     <h1>Sharehouse Game</h1>
     <p class="lead">Take the pain out of sharehouse living.</p>
     <p><a href="#signup" class="btn btn-primary btn-large">&raquo; Sign up</a></p>
@@ -20,6 +20,13 @@
    <div class="container">
   
   {% include "actions/login_modal.html" %}
+
+    {% if signup_email %}
+	<div class="alert alert-success">
+	    <strong>Welcome</strong>! {{referred_by}} would like you to <a href="#signup">join their ShareHouse!</a>
+	<button type="button" class="close" data-dismiss="alert">×</button>
+	</div>
+    {% endif %}
 
 <div class="row">
   <div class="span7">
@@ -58,30 +65,38 @@
 <p id="signup" class="extra-bottom-margin">&nbsp</p>
 <div class="hero-unit extra-bottom-margin">
   <h1>Signup</h1>
+    {% if signup_email %}
+    <p>Please confirm your details and enter a password to join {{referred_by}}'s house (or start your own house).</p>
+    {% else %}
     <p>Enter your details below to begin</p>
+    {%endif%}
       <hr>
     <form id="verify-details" class="form-horizontal" method="post">
 	
       <div class="control-group">
 	<label class="control-label">Name</label>
-	<div class="controls">
-	  <input type="text" class="required" name="name" placeholder="Name" value="">
+	<div class="controls">					{% set signup_name=signup_name or "" %}
+	  <input type="text" class="required" name="name" placeholder="Name" value="{{signup_name}}">
 	</div>
       </div>	
       <div class="control-group">
 	<label class="control-label">Email</label>
 	<div class="controls">
+	{% if signup_email %}
+	  <input type="text" class="required email" name="email" placeholder="Email" disabled value="{{signup_email}}">
+	  <span class="inline-help"><i rel="tooltip" title="We've already verified your email. You can change it after logging in."
+					 class="tt-hover icon-black icon-info-sign"></i></span>
+	{% else %}
 	  <input type="text" class="required email" name="email" placeholder="Email">
 	  <span class="inline-help"><i rel="tooltip" title="Used for important notifications and account recovery."
 					 class="tt-hover icon-black icon-info-sign"></i></span>
+	{% endif %}
 	</div>
       </div>
       <div class="control-group">
 	<label class="control-label">Password</label>
 	<div class="controls">
 	  <input type="password" class="required" name="password" minlength="7" placeholder="Password">
-	    <i rel="tooltip" title="You can login to Sharehouse Game using this password
-            and your email address (or alternatively, your Facebook account)" class="tt-hover icon-black icon-info-sign"></i>
 	</div>
       </div>
       <div class="control-group">
@@ -100,7 +115,7 @@
 
 {% block javascript %}
 
-<script src="js/vendor/jquery-validate/jquery.validate.min.js"></script>
+<script src="/js/vendor/jquery-validate/jquery.validate.min.js"></script>
 <script>
   
 $('.tt-hover').tooltip({
@@ -125,9 +140,9 @@ $('.tt-hover').tooltip({
 		setTimeout(function(){
 		    $(alert).fadeOut('slow');
 		},2000);
-	    },
+	    },						    {% set signup_action=signup_action or "/signup" %}
 	    submitHandler: function(form) {
-		post_form('/signup',form,'#verify-details');
+		post_form('{{signup_action}}',form,'#verify-details');
 	    }
     });
     
