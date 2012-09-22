@@ -87,6 +87,7 @@ class AuthLogout(webapp2.RequestHandler):
 
 class AuthSignup(Jinja2Handler):
     
+    
     @ndb.transactional(xg=True)
     def post(self):
         

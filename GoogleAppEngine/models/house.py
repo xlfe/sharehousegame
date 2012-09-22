@@ -22,7 +22,6 @@ class House(ndb.Model):
     
     @classmethod
     def _get_house_by_id(cls,id):
-        """Gets a user based on their ID"""
         
         return cls.get_by_id(int(id))
         
