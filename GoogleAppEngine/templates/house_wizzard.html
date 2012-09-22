@@ -75,6 +75,11 @@
         function add_hm_row(name,email,email_extra) {
         
             var id = hm_id;
+            
+            if (id > 9) {
+                alert('Sorry, we currently only support a max of 10 housemates');
+                return;
+            }
         
             var row = $('<div class="control-group">' +
             '<div class="control-label"><strong>'+(id+1)+'</strong></div>' +
@@ -104,7 +109,10 @@
         $('#remove').live('click',function() {
             $(this).parent().parent().remove();
             hm_id -=1;
-        })
+            if (hm_id > 2) {
+                $('<span id="remove" class="inline-help"><a href="#" class="icon-minus"></a></span>').insertAfter( $('input :last') );
+            }
+        });
         
                 
          $('#house-setup').validate({

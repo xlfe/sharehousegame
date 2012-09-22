@@ -112,8 +112,7 @@ class AuthSignup(Jinja2Handler):
         token.send_email(self.request.host_url,'new_user')
         
         resp = {
-                    'redirect':'/static/email-sent',
-                    'success': 'Validation email sent'
+                    'success': 'Validation email sent. Please check your email!'
                 }
         
         self.json_response(json.dumps(resp))

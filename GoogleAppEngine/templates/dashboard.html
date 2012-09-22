@@ -27,11 +27,13 @@
             </tr>
         {%endfor%}
 
-
+	{% set i = 0 %}
         {% for u in house.invited_users %}
             <tr>
                 <td>{{u.name}}</td>
-                <td>Hasn't joined the game yet (<a>remind</a>)</td>
+                <td>Hasn't joined the game yet
+		<button class="btn btn-mini btn-info" id="invite-reminder" name="{{i}}">Resend invite <i class="icon-envelope"></i></button>
+		    </td>   {%set i = i+1 %}
             </tr>
         {%endfor%}
             </tbody>
@@ -61,6 +63,45 @@
        
         
     </div>
+    
+    <script>
+	
+	$('#invite-reminder').live('click','',function() {
+	
+	    $.ajax( {
+		type: 'POST',
+		url: '/api',
+		data: {what:'refer', housemate_id: $(this).attr('name') },
+		dataType: "json",
+		success: function(responseText){
+		  
+		  var response = responseText;// JSON.parse(responseText);
+		  var message= null;
+		  var timeout = 0;
+		  if (response['success'] != "") {
+		      message = $('<div class="alert alert-success"><strong>Success!</strong> ' +
+			response['success'] +
+			'.</div>').fadeIn('fast').insertAfter($(response_object));
+      
+		  }
+		  
+		  if (response['redirect'] != "") {
+		      if (message != null) {
+			  $(message).fadeOut(1500);
+			  timeout = 1000;
+		      }
+		      
+		      setTimeout(function(){
+			  window.location.replace(response['redirect']); 
+			  },timeout);
+		  
+		       }
+		 }
+	      });	    
+	})
+	
+	
+    </script>
         
         
  {%endblock%}

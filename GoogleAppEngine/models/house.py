@@ -18,7 +18,7 @@ class House(ndb.Model):
     users = ndb.IntegerProperty(repeated=True)
 
     def get_house_id(self):
-        return str(self.key.id())
+        return self.key.id()
     
     @classmethod
     def _get_house_by_id(cls,id):
@@ -47,7 +47,17 @@ class House(ndb.Model):
         for u in self.users:
             user_list.append(_user.User._get_user_from_id(u))
         return user_list
-            
+    
+    def add_user(self,user):
+        self.users.append(user._get_id())
+        n=0
+        for i in self.invited_users:
+            if i.email == user.verified_email:
+                self.invited_users.pop(n)
+                break
+            n+=1
+        self.put()
+        return    
         
     
 class HouseLog(ndb.Model):
