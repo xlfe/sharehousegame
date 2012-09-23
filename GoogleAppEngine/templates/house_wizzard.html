@@ -4,63 +4,61 @@
 {%block main %}
 
     <ul class="nav nav-tabs" id="tabs">
-      <li class="active"><a href="#new">Setup a new sharehouse</a></li>
-      <li><a href="#existing">Join an existing sharehouse</a></li>
+        <li class="active"><a href="#new">Setup a new sharehouse</a></li>
+        <li><a href="#existing">Join an existing sharehouse</a></li>
     </ul>
- 
     <div class="tab-content">
-      <div class="tab-pane active" id="new">
-
-
-    
-    <form class="form-horizontal" id="house-setup">
-        <div class="row">
-            <div class="span9">
+        <div class="tab-pane active" id="new">
+            <form class="form-horizontal" id="house-setup">
+                <div class="row">
+                    <div class="span9">
   
-                {% set house_options = [
-                     ('House Name', 'houseName','Eg. 42 Awesome Street'),
-                     ]-%}
-                    {% for name, id, placeholder in house_options %}  
-  
-                    <div class="control-group">
-                      <label class="control-label" for="{{id}}">{{name}}</label>
-                      <div class="controls">
-                        <input type="text" class="required" form="house-setup" name="{{id}}" placeholder="{{placeholder}}">
-                      </div>
+                        {% set house_options = [ ('House Name', 'houseName','Eg. 42 Awesome Street'),]-%}
+                        {% for name, id, placeholder in house_options %}  
+                        <div class="control-group">
+                            <label class="control-label" for="{{id}}">{{name}}</label>
+                            <div class="controls">
+                                <input type="text" class="required" form="house-setup" name="{{id}}" placeholder="{{placeholder}}">
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
-                {% endfor %}
-            </div>
-        </div>
-    
-        <div class="row">
-          <div class="span9">
-            <div class="control-group">
-              <label class="control-label"><strong>Housemates:</strong></label>
-            </div>
-            <div class="control-group" id="housemates">
-            </div>
-            <div class="control-group">
-                <div class="controls">
-                    <a href="#" id="add_hm"><i class="icon-black icon-plus"></i> Add another housemate</a>
                 </div>
-            </div>
-  
-        
-            <div class="control-group">
-              <div class="controls">
-                <button type="submit" form="house-setup" class="btn btn-success">Save &raquo;</button>
-              </div>
-            </div>
+                <div class="row">
+                    <div class="span9">
+                        <div class="control-group">
+                            <label class="control-label"><strong>Housemates:</strong></label>
+                        </div>
+                        <div class="control-group" id="housemates">
+                        </div>
+                        <div class="control-group">
+                            <div class="controls">
+                                <a href="#" id="add_hm"><i class="icon-black icon-plus"></i> Add another housemate</a>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <div class="controls">
+                                <button type="submit" form="house-setup" class="btn btn-success">Save &raquo;</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>        
         </div>
-          </div>
-      </form>
-              
-      </div>
-      <div class="tab-pane" id="existing">
-        
-      </div>
-  
-</div>
+        <div class="tab-pane" id="existing">
+            <div class="container">  
+                <div class="well">
+                    <h1>Join an existing sharehouse</h1>
+                    <ol>
+                        <li>Ask the housemate who setup your sharehouse to resend the invite to you.</li>
+                        <li>Make sure you are signed into your Sharehouse Game account (as you are now).</li>
+                        <li>Click on the invite link in the email your received.</li>
+                        <li>You will be added to the existing sharehouse.</li>
+                    </ol>
+                </div>
+            </div>  
+        </div>
+    </div>
 
         
  {%endblock%}
