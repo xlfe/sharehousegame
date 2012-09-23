@@ -98,9 +98,6 @@ class API(Jinja2Handler):
 	return self.json_response(json.dumps(resp)) #self.request.params)
 	
 
-
-
-
 def wipe_datastore():
     w = [
         authprovider.AuthProvider.query().fetch()

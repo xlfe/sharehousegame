@@ -1,0 +1,107 @@
+
+{% extends "home.html" %}
+
+{%block main %}
+    <div class="row">
+        <div class="span1"></div>
+    </div>
+
+    <div class="row">
+        <div class="span5 "><h3>Tasks</h3>    </div>
+    </div>
+    
+    
+    <form class="form-horizontal">
+	<div class="control-group">
+	    <label class="control-label">Task name</label>
+	    <div class="controls">
+		<input class="input-xxlarge required" type="text" name="task_name" placeholder="Untitled task">
+	    </div>
+	</div>
+	
+	<div class="control-group">
+	    <label class="control-label">How often?
+	    <i class="icon-info-sign tt-hover" title="How often does this task happen?"></i>
+	    </label>
+	    <div class="controls">
+		<input class="input input-xlarge required smart-select" type="text" name="frequency" placeholder="Eg: Daily, Weekly, Monthly, Fortnightly">
+	    </div>
+	</div>
+	
+	<div class="control-group">
+	    <label class="control-label">When?
+	    <i class="icon-info-sign tt-hover" title="When does the task next need to happen?"></i>
+	    </label>
+	    <div class="controls">
+		<input class="input-xlarge required" type="text" name="task_name" placeholder="Eg: Saturday, tomorrow, next Monday">
+		<label class="checkbox inline tt-hover" title="Task is to be completed by then.">
+		    <input type="checkbox" id="deadline_cb" value="deadline"> Deadline
+		</label>
+	    </div>
+	</div>
+	
+	<div class="control-group">
+	    <label class="control-label" for=""></label>
+	    <div class="controls">
+		
+	    </div>
+	</div>
+	
+	
+		{% if false %}	
+	<div class="control-group">
+	    <label class="control-label" for=""></label>
+	    <div class="controls">
+		
+
+		<label class="checkbox inline tt-hover" title="Task repeats at the specified interval">
+		    <input type="checkbox" id="group_task_cb" value="group_task"> Task repeats		    
+		</label>
+		
+		<label class="checkbox inline tt-hover" title="Send a reminder before the task expires">
+		    <input type="checkbox" id="deadline_cb" value="deadline"> Send reminder
+		</label>
+		
+		<label class="checkbox inline tt-hover" title="Points expire if task is not completed before the deadline">
+		    <input type="checkbox" id="group_task_cb" value="group_task"> Deadline
+		</label>
+		
+		<label class="checkbox inline tt-hover" title="All housemates must complete the task before it is considered 'done'">
+		    <input type="checkbox" id="group_task_cb" value="group_task"> Group task
+		</label>
+	    </div>
+	</div>
+		{%endif%}
+	
+	
+	<div class="control-group">
+	    <div class="controls">
+		
+		<button type="submit" class="btn btn-success">Create task &raquo;</button>
+	    </div>
+	</div>
+    </form>
+    <script src="/js/vendor/jquery.smart_autocomplete.js" type="text/javascript"></script>
+    <script src="/js/vendor/qs_score.js" type="text/javascript"></script>
+    <script>
+    
+	$('form input:first').focus();
+	
+		
+	$('.tt-hover').tooltip({
+	    placement:'bottom'
+	});
+	
+	$(".smart-select").typeahead({
+	    source: [
+          "Daily","Weekly",'Fortnightly',"Monthly"
+        ],
+	minLength : 0,
+
+        });
+	
+    
+    </script>
+        
+        
+ {%endblock%}
