@@ -17,6 +17,7 @@
             var response = responseText;// JSON.parse(responseText);
             var message= null;
             var timeout = 0;
+            
             if ("success" in response) {
                 message = $('<div class="alert alert-success"><strong>Success!</strong> ' +
                   response['success'] +
