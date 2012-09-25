@@ -3,5 +3,5 @@
 latest.zip*
 commit.msg
 *.pdf
-./Docs/*
-./*.mindnode/
+Docs/
+mindnode/
