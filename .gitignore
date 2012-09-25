@@ -5,3 +5,6 @@ commit.msg
 *.pdf
 Docs/
 mindnode/
+bootstrap*css
+vendor/
+lib/
