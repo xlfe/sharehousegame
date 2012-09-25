@@ -5,3 +5,4 @@ commit.msg
 *.pdf
 ./Docs/*
 */QuickLook/*
+*.mindnode*
