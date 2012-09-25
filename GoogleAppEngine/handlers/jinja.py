@@ -1,6 +1,7 @@
 import webapp2
 import logging
 from webapp2_extras import jinja2
+from models import house
 
 class Jinja2Handler(webapp2.RequestHandler):
     """
@@ -18,13 +19,18 @@ class Jinja2Handler(webapp2.RequestHandler):
         except KeyError:
             return None
 
-    def render_template(self, template_name, template_values={}):
+    def render_template(self, template_name, template_values=None):
         #messages = self.get_messages()
         #if messages:
         #    template_values.update({'messages': messages})
-            
-        template_values['page_base'] = self.request.route.name
+        if not template_values:
+            template_values = {}
+            if self.request.session and self.request.session.user:
+                template_values['user'] = self.request.session.user
+                if self.request.session.user.house_id:
+                    template_values['house'] = house.House._get_house_by_id(self.request.session.user.house_id)
         
+        template_values['page_base'] = self.request.route.name
         self.response.write(self.jinja2.render_template(
             template_name, **template_values))
 
