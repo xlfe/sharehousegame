@@ -25,10 +25,11 @@ class Jinja2Handler(webapp2.RequestHandler):
         #    template_values.update({'messages': messages})
         if not template_values:
             template_values = {}
-            if self.request.session and self.request.session.user:
-                template_values['user'] = self.request.session.user
-                if self.request.session.user.house_id:
-                    template_values['house'] = house.House._get_house_by_id(self.request.session.user.house_id)
+            
+        if self.request.session and self.request.session.user and not 'user' in template_values:
+            template_values['user'] = self.request.session.user
+            if self.request.session.user.house_id and not 'house' in template_values:
+                template_values['house'] = house.House._get_house_by_id(self.request.session.user.house_id)
         
         template_values['page_base'] = self.request.route.name
         self.response.write(self.jinja2.render_template(
