@@ -4,5 +4,4 @@ latest.zip*
 commit.msg
 *.pdf
 ./Docs/*
-*/QuickLook/*
-*.mindnode*
+./*.mindnode/
