@@ -7,6 +7,21 @@ from models import house, authprovider
 from handlers.jinja import Jinja2Handler
 from pytz.gae import pytz
 from datetime import datetime, timedelta, time
+import calendar
+
+def add_months(sourcedate,months):
+    month = sourcedate.month - 1 + months
+    year = sourcedate.year + month / 12
+    month = month % 12 + 1
+    day = min(sourcedate.day,calendar.monthrange(year,month)[1])
+    return datetime(year,month,day,sourcedate.hour,sourcedate.minute,sourcedate.second)
+    
+def add_years(sourcedate,years):
+    month = sourcedate.month 
+    year = sourcedate.year + years
+    month = sourcedate.month
+    day = min(sourcedate.day,calendar.monthrange(year,month)[1])
+    return datetime(year,month,day,sourcedate.hour,sourcedate.minute,sourcedate.second)
 
 class RepeatedTask(ndb.Model):
     
@@ -57,8 +72,6 @@ class RepeatedTask(ndb.Model):
     def create(cls, dict):
         
         rt = cls()
-    
-        logging.info(dict)
         
         #encapsulate repeated properties
         dict = shg_utils.encapsulate_dict(dict,RepeatedTask())
@@ -70,9 +83,16 @@ class RepeatedTask(ndb.Model):
                         assert i in v, "Incorrect value : {0}".format(i)
                 else:
                     assert dict[k] in v, "Incorrect value : {0}".format(dict[k])
-                
-        rt.populate(**dict)
-        rt.put()
+        
+        if 'reminders' in dict:
+            assert len(dict['reminders']) <= 10, 'Sorry, a maximum of 10 reminders'
+        
+        try:
+            rt.populate(**dict)
+            rt.put()
+        except:
+            logging.error(dict)
+            raise
         
         return rt
     
@@ -148,34 +168,138 @@ class RepeatedTask(ndb.Model):
                     }
         
         return intervals[reminder]
+    @staticmethod
+    def weekdays_to_int(weekday):
+        """uses ISO weekday assignments"""
+        
+        wdn = {
+            'Monday':1,
+            'Tuesday':2,
+            'Wednesday':3,
+            'Thursday':4,
+            'Friday':5,
+            'Saturday':6,
+            'Sunday':7
+        }
+        
+        return wdn[weekday]
         
     def next_event_utc(self):
         """the next event trigger"""
         
         
-        return '<br>'.join(str(i) for i in self.iter_events())
-        
-    def iter_events(self):
-        
-        local_tz = pytz.timezone(self.timezone)
-        gtd = timedelta()
+        return '<br>'.join(str(i) for i in self.iter_instances())
+    
+    def iter_reminders(self,dt_event):
+        """ returns UTC datetime objects for reminders for an event occuring on dt_event"""
         
         sorted_reminders = sorted(self.reminder_to_time_delta(r) for r in self.reminders)
         
-        
-        i = 0
-        while i < 10:
+        for r in sorted_reminders:
+            i+=1
+            yield local_tz.localize( datetime.combine( self.start_date, time(12,0,0) ) + r )
             
+            if i > 10:
+                return
+
+        yield dt_event
+    
+    def next_wd(self,weekdays,last_event):
+        eow = True
+        for d in weekdays:
+            if d > last_event.isoweekday():
+                last_event += timedelta(days=d-last_event.isoweekday())
+                eow = False
+                break
+        if eow:
+            #reset to the begining of the week
+            last_event += timedelta(days=weekdays[0] -last_event.isoweekday())
+            
+            last_event += timedelta(weeks=self.repeat_freq)
         
-            #no reminder, then the next event is 4.30am on the day (the task is created)
-            if self.no_reminder:
-                i+=1
-                yield local_tz.localize( gtd + datetime.combine(self.start_date, time(4,30,0) ) )
-            else:
-                for r in sorted_reminders:
-                    i+=1
-                    yield local_tz.localize( datetime.combine( self.start_date, time(12,0,0) ) + r )
+        return last_event
+        
+    
+    def iter_instances(self,max_events=10):
+        """ returns a list of datetime objects for a repeating event"""
+        
+        local_tz = pytz.timezone(self.timezone)
+        last_event = datetime.combine( self.start_date , time(12,0,0) )
+        
+        if not self.repeat:
+            #doesn't repeat, so return just the event
+            yield local_tz.localize( last_event )
+            return
+        
+        if len(self.repeat_on) > 0:
+            wd = sorted([self.weekdays_to_int(d) for  d in self.repeat_on])
+            if last_event.isoweekday() not in wd:
+                last_event = self.next_wd(wd,last_event)
+            
+            original_dow = None
+        else:
+            wd = None
+            original_dow = {'day':last_event.day,'weekday':last_event.isoweekday()}
+        
+        i=0
+        while True:
+            
+            if i >= max_events or (self.repeats_limited and i >= self.repeats_times):
+                return
+            
+            i+=1
+            yield local_tz.localize( last_event )
+            
+            if self.repeat_period == "Daily":
                 
+                last_event += timedelta(days=self.repeat_freq)
+                
+            elif self.repeat_period == "Weekly":
+                if wd:
+                    last_event = self.next_wd(wd,last_event)
+                else:
+                    last_event += timedelta(weeks=self.repeat_freq)
+                
+            elif self.repeat_period == "Monthly":
+                
+                #closest day possible in the right month
+                last_event = add_months( datetime.combine(self.start_date,time(12,0,0)) ,self.repeat_freq * i)
+
+                if self.repeat_by == "dow":
+                    assert(original_dow), 'Something went wrong'
+                    
+                    #how many days forward to get to the same day of week
+                    dd_b = (last_event.isoweekday() - original_dow['weekday']) % 7
+                    dd_f = 7- dd_b
+                    
+                    if original_dow['day'] > 28:
+                        max_day = calendar.monthrange(last_event.year,last_event.month)[1]
+                        min_day = 0
+                    elif original_dow['day'] > 21:
+                        max_day = 28
+                        min_day = 22
+                    elif original_dow['day'] > 14:
+                        max_day = 21
+                        min_day = 15
+                    elif original_dow['day'] > 7:
+                        max_day = 14
+                        min_day = 8
+                    else:
+                        max_day = 7
+                        min_day = 1
+                    
+                    if last_event.day + dd_f > max_day:
+                        #logging.info('{3} le day {0} dow {1} going backwards {2} - f{4} b{5}'.format(last_event.day,last_event.isoweekday(),-dd_b,last_event.month,dd_f,dd_b))
+                        last_event += timedelta(days= -dd_b)
+                    else:
+                        #logging.info('{3} le day {0} dow {1} going forwards {2} - f{4} b{5}'.format(last_event.day,last_event.isoweekday(),dd_f,last_event.month,dd_f,dd_b))
+                        last_event += timedelta(days= dd_f)
+                
+            elif self.repeat_period == "Yearly":
+                
+                last_event = add_years(datetime.combine(self.start_date,time(12,0,0)),i)
+                    
+        
         
         
     @staticmethod

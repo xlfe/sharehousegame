@@ -277,10 +277,14 @@
 	$('#rem_reminder').hide();
 	
 	$('#add_reminder').click(function(){
-	    var ro  = $('#reminder-options :first').clone().insertAfter('#reminder-options :last');
-	    $(ro).children('.control-label').remove();
-	    $(ro).find('#add_reminder').remove();
-	    $(ro).find('#rem_reminder').show();
+            if ($('div[id=reminder-options]').length > 9) {
+                alert("Sorry, there is a maximum of 10 reminders allowed.");
+            } else {
+                var ro  = $('#reminder-options :first').clone().insertAfter('#reminder-options :last');
+                $(ro).children('.control-label').remove();
+                $(ro).find('#add_reminder').remove();
+                $(ro).find('#rem_reminder').show();
+            }
 	});
 	
 	$('#rem_reminder').live('click',function() {
