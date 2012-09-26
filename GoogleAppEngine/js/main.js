@@ -1,5 +1,4 @@
     function err(response_object) {
-        alert('Ooops');
         $('<div class="alert alert-error"><strong>Error!</strong> ' +
                   'Something went wrong. Please try again' +
                   '.</div>').fadeIn('fast').insertAfter($(response_object)); 

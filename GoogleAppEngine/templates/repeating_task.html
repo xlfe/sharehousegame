@@ -94,6 +94,16 @@
 		    <label class="radio inline"><input type="radio" name="repeat_by" value="dow"> day of the week</label>
 		</div>
 	    </div>
+            <div class="control-group">
+                <label class="control-label">Repeat
+                </label>
+                <div class="controls" id="repeat-times">
+                    <label class="radio"><input type="radio" name="repeats_limited" value="False" checked> until cancelled</label>
+                    <label class="radio"><input id='repeat-times-check' type="radio" name="repeats_limited" value="True">
+                    <input type="text" id="repeat-times-input" class="number input-mini" name="repeats_times">
+                    occurences </label>
+                </div>
+            </div>
 	</div>
 	
 	<div id="reminder-details">
@@ -162,6 +172,8 @@
 	$('.tt-right').tooltip( {
 	    placement: 'right'
 	});
+        
+        
 	
 	$('#when').bind('keyup',function() {
 	    
@@ -216,6 +228,17 @@
 	function checked(cb){
 	    return $(cb).attr("checked") != "undefined" && $(cb).attr("checked") == "checked"
 	}
+        
+        $('#repeat-times').change(function() {
+            if (checked($('#repeat-times-check')) ){
+                $('#repeat-times-input').addClass('required').addClass('number')
+                .parent().parent().parent().removeClass('error').removeClass('success');
+            } else {
+                $('#repeat-times-input').removeClass('required').removeClass('error').val('')
+                .parent().parent().parent().removeClass('error').removeClass('success').find('.inline-help').remove();
+            }
+        });
+        
 	$('#repeats_cb').change(function() {
 	    if (checked(this)) {
 		$('#repeat-options').show();

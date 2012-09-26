@@ -8,3 +8,4 @@ mindnode/
 bootstrap*css
 vendor/
 lib/
+pytz/

@@ -20,7 +20,7 @@
             <tr>
                 <td><span class="tt-below" title="{{t.desc|truncate(length=64, killwords=False, end='...')}}">
 			{{t.name|truncate(length=32,killwords=False,end='...')}}</span></td>
-		<td></td>
+		<td>{{t.next_event_utc()|safe}}</td>
                 <td>{{t.describe_repeat()|safe}}</td>
 		<td><i class="icon-{% if t.group_task %}ok tt-right" title="All housemates must complete the task before it is marked as 'done'"{%else%}remove{%endif%}"></i></td>
 		<td><i class="tt-right icon-{% if t.no_reminder %}remove"{%else%}ok" title="{{ t.reminders|join(', ') }}"{%endif%}></i></td>
