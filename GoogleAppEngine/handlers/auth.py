@@ -10,6 +10,7 @@ from webapp2_extras import security
 from google.appengine.ext import ndb
 import shg_utils
 from handlers.jinja import Jinja2Handler
+from time import sleep
 
 class PasswordAuth(Jinja2Handler):
     
@@ -71,7 +72,7 @@ class FacebookAuth(webapp2.RequestHandler):
             new_at = authprovider.AuthProvider._create(user=at_user,auth_id=auth_id,user_info=callback['user_info'],credentials=callback['credentials'])
                 
             #self.request.session.upgrade_to_user_session(at_user._get_id())
-        
+        sleep(1)
         return self.redirect('/')
     
         

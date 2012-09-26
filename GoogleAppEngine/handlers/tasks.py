@@ -7,6 +7,7 @@ from models import house, authprovider
 from handlers.jinja import Jinja2Handler
 from pytz.gae import pytz
 from datetime import datetime, timedelta, time
+from time import sleep
 import calendar
 
 def add_months(sourcedate,months):
@@ -63,6 +64,7 @@ class RepeatedTask(ndb.Model):
     group_task = ndb.BooleanProperty(default=False)
     no_reminder = ndb.BooleanProperty(default=False)
     reminders = ndb.StringProperty(repeated=True)
+    points = ndb.IntegerProperty(required=True)
     
     house_id = ndb.IntegerProperty(required=True, indexed=True)
     created_by = ndb.IntegerProperty(required=True)
@@ -86,6 +88,10 @@ class RepeatedTask(ndb.Model):
         
         if 'reminders' in dict:
             assert len(dict['reminders']) <= 10, 'Sorry, a maximum of 10 reminders'
+            #make sure we only have one of each...
+            dict['reminders'] = set(dict['reminders'])
+            
+        assert dict['start_date'].year >= 2012,'Start date must be after 2012'
         
         try:
             rt.populate(**dict)
@@ -187,22 +193,49 @@ class RepeatedTask(ndb.Model):
     def next_event_utc(self):
         """the next event trigger"""
         
+        now = pytz.UTC.localize(datetime.now())
         
-        return '<br>'.join(str(i) for i in self.iter_instances())
+        for event in self.iter_instances(None):
+            if event > now:
+                return event
+    def next_reminder_utc(self):
+        
+        now = pytz.UTC.localize(datetime.now())
+        ne = self.next_event_utc()
+        if ne:
+            for reminder in self.iter_reminders(ne,None):
+                if reminder > now:
+                    return reminder
+        
+    def localize(self,dt):
+        fmt = '%Y-%m-%d'
+        
+        if dt:
+            local = pytz.timezone(self.timezone)
+            return local.normalize(dt.astimezone(local)).strftime(fmt)
+        else:
+            return '-'
+        
     
-    def iter_reminders(self,dt_event):
+    def pretty(self,dt):
+        if dt:
+            return shg_utils.prettydate(dt)
+        else:
+            return '-'
+            
+    def iter_reminders(self,dt_event,max_reminders=10):
         """ returns UTC datetime objects for reminders for an event occuring on dt_event"""
         
         sorted_reminders = sorted(self.reminder_to_time_delta(r) for r in self.reminders)
+        n= 0
         
         for r in sorted_reminders:
-            i+=1
-            yield local_tz.localize( datetime.combine( self.start_date, time(12,0,0) ) + r )
-            
-            if i > 10:
+            n+=1
+            yield  dt_event + r 
+        
+            if max_reminders and n > max_reminders:
                 return
 
-        yield dt_event
     
     def next_wd(self,weekdays,last_event):
         eow = True
@@ -221,7 +254,7 @@ class RepeatedTask(ndb.Model):
         
     
     def iter_instances(self,max_events=10):
-        """ returns a list of datetime objects for a repeating event"""
+        """ returns a list of UTC datetime objects for a repeating event"""
         
         local_tz = pytz.timezone(self.timezone)
         last_event = datetime.combine( self.start_date , time(12,0,0) )
@@ -244,7 +277,7 @@ class RepeatedTask(ndb.Model):
         i=0
         while True:
             
-            if i >= max_events or (self.repeats_limited and i >= self.repeats_times):
+            if (max_events and i >= max_events) or (self.repeats_limited and i >= self.repeats_times):
                 return
             
             i+=1
@@ -319,6 +352,10 @@ class Task(Jinja2Handler):
             
             rt = RepeatedTask().create(dict)
             
+            hse = house.House.get_by_id(self.request.session.user.house_id)
+            hse.add_house_event(self.request.session.user._get_id(),'created a task named {0}'.format(dict['name']),0)
+                
+            
             self.json_response(json.dumps({'success':'Task created','redirect':'/tasks'}))
             
         return
@@ -340,6 +377,25 @@ class Task(Jinja2Handler):
         elif action == 'create':
                 
             self.render_template('repeating_task.html')
+        elif action == 'delete':
+            
+            id = self.request.GET['id']
+            
+            task = ndb.Key('RepeatedTask',int(id)).get()
+            
+            if task:
+                
+                if self.request.session.user.house_id == task.house_id:
+                    hse = house.House.get_by_id(self.request.session.user.house_id)
+                    hse.add_house_event(self.request.session.user._get_id(),'deleted the task called {0}'.format(task.name),0)
+                
+                    task.key.delete(use_datastore=False)
+                    task.key.delete()
+                
+                
+                
+            sleep(1)
+            self.redirect('/tasks?deleted')
         
         
             

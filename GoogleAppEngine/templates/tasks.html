@@ -7,25 +7,48 @@
         <table class="table table-hover">
             <thead>
                 <tr>
+                    <th></th>
                     <th>Name</th>
-		    <th>Next occurence</th>
+                    <th>Next occurence</th>
+		    <th>Next reminder</th>
                     <th>Repeats</th>
 		    <th>Group task</th>
 		    <th>Reminders</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 
         {% for t in tasks %}
             <tr>
+                <td>{{points_helper.points(t.points)}}</td>
                 <td><span class="tt-below" title="{{t.desc|truncate(length=64, killwords=False, end='...')}}">
-			{{t.name|truncate(length=32,killwords=False,end='...')}}</span></td>
-		<td>{{t.next_event_utc()|safe}}</td>
+			{{t.name|truncate(length=32,killwords=False,end='...')}}</span>
+                </td>
+                <td>{% set ne = t.next_event_utc() %}<span class="tt-right" title="{{t.localize(ne)}}">
+                          {{t.pretty(ne)}}</span>
+                </td>
+		<td>
+                    {% set ne = t.next_reminder_utc() %}<span class="tt-right" title="{{t.localize(ne)}}">
+                          {{t.pretty(ne)}}</span>
+                </td>
+                    
                 <td>{{t.describe_repeat()|safe}}</td>
-		<td><i class="icon-{% if t.group_task %}ok tt-right" title="All housemates must complete the task before it is marked as 'done'"{%else%}remove{%endif%}"></i></td>
-		<td><i class="tt-right icon-{% if t.no_reminder %}remove"{%else%}ok" title="{{ t.reminders|join(', ') }}"{%endif%}></i></td>
+		<td>{% if t.group_task %}
+                        <i class="icon-ok tt-right" title="All housemates must complete the task before it is marked as 'done'"></i>
+                        {%else%}
+                            -
+                        {%endif%}
+                </td>
+		<td>{% if t.no_reminder %}-{%else%}<i class="tt-right icon-ok" title="{{ t.reminders|join(', ') }}"></i>{%endif%}</td>
+                <td value="{{t.key.id()}}" class="tt-below delete-task" title="Delete task"><i class="icon-remove"></i></td>
             </tr>
         {%endfor%}
+        
+        <tr>
+            <td id="add-repeated-task" colspan="100" align="center"> <i class="icon-plus"></i> Add a task</td></a>
+        </tr>
+        
 
 	
             </tbody>
@@ -42,6 +65,14 @@ $('.tt-right').tooltip( {
 $('.tt-below').tooltip( {
 	    placement: 'bottom'
 	});
+        
+$('#add-repeated-task').click(function() {
+    window.location = '/task/create';
+});
+
+$('.delete-task').bind('click',function() {
+   window.location = '/task/delete?id=' + $(this).attr('value');
+});
 
 </script>
 {%endblock%}
