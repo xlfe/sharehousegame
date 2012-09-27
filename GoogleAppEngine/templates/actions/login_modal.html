@@ -5,6 +5,7 @@
 	<h3 id="myModalLabel">Login</h3>
     </div>
     	<ul class="nav nav-tabs">
+	    <li class="active"><a id="login-tab" href="#" data-toggle="tab">Login</a></li>
 	    <li class="pull-right"><a id="password-reset" href="#" data-toggle="tab">Password reset</a></li>
 	</ul>
 	    
@@ -64,15 +65,25 @@
 	$('#login form').attr('action','/auth/password/reset');
 	$('#login button[type=submit]').html('Reset password &raquo;');
 	$('#login #pw').hide();
+	$('#myModalLabel').text('Password reset');
     });
-    
-    $('#login').on('hidden', function () {
-    	$('#login hr').next().show();
+    function reset_login() {
+	$('#login hr').next().show();
 	$('#login hr').show();
 	$('#login form').attr('action','/auth/password');
 	$('#login button[type=submit]').html('Login &raquo;');
 	$('#login #pw').show();
+	$('#password-reset').parent().removeClass('active');
+	$('#login-tab').parent().addClass('active');
+	$('#myModalLabel').text('Login');
+    }
+    $('#login-tab').click(function () {
+    	reset_login();
     });
+    
+    $('#login').on('hidden',function() {
+	reset_login();
+    })
     
 
     

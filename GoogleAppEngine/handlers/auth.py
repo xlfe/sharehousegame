@@ -14,22 +14,21 @@ from time import sleep
 
 class PasswordAuth(Jinja2Handler):
     
-    error_msg = 'We were unable to log you on using the supplied email address and password.'
+    
     
     @session.manage_user
     def start(self):
+	error_msg = 'We were unable to log you on using the supplied email address and password. Do you need to reset your password?'
 	password = self.request.POST['password']
 	email = self.request.POST['email']
 	auth_id = authprovider.AuthProvider.generate_auth_id('password',email)
 	
 	auth_token = authprovider.AuthProvider._get_by_auth_id(auth_id)
 	
-	if auth_token is None:
-	    raise Exception(self.error_msg)
+	if auth_token is None or not security.check_password_hash(password=password,pwhash=auth_token.password_hash,pepper=shg_utils.password_pepper):
+	    return self.generic_error(title='Error logging in',message=error_msg,action='Password reset &raquo;',
+				      action_link="""#login" data-toggle="modal" onclick="$('#password-reset').click();" """)
 	    
-	if not security.check_password_hash(password=password,pwhash=auth_token.password_hash,pepper=shg_utils.password_pepper):
-	    raise Exception(self.error_msg)
-	
 	self.request.session.upgrade_to_user_session(auth_token.user_id)
 	
 	return self.redirect('/')
