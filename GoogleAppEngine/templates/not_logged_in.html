@@ -93,8 +93,9 @@
 	{% endif %}
 	</div>
       </div>
-      <div class="control-group">
-	<label class="control-label">Password</label>
+      <div class="control-group">{% if signup_email %}
+	<label class="control-label">Choose a password</label>{% else %}
+	<label class="control-label">Password</label>{% endif %}
 	<div class="controls">
 	  <input type="password" class="required" name="password" minlength="7" placeholder="Password">
 	</div>

@@ -1,7 +1,11 @@
-    function err(response_object) {
+    function err(response_object,message) {
+        
+        if (message == "undefined") {
+            var message = 'Something went wrong. Please try again shortly.'
+        }
         $('<div class="alert alert-error"><strong>Error!</strong> ' +
-                  'Something went wrong. Please try again' +
-                  '.</div>').fadeIn('fast').insertAfter($(response_object)); 
+                  message +
+                  '</div>').fadeIn('fast').insertAfter($(response_object)); 
     }
 
   function post_form(action,form,response_object){
@@ -23,6 +27,16 @@
             if (response == null) {
                 err(response_object);
             } else {
+                
+                if ("error" in response) {
+                    err(response_object,response['error']);
+                    return;
+                }
+                
+                if ("failure" in response) {
+                    err(response_object,response['failure']);
+                    return;
+                }
             
                 if ("success" in response) {
                     message = $('<div class="alert alert-success"><strong>Success!</strong> ' +

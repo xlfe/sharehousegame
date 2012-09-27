@@ -29,7 +29,9 @@ class House(ndb.Model):
         ra = []
         
         for h in HouseLog.query(ancestor=self.key).order(HouseLog.when):
-            a = {'who':_user.User._get_first_name(h.user_id)
+            log_user = _user.User._get_user_from_id(h.user_id)
+            
+            a = {'who': log_user.get_first_name() if log_user else 'Unknown'
                  ,'when':prettydate(h.when)
                  ,'desc':h.desc
                  ,'points':h.points
@@ -50,14 +52,17 @@ class House(ndb.Model):
     
     def add_user(self,user):
         self.users.append(user._get_id())
-        n=0
-        for i in self.invited_users:
-            if i.email == user.verified_email:
-                self.invited_users.pop(n)
-                break
-            n+=1
+        self.invited_users = filter (lambda u: u.email != user.verified_email, self.invited_users )
         self.put()
-        return    
+        return
+    
+    def remove_user(self,user_id):
+        self.users = filter ( lambda x: x != user_id, self.users )
+        self.put()
+        self.add_house_event(user_id,'left the house',0)
+        
+        if len(self.users) == 0:
+            self.key.delete()
         
     
 class HouseLog(ndb.Model):

@@ -198,6 +198,7 @@ class RepeatedTask(ndb.Model):
         for event in self.iter_instances(None):
             if event > now:
                 return event
+        
     def next_reminder_utc(self):
         
         now = pytz.UTC.localize(datetime.now())

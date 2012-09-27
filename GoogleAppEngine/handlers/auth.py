@@ -89,34 +89,34 @@ class AuthLogout(webapp2.RequestHandler):
 class AuthSignup(Jinja2Handler):
     
     
-    @ndb.transactional(xg=True)
     def post(self):
-        
-        name = self.request.get('name')
-        email = self.request.get('email')
-        password = self.request.get('password')
-        
-        if not name or not email or not password:
-            raise Exception('Error not all values passed')
-            
-        auth_id = authprovider.AuthProvider.generate_auth_id('password', email)
-            
-        matched_at = authprovider.AuthProvider.get_by_auth_id(auth_id)
-        
-        if matched_at:
-            raise Exception('Error email already exists in system')
-        
-        
-        password_hash = security.generate_password_hash(password=password,pepper=shg_utils.password_pepper)
-        token = _user.EmailHash.create(name=name,email=email,password_hash=password_hash)
-        
-        token.send_email(self.request.host_url,'new_user')
-        
-        resp = {
-                    'success': 'Validation email sent. Please check your email!'
-                }
-        
-        self.json_response(json.dumps(resp))
-    
-        return
+	
+	name = self.request.get('name')
+	email = self.request.get('email')
+	password = self.request.get('password')
+	
+	if not name or not email or not password:
+	    raise Exception('Error not all values passed')
+	    
+	auth_id = authprovider.AuthProvider.generate_auth_id('password', email)
+	    
+	matched_at = authprovider.AuthProvider.get_by_auth_id(auth_id)
+	
+	if matched_at:
+	    raise Exception('Error email already exists in system')
+	
+	password_hash = security.generate_password_hash(password=password,pepper=shg_utils.password_pepper)
+	token = _user.EmailHash.get_or_create(name=name,email=email,password_hash=password_hash)
+	
+	reason = token.limited()
+	
+	if reason:
+	    return self.json_response(json.dumps({'failure':reason}))
+	
+	if token.send_email(self.request.host_url,'new_user'):
+	    return self.json_response(json.dumps({'success':'Validation email sent. Please check your inbox!'}))
+	else:
+	    return self.json_response(json.dumps({'failure':'Unable to send email - please try again shortly'}))
+	    
+
     

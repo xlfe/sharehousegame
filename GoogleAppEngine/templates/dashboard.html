@@ -7,7 +7,7 @@
     </div>
 
     <div class="row">
-        <div class="span5 "><h3>Housemates</h3>    </div>
+        <div class="span5 "><h4>Housemates</h4>    </div>
     </div>
     
     <div class="row">
@@ -16,6 +16,7 @@
                 <tr>
                     <th>Name</th>
                     <th>Points</th>
+		    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -24,6 +25,7 @@
             <tr>
                 <td>{{u.get_first_name()}}</td>
                 <td>{{ points_helper.points(u.points_balance())}}</td>
+		<td></td>
             </tr>
         {%endfor%}
 
@@ -67,38 +69,47 @@
     <script>
 	
 	$('#invite-reminder').live('click','',function() {
-	
-	    $.ajax( {
-		type: 'POST',
-		url: '/api',
-		data: {what:'refer', housemate_id: $(this).attr('name') },
-		dataType: "json",
-		success: function(responseText){
-		  
-		  var response = responseText;// JSON.parse(responseText);
-		  var message= null;
-		  var timeout = 0;
-		  if (response['success'] != "") {
-		      message = $('<div class="alert alert-success"><strong>Success!</strong> ' +
-			response['success'] +
-			'.</div>').fadeIn('fast').insertAfter($(response_object));
-      
-		  }
-		  
-		  if (response['redirect'] != "") {
-		      if (message != null) {
-			  $(message).fadeOut(1500);
-			  timeout = 1000;
-		      }
+		$.ajax( {
+		    type: 'POST',
+		    url: '/api',
+		    data: {what:'refer', housemate_id: $(this).attr('name') },
+		    dataType: "json",
+		
+		    error: function(responseText) {
+			alert('Something went wrong - please try again!');
+		    },
+		    success: function(responseText){
 		      
-		      setTimeout(function(){
-			  window.location.replace(response['redirect']); 
-			  },timeout);
-		  
-		       }
-		 }
-	      });	    
-	})
+		      var response = responseText;// JSON.parse(responseText);
+		      var message= null;
+		      var timeout = 0;
+		      
+		      if (response == null) {
+			  alert('Something went wrong - please try again!');
+		      } else {
+		      
+			  if ("success" in response) {
+				var hm = $('button[name=' + response['success'] +']');
+				var label = $('<span class="label label-success">Email sent!</span>').insertAfter($(hm)).fadeIn();
+				$(hm).remove();
+				
+				
+			  } else {
+			  
+				var hm = $('button[name=' + response['hm'] +']');
+				var label = $('<span class="label label-info">'+response['failure'] +'</span>').insertAfter($(hm)).fadeIn();
+				$(hm).remove();
+			  
+			  }
+			  
+			  
+			  
+			  
+		    }
+		  }
+	    });
+	    
+	});
 	
 	
     </script>

@@ -3,5 +3,30 @@
 
 {%block main %}
 
+<div class="row">
+    <div class="span1">
+        
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="span5 "><h4>Your name</h4>
+        <p class="well">{{user.display_name}}</p>
+    </div>
+</div>
+   
+<div class="row">
+    <div class="span5 "><h4>Your house</h4>
+       <p class="well">{{house.name}}</p>
+       <a href="/api?what=leave-house">Leave house / create your own house</a>
+    </div>
+</div>
  
- {%endblock%}
+ 
+{%endblock%}
+
+{% block javascript %}
+    
+    
+{% endblock %}
