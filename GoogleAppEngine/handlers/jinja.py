@@ -26,7 +26,7 @@ class Jinja2Handler(webapp2.RequestHandler):
         if not template_values:
             template_values = {}
             
-        if self.request.session and self.request.session.user and not 'user' in template_values:
+        if type(self) == type(webapp2.RequestHandler) and self.request.session and self.request.session.user and not 'user' in template_values:
             template_values['user'] = self.request.session.user
             if self.request.session.user.house_id and not 'house' in template_values:
                 template_values['house'] = house.House._get_house_by_id(self.request.session.user.house_id)
@@ -34,6 +34,16 @@ class Jinja2Handler(webapp2.RequestHandler):
         template_values['page_base'] = self.request.route.name
         self.response.write(self.jinja2.render_template(
             template_name, **template_values))
+    
+    def generic_success(self,title,message,action='Continue &raquo;',action_link='/'):
+        return self.render_template('actions/generic_success.html', { 'title':title,'message':message,'action':action,'action_link':action_link})
+    
+    def generic_error(self,title,message,action='Continue &raquo;',action_link='/'):
+        return self.render_template('actions/generic_error.html', { 'title':title,'message':message,'action':action,'action_link':action_link})
+    
+    def generic_question(self,title,message,form_action,submit_name,questions):
+        return self.render_template('actions/generic_question.html', { 'title':title,'message':message,'form_action':form_action,
+                                                                      'submit_name':submit_name,'questions':questions})
 
     def render_string(self, template_string, template_values={}):
         self.response.write(self.jinja2.environment.from_string(
@@ -46,7 +56,7 @@ class Jinja2Handler(webapp2.RequestHandler):
     #def handle_exception(self,exception,debug_mode):
         
      #   if debug_mode:
-     #       raise Exception(exception)
-     #   logging.error('Ooops {0} {1}'.format(exception,debug_mode))
-      #  return
+      #      raise 
+       # logging.error('Ooops {0} {1}'.format(exception,debug_mode))
+        #return
         

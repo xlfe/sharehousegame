@@ -8,9 +8,9 @@
     
   <div class="container">  
     <div class="hero-unit">
-    <h1>Welcome to {{house_name}}!</h1>
-    <p>You have successfully joined the house.</p>
-    <a href="/" class="btn btn-large btn-success">Continue &raquo;</a>
+    <h1>{{title}}</h1>
+    <p>{{message}}</p>
+    <a href="{{action_link|safe}}" class="btn btn-large btn-success">{{action|safe}}</a>
     </div>
   </div>
     

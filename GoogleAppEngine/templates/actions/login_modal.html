@@ -4,7 +4,10 @@
 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
 	<h3 id="myModalLabel">Login</h3>
     </div>
-
+    	<ul class="nav nav-tabs">
+	    <li class="pull-right"><a id="password-reset" href="#" data-toggle="tab">Password reset</a></li>
+	</ul>
+	    
     <div class="modal-body">
 	<div class="row">
 	    <form class="form-horizontal" action="/auth/password" method="POST">
@@ -14,14 +17,17 @@
 			<input type="text" name="email" placeholder="Email">
 		    </div>
 		</div>
-		<div class="control-group">
+		<div class="control-group" id="pw">
 		    <label class="control-label">Password</label>
 		    <div class="controls">
 			<input type="password" name="password" placeholder="Password">
 		    </div>
 		</div>
 		<div class="control-group">
-		    <div class="controls">
+		    <div class="controls">{% if False %}
+			<label class="checkbox">
+			    <input type="checkbox" name="session_only" value="yes"> Don't remember me on this computer
+			</label>{%endif%}
 			<button type="submit" class="btn btn-success">Login &raquo;</button>
 		    </div>
 		</div>
@@ -44,16 +50,32 @@
     </div>
 </div>
 
-<script>
-    $('#tabs a').click(function (e) {
-	e.preventDefault();
-	$(this).tab('show');
-    });
     
+<script>
+
     $('.fb-hover').tooltip({
         placement:'right'
     });
 
+    $('#password-reset').click(function(e){
+	e.preventDefault();
+	$('#login hr').next().hide();
+	$('#login hr').hide();
+	$('#login form').attr('action','/auth/password/reset');
+	$('#login button[type=submit]').html('Reset password &raquo;');
+	$('#login #pw').hide();
+    });
+    
+    $('#login').on('hidden', function () {
+    	$('#login hr').next().show();
+	$('#login hr').show();
+	$('#login form').attr('action','/auth/password');
+	$('#login button[type=submit]').html('Login &raquo;');
+	$('#login #pw').show();
+    });
+    
+
     
 </script>
+
 

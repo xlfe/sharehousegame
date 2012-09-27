@@ -1,0 +1,39 @@
+
+{% extends "base.html" %}
+
+
+{% block content %}
+    
+    
+    
+  <div class="container">  
+    <div class="hero-unit">
+    <h1>{{title}}</h1>
+    <p>{{message}}</p>
+    <form action="{{form_action}}" class="form-horizontal" method="POST">
+
+        {% for q in questions %}
+        <div class="control-group">
+            <label class="control-label">{{q.label}}</label>
+            <div class="controls">
+                <input type="{{q.type}}" name="{{q.name}}" placeholder="{{q.placeholder}}">
+            </div>
+        </div>
+        {%endfor%}
+        <div class="control-group">
+            <div class="controls">
+                <button type="submit" class="btn btn-success">{{submit_name}}</button>
+            </div>
+        </div>
+    </form>
+    </div>
+  </div>
+    
+{% endblock %}
+
+
+{% block javascript %}
+
+
+{% endblock %}
+        

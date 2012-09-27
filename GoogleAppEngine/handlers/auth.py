@@ -18,21 +18,45 @@ class PasswordAuth(Jinja2Handler):
     
     @session.manage_user
     def start(self):
-        password = self.request.POST['password']
-        email = self.request.POST['email']
-        auth_id = authprovider.AuthProvider.generate_auth_id('password',email)
-        
-        auth_token = authprovider.AuthProvider._get_by_auth_id(auth_id)
-        
-        if auth_token is None:
+	password = self.request.POST['password']
+	email = self.request.POST['email']
+	auth_id = authprovider.AuthProvider.generate_auth_id('password',email)
+	
+	auth_token = authprovider.AuthProvider._get_by_auth_id(auth_id)
+	
+	if auth_token is None:
 	    raise Exception(self.error_msg)
+	    
+	if not security.check_password_hash(password=password,pwhash=auth_token.password_hash,pepper=shg_utils.password_pepper):
+	    raise Exception(self.error_msg)
+	
+	self.request.session.upgrade_to_user_session(auth_token.user_id)
+	
+	return self.redirect('/')
     
-        if not security.check_password_hash(password=password,pwhash=auth_token.password_hash,pepper=shg_utils.password_pepper):
-	    raise Exception(self.error_msg)
-        
-        self.request.session.upgrade_to_user_session(auth_token.user_id)
-        
-        return self.redirect('/')
+    def reset(self):
+	
+	email = self.request.POST['email']
+	
+	auth_id = authprovider.AuthProvider.generate_auth_id('password',email)
+	auth_token = authprovider.AuthProvider._get_by_auth_id(auth_id)
+	
+	if not auth_token:
+	    return self.generic_error(title='Account not found',message="We're sorry, we couldn't find an account with email address '{0}'".format(email),
+				      action='Sign up &raquo;',action_link='/')
+	token = _user.EmailHash.get_or_create(email=email,user_id=auth_token.user_id,password_hash='reset')
+	
+	reason = token.limited()
+	
+	if reason:
+	    return self.generic_error(title='Unable to send verification email',message=reason)
+	
+	if token.send_email(self.request.host_url,'reset_password'):
+	    self.generic_success(title='Verification email sent',message='Please follow the instructions in your email inbox to reset your password')
+	else:
+	    self.generic_error(title='Unable to send verification email',messsage='An unknown error occurred, please try again')
+	
+	return
 
 
 class FacebookAuth(webapp2.RequestHandler):
@@ -88,9 +112,8 @@ class AuthLogout(webapp2.RequestHandler):
 
 class AuthSignup(Jinja2Handler):
     
-    
     def post(self):
-	
+
 	name = self.request.get('name')
 	email = self.request.get('email')
 	password = self.request.get('password')
@@ -103,7 +126,7 @@ class AuthSignup(Jinja2Handler):
 	matched_at = authprovider.AuthProvider.get_by_auth_id(auth_id)
 	
 	if matched_at:
-	    raise Exception('Error email already exists in system')
+	    return self.json_response(json.dumps({'failure':'Email already exists in system &raquo; <a href="#login" class="btn btn-small btn-success" data-toggle="modal" >Login or reset password</a>'}))
 	
 	password_hash = security.generate_password_hash(password=password,pepper=shg_utils.password_pepper)
 	token = _user.EmailHash.get_or_create(name=name,email=email,password_hash=password_hash)

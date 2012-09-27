@@ -1,0 +1,24 @@
+
+{% extends "base.html" %}
+
+
+{% block content %}
+    
+    
+    
+  <div class="container">  
+    <div class="hero-unit alert-error">
+    <h1>{{title}}</h1>
+    <p>{{message}}</p>
+    <a href="{{action_link|safe}}" class="btn btn-large btn-success">{{action|safe}}</a>
+    </div>
+  </div>
+    
+{% endblock %}
+
+
+{% block javascript %}
+
+
+{% endblock %}
+        
