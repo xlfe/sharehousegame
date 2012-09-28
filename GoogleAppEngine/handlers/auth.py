@@ -30,6 +30,10 @@ class PasswordAuth(Jinja2Handler):
 				      action_link="""#login" data-toggle="modal" onclick="$('#password-reset').click();" """)
 	    
 	self.request.session.upgrade_to_user_session(auth_token.user_id)
+	if self.request.POST.get('dont_persist') == "True":
+	    self.response.set_cookie('_eauth', self.request.session.serialize(),expires=None)
+	    
+	
 	
 	return self.redirect('/')
     

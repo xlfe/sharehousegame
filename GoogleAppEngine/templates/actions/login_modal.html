@@ -26,8 +26,8 @@
 		</div>
 		<div class="control-group">
 		    <div class="controls">{% if False %}
-			<label class="checkbox">
-			    <input type="checkbox" name="session_only" value="yes"> Don't remember me on this computer
+			<label class="checkbox" id='dont-persist'>
+			    <input type="checkbox" name="dont_persist" value="True"> Don't remember me on this computer
 			</label>{%endif%}
 			<button type="submit" class="btn btn-success">Login &raquo;</button>
 		    </div>
@@ -66,6 +66,7 @@
 	$('#login button[type=submit]').html('Reset password &raquo;');
 	$('#login #pw').hide();
 	$('#myModalLabel').text('Password reset');
+	$('#dont-persist').hide();
     });
     function reset_login() {
 	$('#login hr').next().show();
@@ -76,6 +77,7 @@
 	$('#password-reset').parent().removeClass('active');
 	$('#login-tab').parent().addClass('active');
 	$('#myModalLabel').text('Login');
+	$('#dont-persist').show();
     }
     $('#login-tab').click(function () {
     	reset_login();

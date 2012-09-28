@@ -7,6 +7,13 @@ from models import authprovider,house,user
 from google.appengine.ext import ndb
 from time import sleep
 from handlers.jinja import Jinja2Handler
+from google.appengine.ext import deferred
+
+def invite_housemate(h,house_id,base_url,referred_by):
+    
+    e_token = user.EmailHash.get_or_create(name=h.name,email=h.email,house_id=house_id,referred_by=referred_by)
+    return e_token.send_email(base_url,'invite_user')
+    
 
 class API(Jinja2Handler):
     
@@ -115,12 +122,15 @@ class API(Jinja2Handler):
         session_user.insert_points_transaction(points=100,desc='Setup your sharehouse')
         hse.add_house_event(user_id=session_user._get_id(),desc='setup the house',points=100)
         
+        for h in housemates:
+            deferred.defer(invite_housemate,h,hse.get_house_id(),self.request.host_url,session_user.display_name)
+        
         resp = {
             'redirect':'/dashboard',
             'success':'House created {0} with {1} housemates'.format(name,i)
         }
     
-        return self.json_response(json.dumps(resp)) #self.request.params)
+        return self.json_response(json.dumps(resp)) 
 	
 
 def wipe_datastore():

@@ -26,7 +26,8 @@ class Jinja2Handler(webapp2.RequestHandler):
         if not template_values:
             template_values = {}
             
-        if type(self) == type(webapp2.RequestHandler) and self.request.session and self.request.session.user and not 'user' in template_values:
+        #we have to check subclasses because when this is an error handler we get in trouble...
+        if self.request.session and self.request.session.user and not 'user' in template_values:
             template_values['user'] = self.request.session.user
             if self.request.session.user.house_id and not 'house' in template_values:
                 template_values['house'] = house.House._get_house_by_id(self.request.session.user.house_id)
