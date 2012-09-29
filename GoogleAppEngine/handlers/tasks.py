@@ -24,31 +24,74 @@ def add_years(sourcedate,years):
     day = min(sourcedate.day,calendar.monthrange(year,month)[1])
     return datetime(year,month,day,sourcedate.hour,sourcedate.minute,sourcedate.second)
 
+class StandingTask(ndb.Model):
+    _default_indexed=False
+    
+    name = ndb.StringProperty(required=True)
+    desc = ndb.TextProperty(required=True)
+    points = ndb.IntegerProperty(required=True)
+    
+    house_id = ndb.IntegerProperty(required=True, indexed=True)
+    created_by = ndb.IntegerProperty(required=True)
+    created = ndb.DateTimeProperty(auto_now_add=True)
+
+class TaskCompletion(ndb.Model):
+    """Stores a record of a housemate completing a task"""
+    
+    user_id = ndb.IntegerProperty(required=True)
+    when = ndb.DateTimeProperty(auto_now_add=True)
+    
+class TaskInteractions(ndb.Model):
+    """Stores a record of reminders / other emails sent"""
+    
+    user_id = ndb.IntegerProperty(required=True)
+    when = ndb.DateTimeProperty(auto_now_add=True)
+
+class TaskInstance(ndb.Model):
+    """Basically a pointer to the Owner Task to be called at a regular interval using cron"""
+    _default_indexed = False
+    
+    owner = ndb.KeyProperty(required=True,indexed=True)
+    next_action_reqd = ndb.DateTimeProperty(required=True,indexed=True)
+    
+    completions = ndb.StructuredProperty(TaskCompletion,repeated=True)
+    interactions = ndb.StructuredProperty(TaskInteractions,repeated=True)
+    
+
 class RepeatedTask(ndb.Model):
     
     _default_indexed= False
     
-    _definitions = {
+    definitions = {
         'repeat_by'  : [ 'dom', 'dow']
     ,       'repeat_on'  : ['Sunday', 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday' ]
     ,       'repeat_freq':range(1,31)
     ,       'repeat_period': ['Daily','Weekly','Monthly','Yearly']
-    ,       'reminders'     :  [
-                            'That afternoon (about 2pm)',
-                            'Lunch time (about 12pm)',
-                            'That morning (about 10am)',
-                            'The night before (about 7pm)',
-                            'The evening before (about 5pm)',
-                            'The afternoon before (about 3pm)',
-                            'Anytime the day before',
-                            '2 days before',
-                            '3 days before',
-                            '5 days before',
-                            '7 days before',
-                            '10 days before',
-                            '14 days before'
-                            ]
+    ,       'reminder_intervals' : {
+                        'That afternoon (about 2pm)'     : timedelta(hours=2),
+                        'Lunch time (about 12pm)'        : timedelta(hours=0),
+                        'That morning (about 10am)'      : timedelta(hours=-2),
+                        'The night before (about 7pm)'   : timedelta(days=-1,hours=+7),
+                        'The evening before (about 5pm)' : timedelta(days=-1,hours=+5),
+                        'The afternoon before (about 3pm)':timedelta(days=-1,hours=+3),
+                        'Anytime the day before'          :timedelta(days=-1),
+                        '2 days before'                   :timedelta(days=-2),
+                        '3 days before'                   :timedelta(days=-3),
+                        '5 days before'                   :timedelta(days=-5),
+                        '7 days before'                   :timedelta(days=-7),
+                        '10 days before'                  :timedelta(days=-10),
+                        '14 days before'                  :timedelta(days=-14),
+                    }
+    ,       'wd_names' : {
+                        'Monday':   1,
+                        'Tuesday':  2,
+                        'Wednesday':3,
+                        'Thursday': 4,
+                        'Friday':   5,
+                        'Saturday': 6,
+                        'Sunday':   7
             }
+    }
 
     name = ndb.StringProperty(required=True)
     start_date = ndb.DateProperty(required=True)
@@ -71,8 +114,12 @@ class RepeatedTask(ndb.Model):
     house_id = ndb.IntegerProperty(required=True, indexed=True)
     created_by = ndb.IntegerProperty(required=True)
     created = ndb.DateTimeProperty(auto_now_add=True)
+    
+    disabled = ndb.BooleanProperty(default=False)
+    
 
     @classmethod
+    @ndb.transactional(xg=True)
     def create(cls, dict):
         
         rt = cls()
@@ -80,7 +127,7 @@ class RepeatedTask(ndb.Model):
         #encapsulate repeated properties
         dict = shg_utils.encapsulate_dict(dict,RepeatedTask())
         
-        for k,v in cls._definitions.iteritems():
+        for k,v in cls.definitions.iteritems():
             if k in dict:
                 if type(dict[k]) == type([]):
                     for i in dict[k]:
@@ -102,6 +149,21 @@ class RepeatedTask(ndb.Model):
             logging.error(dict)
             raise
         
+        try:
+            next_reminder = rt.next_reminder_utc()
+            
+            next_event = rt.next_event_utc()
+            if next_reminder and next_event:    
+                nar = min(next_event,next_reminder)
+            else:
+                nar = next_event
+            if next_event:
+                logging.info(nar)
+                ti = TaskInstance(owner=rt.key,next_action_reqd=nar.replace(tzinfo=None))
+                ti.put()
+        except:
+            raise
+            
         return rt
     
     @property
@@ -169,51 +231,24 @@ class RepeatedTask(ndb.Model):
         
         return '<span class="tt-right" title="{0}"> {1}</span>'.format(desc,short)
     
-    @staticmethod
-    def reminder_to_time_delta(reminder):
-        """takes a description of the reminder and returns the time delta
-        assuming a standard 12pm on the day"""
+    def reminder_to_time_delta(self,reminder):
+        """takes a description of the reminder and returns the time delta assuming a standard 12pm on the day"""
+        return self.definitions['reminder_intervals'][reminder]
         
-        intervals = {   'That afternoon (about 2pm)'     : timedelta(hours=2),
-                        'Lunch time (about 12pm)'        : timedelta(hours=0),
-                        'That morning (about 10am)'      : timedelta(hours=-2),
-                        'The night before (about 7pm)'   : timedelta(days=-1,hours=+7),
-                        'The evening before (about 5pm)' : timedelta(days=-1,hours=+5),
-                        'The afternoon before (about 3pm)':timedelta(days=-1,hours=+3),
-                        'Anytime the day before'          :timedelta(days=-1),
-                        '2 days before'                   :timedelta(days=-2),
-                        '3 days before'                   :timedelta(days=-3),
-                        '5 days before'                   :timedelta(days=-5),
-                        '7 days before'                   :timedelta(days=-7),
-                        '10 days before'                  :timedelta(days=-10),
-                        '14 days before'                  :timedelta(days=-14),
-                    }
-        
-        return intervals[reminder]
-    @staticmethod
-    def weekdays_to_int(weekday):
+    def weekdays_to_int(self,weekday):
         """uses ISO weekday assignments"""
-        
-        wdn = {
-            'Monday':1,
-            'Tuesday':2,
-            'Wednesday':3,
-            'Thursday':4,
-            'Friday':5,
-            'Saturday':6,
-            'Sunday':7
-        }
-        
-        return wdn[weekday]
-        
+        return self.definitions['wd_names'][weekday]
+    
     def next_event_utc(self):
         """the next event trigger"""
         
         now = pytz.UTC.localize(datetime.now())
         
+        
         for event in self.iter_instances(None):
             if event > now:
-                return event
+                return pytz.UTC.normalize(event.astimezone(pytz.UTC))
+                #return event
         
     def next_reminder_utc(self):
         
@@ -225,7 +260,8 @@ class RepeatedTask(ndb.Model):
                     return reminder
         
     def localize(self,dt):
-        fmt = '%Y-%m-%d'
+        """Converts the UTC dt into the local timezone """
+        fmt = '%Y-%m-%d %H:%M %Z'
         
         if dt:
             local = pytz.timezone(self.timezone)
@@ -233,7 +269,6 @@ class RepeatedTask(ndb.Model):
         else:
             return '-'
         
-    
     def pretty(self,dt):
         if dt:
             return shg_utils.prettydate(dt)
@@ -241,7 +276,7 @@ class RepeatedTask(ndb.Model):
             return '-'
             
     def iter_reminders(self,dt_event,max_reminders=10):
-        """ returns UTC datetime objects for reminders for an event occuring on dt_event"""
+        """ returns datetime objects for reminders for an event occuring on dt_event"""
         
         sorted_reminders = sorted(self.reminder_to_time_delta(r) for r in self.reminders)
         n= 0
@@ -268,10 +303,9 @@ class RepeatedTask(ndb.Model):
             last_event += timedelta(weeks=self.repeat_freq)
         
         return last_event
-        
     
     def iter_instances(self,max_events=10):
-        """ returns a list of UTC datetime objects for a repeating event"""
+        """ returns a list of localized datetime objects for a repeating event"""
         
         local_tz = pytz.timezone(self.timezone)
         last_event = datetime.combine( self.start_date , time(12,0,0) )
@@ -350,11 +384,9 @@ class RepeatedTask(ndb.Model):
                 last_event = add_years(datetime.combine(self.start_date,time(12,0,0)),i)
                     
         
-        
-        
     @staticmethod
     def get_tasks_by_house_id(house_id):
-        return RepeatedTask().query(RepeatedTask.house_id == house_id).fetch()
+        return RepeatedTask().query(RepeatedTask.house_id == house_id,RepeatedTask.disabled == False).fetch()
     
 class Task(Jinja2Handler):
     
@@ -372,7 +404,6 @@ class Task(Jinja2Handler):
             hse = house.House.get_by_id(self.request.session.user.house_id)
             hse.add_house_event(self.request.session.user._get_id(),'created a task named {0}'.format(dict['name']),0)
                 
-            
             self.json_response(json.dumps({'success':'Task created','redirect':'/tasks'}))
             
         return
@@ -405,16 +436,17 @@ class Task(Jinja2Handler):
                 if self.request.session.user.house_id == task.house_id:
                     hse = house.House.get_by_id(self.request.session.user.house_id)
                     hse.add_house_event(self.request.session.user._get_id(),'deleted the task called {0}'.format(task.name),0)
-                
-                    task.key.delete(use_datastore=False)
                     task.key.delete()
                 
                 
                 
             sleep(1)
             self.redirect('/tasks?deleted')
+            
+        return
+    
+    def send_reminders(self):
+        """Cron job that is run every 15 minutes"""
         
         
-            
-            
         return

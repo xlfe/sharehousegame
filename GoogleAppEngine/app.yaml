@@ -21,6 +21,10 @@ handlers:
 - url: /.*
   script: main.app
 
+- url: /backend/send-reminders
+  script: main.app
+  login: admin
+  
 libraries:
 - name: webapp2
   version: "2.5.1"

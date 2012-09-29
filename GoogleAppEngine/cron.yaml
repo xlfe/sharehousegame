@@ -1,0 +1,5 @@
+
+cron:
+- description: reminder emails
+  url: /backend/send-reminders
+  schedule: every 15 minutes synchronized

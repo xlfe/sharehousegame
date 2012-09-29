@@ -35,6 +35,7 @@ class PasswordAuth(Jinja2Handler):
 	
 	return self.redirect('/')
     
+    @session.manage_user
     def reset(self):
 	
 	email = self.request.POST['email']
@@ -44,7 +45,7 @@ class PasswordAuth(Jinja2Handler):
 	
 	if not auth_token:
 	    return self.generic_error(title='Account not found',message="We're sorry, we couldn't find an account with email address '{0}'".format(email),
-				      action='Sign up &raquo;',action_link='/')
+				      action='Sign up &raquo;',action_link='/#signup')
 	token = _user.EmailHash.get_or_create(email=email,user_id=auth_token.user_id,password_hash='reset')
 	
 	reason = token.limited()

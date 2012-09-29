@@ -206,7 +206,7 @@
 	$('form input:first').focus();
         
         $('.dropdown-menu a').click(function(){
-            $('input[name=points]').val($(this).data('points'));
+            $('input[name=points]').val($(this).data('points')).keyup();
             //$(this).parents('.dropdown-menu').dropdown('toggle');
             $('.dropdown.open .dropdown-toggle').dropdown('toggle');
         });
@@ -216,10 +216,6 @@
             return false;
         });
 	
-	$('.tt-hover').tooltip({
-	    placement:'bottom'
-	});
-	
 	$('.tt-right').tooltip( {
 	    placement: 'right'
 	});
@@ -228,6 +224,12 @@
             placement: 'bottom',
             trigger: 'hover',
             delay: { show: 200, hide: 300 }
+        });
+        
+        $('.pop-right').popover({
+            placement: 'right',
+            trigger: 'hover',
+            delay: {show : 200, hide:0}
         });
         
         function override_validate(remove,add) {
