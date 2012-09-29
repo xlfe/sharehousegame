@@ -53,7 +53,6 @@ class RepeatedTask(ndb.Model):
     name = ndb.StringProperty(required=True)
     start_date = ndb.DateProperty(required=True)
     desc = ndb.TextProperty(required=True)
-    timezone = ndb.StringProperty(required=True)
     repeat = ndb.BooleanProperty(required=True)
     repeat_period = ndb.StringProperty(required = True)
     repeat_freq = ndb.IntegerProperty(required = True)
@@ -61,7 +60,9 @@ class RepeatedTask(ndb.Model):
     repeat_on = ndb.StringProperty(repeated=True)
     repeats_limited = ndb.BooleanProperty(default=False)
     repeats_times = ndb.IntegerProperty()
-    group_task = ndb.BooleanProperty(default=False)
+    shared_task = ndb.BooleanProperty(default=False)
+    shared_number = ndb.IntegerProperty()
+    shared_all_reqd = ndb.BooleanProperty()
     no_reminder = ndb.BooleanProperty(default=False)
     reminders = ndb.StringProperty(repeated=True)
     points = ndb.IntegerProperty(required=True)
@@ -102,7 +103,21 @@ class RepeatedTask(ndb.Model):
         
         return rt
     
+    @property
+    def shared_desc(self):
+        
+        if not self.shared_task:
+            return None
+        
+        if self.shared_all_reqd:
+            return 'All'
+        else:
+            return str(self.shared_number)
     
+    @property
+    def timezone(self):
+        hse = house.House.get_by_id(self.house_id)
+        return hse.timezone
     
     def describe_repeat(self):
         

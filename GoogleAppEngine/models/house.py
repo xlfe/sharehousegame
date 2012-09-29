@@ -2,18 +2,25 @@ from google.appengine.ext import ndb
 
 from shg_utils import prettydate
 from models import user as _user
+from datetime import datetime, timedelta
 
 class InvitedUser(ndb.Model):
     _default_indexed=False
     
     name = ndb.StringProperty()
     email = ndb.StringProperty()
-    invited = ndb.DateTimeProperty()
+    initial_invite = ndb.DateTimeProperty(auto_now_add=True)
     
+    def elapsed(self):
+        
+        if self.initial_invite < datetime.now() + timedelta(minutes=-5):
+            return True
+        return False
 
 class House(ndb.Model):
     created = ndb.DateTimeProperty(auto_now_add = True, indexed=False)
     name = ndb.StringProperty(indexed=False)
+    timezone = ndb.StringProperty(required=True)
     invited_users = ndb.StructuredProperty(InvitedUser,repeated=True)
     users = ndb.IntegerProperty(repeated=True)
 

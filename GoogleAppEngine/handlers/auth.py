@@ -14,8 +14,6 @@ from time import sleep
 
 class PasswordAuth(Jinja2Handler):
     
-    
-    
     @session.manage_user
     def start(self):
 	error_msg = 'We were unable to log you on using the supplied email address and password. Do you need to reset your password?'
@@ -62,13 +60,13 @@ class PasswordAuth(Jinja2Handler):
 	return
 
 
-class FacebookAuth(webapp2.RequestHandler):
+class FacebookAuth(Jinja2Handler):
     
     @session.manage_user
     def start(self):
 	
-        redirect_uri = facebook.FacebookAuth().auth_start(self.request)
-        
+	redirect_uri = facebook.FacebookAuth().auth_start(self.request)
+	
         resp = webob.exc.HTTPTemporaryRedirect(location=redirect_uri)
         
         return self.request.get_response(resp)
@@ -92,7 +90,8 @@ class FacebookAuth(webapp2.RequestHandler):
             at_user = self.request.session.user
                 
             if not at_user:
-	        raise Exception('Sorry your Facebook account is not assocaited with a Sharehouse Game account. Please login to your Sharehouse Game account using your email/password you setup when you joined, and then click the add Facebook button.')
+		return self.generic_error(title='Unknown user',message="We're sorry, your Facebook account is not assocaited with a Sharehouse Game account. Please login to your Sharehouse Game account using your email/password you setup when you joined, and then click the add Facebook button.",
+					  action="Login",action_link='#login" data-toggle="modal')
 	
                 #at_user = _user.User._create(name=callback['user_info']['displayName'])
             

@@ -43,7 +43,7 @@ class OAuth2(webapp2.RequestHandler):
         flow = pickle.loads(str(req.session.data.get(self.options['session_key'])))
         
         if flow is None:
-            raise Exception('And Error has occurred. Please try again.')
+            raise Exception('Error contacting Facebook. Please try again.')
         
         #Oauth2 Credentials Object
         req.credentials = flow.step2_exchange(req.params)

@@ -22,35 +22,26 @@
 	</div>
          
         <div class="control-group">
-	    <label class="control-label"> Points
+	    <label class="control-label">Points
 	    </label>
 	    <div class="controls">
-                <div class="dropdown" style="display: inline;">
-                    <div class="input-append dropdown-toggle" data-toggle="dropdown" data-target="#">
-                        <input type="text" name="points" class="required number input-small" placeholder="How many?">
-                        <span class="add-on tt-right" title="Suggestions"><i class="icon-list-alt"></i></span>
-                    </div>
-                    <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                        <li><a href="#" data-points="1000">Paying rent {{points_helper.points(1000)}}</a></li>
-                        <li class="dropdown-submenu"><a href="#">Cleaning</a>
-                            <ul class="dropdown-menu">
-                                <li> <a href="#" data-points="200">Cleaning the bathroom {{points_helper.points(200)}}</a></li>
-                                <li> <a href="#" data-points="200">Vacuuming {{points_helper.points(150)}}</a></li>
-                                <li> <a href="#" data-points="200">Cleaning the kitchen {{points_helper.points(175)}}</a></li>
-                            </ul>
-                        </li>
-                        <li class="dropdown-submenu"><a href="#">Other jobs</a>
-                            <ul class="dropdown-menu">
-                                <li> <a href="#" data-points="200">Putting the rubbish bins out{{points_helper.points(200)}}</a></li>
-                                <li> <a href="#" data-points="100">Taking out the recycling {{points_helper.points(100)}}</a></li>
-                            </ul>
-                        </li>
-                    </ul>
+                <div class="input-append dropdown">
+                    <input type="text" name="points" class="required number input-mini">
+                            <span id="points-calc" class="add-on dropdown-toggle" data-toggle="dropdown" data-target="#">
+                                <i class="icon-list-alt"></i>
+                            </span>
+                      
                 </div>
+		
+	      <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                            <li> <a tabindex="-1" href="http://google.com">Action</a> </li>
+                            <li> has</li>
+                        </ul>
+		    
             </div>
 	</div>
 	<div class="control-group">
-	    <label class="control-label"> When
+	    <label class="control-label">When
 	    </label>
 	    <div class="controls">
 		<div class="input-append">
@@ -61,49 +52,14 @@
 	    </div>
 	</div>
 	
-        
-	<div id="reminder-details">
-	    <div class="control-group" id="reminder-options">
-		<label class="control-label tt-hover" title="Housemates who have completed the task already will not receive reminders">Remind
-		</label>
-		<div class="controls"> 
-		    <select class="required" name="reminders">
-			<optgroup label="Same day">
-			    <option>That afternoon (about 2pm)</option>
-			    <option>Lunch time (about 12pm)</option>
-			    <option>That morning (about 10am)</option>
-			</optgroup>
-			<optgroup label="The day before">
-			    <option>The night before (about 7pm)</option>
-			    <option>The evening before (about 5pm)</option>
-			    <option>The afternoon before (about 3pm)</option>
-			    <option selected>Anytime the day before</option>
-			</optgroup>
-			<optgroup label="A few days before">
-			    <option>2 days before</option>
-			    <option>3 days before</option>
-			    <option>5 days before</option>
-			    <option>7 days before</option>
-			    <option>10 days before</option>
-			    <option>14 days before</option>
-			</optgroup>
-		    </select>
-		    <span id="date-info" class="inline-help"></span>
-		    <i id="add_reminder" class="icon-plus tt-right" title="add another reminder"></i>
-		    <i id="rem_reminder" class="icon-minus"></i>
-		</div>
-	    </div>
-	</div>
-	
-        
 	<div class="control-group">
-	    <label class="control-label"> Options
+	    <label class="control-label">
 	    </label>
 	    <div class="controls">
 		<label class="checkbox inline">
 		    <input type="checkbox" id="repeats_cb" name="repeat" value="True"> Repeat
 		</label>
-		<label class="checkbox inline">
+		<label class="checkbox inline tt-hover" title="Multiple housemates must complete the task before it is considered 'done' (eg, paying rent).">
 		    <input type="checkbox" id="shared_task_cb" name='shared_task' value="True"> Shared task
 		</label>
 		<label class="checkbox inline">
@@ -113,7 +69,6 @@
 	</div>
 	
 	<div id="repeat-options">
-            <hr>
 	    <div class="control-group">
 		<label class="control-label">Repeats
 		</label>
@@ -170,20 +125,39 @@
                 </div>
             </div>
 	</div>
-        
-        <div id="shared-options">
-            <hr>
-             <div class="control-group">
-                <label class="control-label"> How many?
-                </label>
-                <div class="controls" id="shared-num">
-                    <label class="radio"><input type="radio" name="shared_all_reqd" value="True" checked> All housemates</label>
-                    <label class="radio"><input id="shared-num-check" type="radio" name="shared_all_reqd" value="False">
-                    <input type="text" id="shared-num-input" class="number input-mini" name="shared_number">
-                    housemates </label>
-                </div>
-            </div>
-        </div>
+	
+	<div id="reminder-details">
+	    <div class="control-group" id="reminder-options">
+		<label class="control-label tt-hover" title="Housemates who have completed the task already will not receive reminders">Remind
+		</label>
+		<div class="controls"> 
+		    <select class="required" name="reminders">
+			<optgroup label="Same day">
+			    <option>That afternoon (about 2pm)</option>
+			    <option>Lunch time (about 12pm)</option>
+			    <option>That morning (about 10am)</option>
+			</optgroup>
+			<optgroup label="The day before">
+			    <option>The night before (about 7pm)</option>
+			    <option>The evening before (about 5pm)</option>
+			    <option>The afternoon before (about 3pm)</option>
+			    <option selected>Anytime the day before</option>
+			</optgroup>
+			<optgroup label="A few days before">
+			    <option>2 days before</option>
+			    <option>3 days before</option>
+			    <option>5 days before</option>
+			    <option>7 days before</option>
+			    <option>10 days before</option>
+			    <option>14 days before</option>
+			</optgroup>
+		    </select>
+		    <span id="date-info" class="inline-help"></span>
+		    <i id="add_reminder" class="icon-plus tt-right" title="add another reminder"></i>
+		    <i id="rem_reminder" class="icon-minus"></i>
+		</div>
+	    </div>
+	</div>
 	
 	
 	
@@ -201,17 +175,6 @@
     <script>
     
 	$('form input:first').focus();
-        
-        $('.dropdown-menu a').click(function(){
-            $('input[name=points]').val($(this).data('points'));
-            //$(this).parents('.dropdown-menu').dropdown('toggle');
-            $('.dropdown.open .dropdown-toggle').dropdown('toggle');
-        });
-        
-        $('input[name=points]').click(function(e){
-            e.preventDefault();
-            return false;
-        });
 	
 	$('.tt-hover').tooltip({
 	    placement:'bottom'
@@ -285,16 +248,6 @@
             }
         });
         
-        $('#shared-num').change(function() {
-            if (checked($('#shared-num-check')) ){
-                $('#shared-num-input').addClass('required').addClass('number')
-                .parent().parent().parent().removeClass('error').removeClass('success');
-            } else {
-                $('#shared-num-input').removeClass('required').removeClass('error').val('')
-                .parent().parent().parent().removeClass('error').removeClass('success').find('.inline-help').remove();
-            }
-        });
-        
 	$('#repeats_cb').change(function() {
 	    if (checked(this)) {
 		$('#repeat-options').show();
@@ -324,22 +277,12 @@
 		    break;	
 	    }
 	});
-        
-        
-        $('#shared_task_cb').change(function(){
-            if (checked(this)) {
-              $('#shared-options').show();  
-            } else {
-                $('#shared-options').hide();
-            }
-        });
 	
 	//Defaults to weekly with reminder
 	$('select[name=repeat_period]').val('Daily').change();
 	//$('#repeat-options').hide();
 	$('#repeats_cb').attr('checked',null).change();
-	$('#shared_task_cb').attr('checked',null).change();
-        
+	
 	$('#rem_reminder').hide();
 	
 	$('#add_reminder').click(function(){
@@ -366,15 +309,14 @@
 	    }
 	    
 	});
-        
     
 	
 	$('form').validate({
 	    errorElement: "span",
 	    validClass: "success",
 	    errorPlacement: function(error, element) {
-		var cg = $(element).parents('.control-group').removeClass('success').addClass("error");
-		$(error).appendTo( cg.children('.controls') ).addClass('inline-help');
+		$(element).closest('.control-group').removeClass('success').addClass("error");
+		$(error).appendTo( element.parent() ).addClass('inline-help');
 	    },
 	    success: function(label) {
 		$(label).parent().closest('.control-group').removeClass('error').addClass('success');

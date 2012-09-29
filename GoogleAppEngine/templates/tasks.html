@@ -12,7 +12,7 @@
                     <th>Due</th>
 		    <th>Next reminder</th>
                     <th>Repeats</th>
-		    <th>Group task</th>
+		    <th>Shared task</th>
 		    <th>Reminders</th>
                     <th></th>
                 </tr>
@@ -34,8 +34,8 @@
                 </td>
                     
                 <td>{{t.describe_repeat()|safe}}</td>
-		<td>{% if t.group_task %}
-                        <i class="icon-ok tt-right" title="All housemates must complete the task before it is marked as 'done'"></i>
+		<td>{% if t.shared_task %}
+                        <i class="icon-ok tt-right" title="{{t.shared_desc}} housemates must complete the task before it is marked as 'done'"></i>
                         {%else%}
                             -
                         {%endif%}

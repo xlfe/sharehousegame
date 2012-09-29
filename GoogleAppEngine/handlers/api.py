@@ -84,6 +84,7 @@ class API(Jinja2Handler):
             raise Exception('User already has house_id, should not be in house setup')
         
         name = self.request.get('houseName')
+        timezone = self.request.get('timezone')
         
         my_name = session_user.display_name
         
@@ -113,7 +114,7 @@ class API(Jinja2Handler):
                 break
         
         if len(housemates) > 0:
-            hse = house.House(name = name,invited_users=housemates,users=[session_user._get_id()])
+            hse = house.House(name = name,invited_users=housemates,users=[session_user._get_id()],timezone=timezone)
             hse.put()
             
         session_user.house_id = hse.get_house_id()
@@ -127,7 +128,7 @@ class API(Jinja2Handler):
         
         resp = {
             'redirect':'/dashboard',
-            'success':'House created {0} with {1} housemates'.format(name,i)
+            'success':'House created {0} with {1} housemates, and invites sent to housemates'.format(name,i)
         }
     
         return self.json_response(json.dumps(resp)) 

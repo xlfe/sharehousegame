@@ -70,7 +70,11 @@
      <script>
         
         var timezone = jstz.determine();
-	$('#tz-hidden').val(timezone.name).hide();
+	$('#tz-hidden').val(timezone.name);
+        
+        $('.tt-right').tooltip( {
+	    placement: 'right'
+	});
         
         var hm_id = 0;
         
