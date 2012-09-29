@@ -17,7 +17,7 @@
 	    <label class="control-label"> Description
 	    </label>
 	    <div class="controls"> 
-		<textarea rows="5" class="required input-xxlarge" placeholder="Describe what a housemate would need to do to complete the task." name="desc"></textarea>
+		<textarea rows="5" class="required input-xxlarge" placeholder="Describe what a housemate should do in order to complete the task." name="desc"></textarea>
 	    </div>
 	</div>
          
@@ -50,7 +50,7 @@
             </div>
 	</div>
 	<div class="control-group">
-	    <label class="control-label"> When
+	    <label class="control-label"> Due date
 	    </label>
 	    <div class="controls">
 		<div class="input-append">
@@ -64,7 +64,7 @@
         
 	<div id="reminder-details">
 	    <div class="control-group" id="reminder-options">
-		<label class="control-label tt-hover" title="Housemates who have completed the task already will not receive reminders">Remind
+		<label class="control-label"> Reminder(s)
 		</label>
 		<div class="controls"> 
 		    <select class="required" name="reminders">
@@ -103,11 +103,14 @@
 		<label class="checkbox inline">
 		    <input type="checkbox" id="repeats_cb" name="repeat" value="True"> Repeat
 		</label>
-		<label class="checkbox inline">
-		    <input type="checkbox" id="shared_task_cb" name='shared_task' value="True"> Shared task
+		<label class="checkbox inline pop-below" data-title="Shared tasks" data-content="Normally a task can only be completed by one housemate; some tasks (like rent)  however need to be completed by multiple housemates before they are actually completed.">
+		    <input type="checkbox" id="shared_task_cb" name='shared_task' value="True"> Shared
 		</label>
-		<label class="checkbox inline">
-		    <input type="checkbox" id="reminder_cb" name="no_reminder" value="True"> Don't send reminder
+                <label class="checkbox inline pop-below" data-title="Task expiry" data-content="Normally a task expires at the end of the day it is due (it can no longer be completed nor points claimed). If you wan't tasks to be valid after their due date, check this box." >
+		    <input type="checkbox" id="expires_cb" name="doesnt_expire" value="True"> No expiry
+		</label>
+		<label class="checkbox inline pop-below" data-title="Reminders" data-content="Reminders are sent to housemates before a task expires. For shared tasks, housemates who have completed the task already will not receive futher reminders.">
+		    <input type="checkbox" id="reminder_cb" name="no_reminder" value="True"> No reminders
 		</label>
 	    </div>
 	</div>
@@ -220,6 +223,17 @@
 	$('.tt-right').tooltip( {
 	    placement: 'right'
 	});
+        
+        $('.pop-below').popover({
+            placement: 'bottom',
+            trigger: 'hover',
+            delay: { show: 200, hide: 300 }
+        });
+        
+        function override_validate(remove,add) {
+            $('#when').removeClass(remove).addClass(add);
+            $('#when').parent().parent().parent().removeClass(remove).addClass(add);
+        }
 	
 	$('#when').bind('keyup',function() {
 	    
@@ -234,10 +248,7 @@
 		  '</span>')
 		    .insertAfter($('#when').parent());
 		    
-		    setTimeout(function(){
-			$('#when').removeClass('success').addClass('error');
-			$('#when').parent().parent().parent().removeClass('success').addClass('error');
-		    },5);
+		    setTimeout(override_validate,5,'success','error');
 		    
 	    } else {
 		    $('<span id="date-info" class="inline-help"> <i class="icon-ok"></i> ' +
@@ -255,8 +266,10 @@
 		    $('#when').val($.trim(di.text()));
 		    $('#when').removeClass('error').addClass("success");
 		    di.remove();
-		}
-	    }
+		} else {
+                    setTimeout(override_validate,5,'success','error');
+                }
+ 	    }
 	    
 	});
 	
@@ -266,6 +279,8 @@
 	    .on('changeDate', function(ev){
 		    $('#when').val(ev.date.toString('dddd dd MMMM, yyyy'));
 		    $('#date-info :last').remove();
+                    setTimeout(override_validate,5,'error','success');
+                    $('.datepicker').hide();
 		    //startDate = new Date(ev.date);
 		    //$('#startDate').text($('#dp4').data('date'));
 		

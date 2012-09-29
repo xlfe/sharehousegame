@@ -65,6 +65,7 @@ class RepeatedTask(ndb.Model):
     shared_all_reqd = ndb.BooleanProperty()
     no_reminder = ndb.BooleanProperty(default=False)
     reminders = ndb.StringProperty(repeated=True)
+    doesnt_expire = ndb.BooleanProperty()
     points = ndb.IntegerProperty(required=True)
     
     house_id = ndb.IntegerProperty(required=True, indexed=True)
