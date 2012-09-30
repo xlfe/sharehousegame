@@ -49,7 +49,7 @@ class TaskInteractions(ndb.Model):
     when = ndb.DateTimeProperty(auto_now_add=True)
 
 class TaskInstance(ndb.Model):
-    """Basically a pointer to the Owner Task to be called at a regular interval using cron"""
+    """A pointer to the Owner Task to be called at a regular interval using cron"""
     _default_indexed = False
     
     owner = ndb.KeyProperty(required=True,indexed=True)
@@ -142,14 +142,15 @@ class RepeatedTask(ndb.Model):
         
         try:
             next_reminder = rt.next_reminder_utc()
-            
             next_event = rt.next_event_utc()
-            if next_reminder and next_event:    
-                nar = min(next_event,next_reminder)
+            if next_reminder:    
+                nar = next_reminder
             else:
                 nar = next_event
+                
             if next_event:
                 logging.info(nar)
+                #We remove the tz info because nar is UTC and the datastore only accepts UTC naive datetimes
                 ti = TaskInstance(owner=rt.key,next_action_reqd=nar.replace(tzinfo=None))
                 ti.put()
         except:
@@ -268,18 +269,21 @@ class RepeatedTask(ndb.Model):
         
         now = pytz.UTC.localize(datetime.now())
         
-        
         for event in self.iter_instances(None):
             if event > now:
+                #logging.info('{0} -> {1}'.format(event,pytz.UTC.normalize(event.astimezone(pytz.UTC))))
                 return pytz.UTC.normalize(event.astimezone(pytz.UTC))
                 #return event
         
     def next_reminder_utc(self):
         
         now = pytz.UTC.localize(datetime.now())
+        
         ne = self.next_event_utc()
+        logging.info('iter event {0}'.format(ne))
         if ne:
             for reminder in self.iter_reminders(ne,None):
+                logging.info('{0} >? {1}'.format(reminder,now))
                 if reminder > now:
                     return reminder
         
@@ -299,15 +303,16 @@ class RepeatedTask(ndb.Model):
         else:
             return '-'
             
-    def iter_reminders(self,dt_event,max_reminders=10):
+    def iter_reminders(self,dt_event,max_reminders=21):
         """ returns datetime objects for reminders for an event occuring on dt_event"""
         
-        sorted_reminders = sorted(self.calc_reminder_delta(r) for r in self.reminders)
+        sorted_reminders = sorted([self.calc_reminder_delta(r) for r in self.reminders])#,key=lambda k: k.total_seconds())
+        
         n= 0
         
         for r in sorted_reminders:
             n+=1
-            yield  dt_event + r + timedelta(minutes=1)
+            yield  dt_event + r #+ timedelta(seconds=1)
         
             if max_reminders and n > max_reminders:
                 return
@@ -471,6 +476,9 @@ class Task(Jinja2Handler):
     
     def send_reminders(self):
         """Cron job that is run every 15 minutes"""
+        
+        for t in TaskInstance.query(TaskInstance.next_action_reqd < datetime.now()).fetch():
+            logging.info(t.owner.get().name)
         
         
         return
