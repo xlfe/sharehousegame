@@ -312,7 +312,7 @@ class RepeatedTask(ndb.Model):
         
         for r in sorted_reminders:
             n+=1
-            yield  dt_event + r #+ timedelta(seconds=1)
+            yield  dt_event + r + timedelta(seconds=1)
         
             if max_reminders and n > max_reminders:
                 return
@@ -476,8 +476,8 @@ class Task(Jinja2Handler):
     
     def send_reminders(self):
         """Cron job that is run every 15 minutes"""
-        
-        for t in TaskInstance.query(TaskInstance.next_action_reqd < datetime.now()).fetch():
+        #get all task instances which have a next action required in the past or in the next 7 minutes
+        for t in TaskInstance.query(TaskInstance.next_action_reqd < (datetime.now() + timedelta(minutes=+7))).fetch():
             logging.info(t.owner.get().name)
         
         
