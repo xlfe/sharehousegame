@@ -66,28 +66,19 @@
 	    <div class="control-group" id="reminder-options">
 		<label class="control-label"> Reminder(s)
 		</label>
-		<div class="controls"> 
-		    <select class="required" name="reminders">
-			<optgroup label="Same day">
-			    <option>That afternoon (about 2pm)</option>
-			    <option>Lunch time (about 12pm)</option>
-			    <option>That morning (about 10am)</option>
-			</optgroup>
-			<optgroup label="The day before">
-			    <option>The night before (about 7pm)</option>
-			    <option>The evening before (about 5pm)</option>
-			    <option>The afternoon before (about 3pm)</option>
-			    <option selected>Anytime the day before</option>
-			</optgroup>
-			<optgroup label="A few days before">
-			    <option>2 days before</option>
-			    <option>3 days before</option>
-			    <option>5 days before</option>
-			    <option>7 days before</option>
-			    <option>10 days before</option>
-			    <option>14 days before</option>
-			</optgroup>
-		    </select>
+		<div class="controls">
+                    <input type="text" class="input input-mini time required" placeholder="9am">
+		    <select class="select">
+                        <option>same day</option>
+                        <option selected>the day before</option>
+                        <option>2 days before</option>
+                        <option>3 days before</option>
+                        <option>4 days before</option>
+                        <option>5 days before</option>
+                        <option>7 days before</option>
+                        <option>10 days before</option>
+                        <option>14 days before</option>
+                    </select>
 		    <span id="date-info" class="inline-help"></span>
 		    <i id="add_reminder" class="icon-plus tt-right" title="add another reminder"></i>
 		    <i id="rem_reminder" class="icon-minus"></i>
@@ -188,8 +179,6 @@
             </div>
         </div>
 	
-	
-	
 	<div class="control-group">
 	    <div class="controls">
 		
@@ -199,11 +188,12 @@
     </form>
     <script src="/js/vendor/bootstrap-datepicker.js" type="text/javascript"></script>
     <link rel="stylesheet" href="/css/datepicker.css">
+    <link rel="stylesheet" href="/css/jquery-ui-slider.css">
     <script src="/js/vendor/datejs/date.js" type="text/javascript"></script>
     <script src="/js/vendor/jquery-validate/jquery.validate.min.js"></script>
-    <script>
+    <script src="/js/vendor/jquery-ui-slider.min.js"></script>
     
-	$('form input:first').focus();
+    <script>
         
         $('.dropdown-menu a').click(function(){
             $('input[name=points]').val($(this).data('points')).keyup();
@@ -232,9 +222,16 @@
             delay: {show : 200, hide:0}
         });
         
-        function override_validate(remove,add) {
-            $('#when').removeClass(remove).addClass(add);
-            $('#when').parent().parent().parent().removeClass(remove).addClass(add);
+        function override_validate(element,success) {
+            if (success==true) {
+                var remove = "error";
+                var add="success";
+            } else {
+                var remove = "success";
+                var add = "error";
+            }
+            $(element).removeClass(remove).addClass(add);
+            $(element).parents('.control-group').removeClass(remove).addClass(add);
         }
 	
 	$('#when').bind('keyup',function() {
@@ -250,7 +247,7 @@
 		  '</span>')
 		    .insertAfter($('#when').parent());
 		    
-		    setTimeout(override_validate,5,'success','error');
+		    setTimeout(override_validate,5,$('#when'),false);
 		    
 	    } else {
 		    $('<span id="date-info" class="inline-help"> <i class="icon-ok"></i> ' +
@@ -267,9 +264,10 @@
 		if (di.children('i').hasClass('icon-ok')) {
 		    $('#when').val($.trim(di.text()));
 		    $('#when').removeClass('error').addClass("success");
+                    setTimeout(override_validate,5,$('#when'),true);
 		    di.remove();
 		} else {
-                    setTimeout(override_validate,5,'success','error');
+                    setTimeout(override_validate,5,$('#when'),false);
                 }
  	    }
 	    
@@ -280,8 +278,8 @@
 	$('#cal-icon').datepicker()
 	    .on('changeDate', function(ev){
 		    $('#when').val(ev.date.toString('dddd dd MMMM, yyyy'));
-		    $('#date-info :last').remove();
-                    setTimeout(override_validate,5,'error','success');
+		    $('#date-info').remove();
+                    setTimeout(override_validate,5,$('#when'),true);
                     $('.datepicker').hide();
 		    //startDate = new Date(ev.date);
 		    //$('#startDate').text($('#dp4').data('date'));
@@ -363,7 +361,7 @@
             if ($('div[id=reminder-options]').length > 9) {
                 alert("Sorry, there is a maximum of 10 reminders allowed.");
             } else {
-                var ro  = $('#reminder-options :first').clone().insertAfter('#reminder-options :last');
+                var ro  = $('#reminder-details > div :first').clone().insertAfter('#reminder-details > div :last');
                 $(ro).children('.control-label').remove();
                 $(ro).find('#add_reminder').remove();
                 $(ro).find('#rem_reminder').show();
@@ -384,7 +382,18 @@
 	    
 	});
         
-    
+        $('.time').keyup(function() {
+            
+                var isValid = /^([0-1]?[0-9]|2[0-4])(?:([0-5][0-9]))(am|pm)?$/.test($.trim($(this).val()));
+        
+                if (isValid) {
+                    setTimeout(override_validate,5,$(this),true);
+                } else {
+                    setTimeout(override_validate,5,$(this),false);
+                }
+        });
+        
+        $('.time').blur(function() { $(this).keyup(); })
 	
 	$('form').validate({
 	    errorElement: "span",

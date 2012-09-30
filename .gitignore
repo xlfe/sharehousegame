@@ -9,3 +9,5 @@ bootstrap*css
 vendor/
 lib/
 pytz/
+img/
+jquery-ui*
