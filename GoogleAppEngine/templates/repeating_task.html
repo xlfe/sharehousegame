@@ -7,6 +7,38 @@
     </div>
     
     <form class="form-horizontal">
+        <div class="control-group">
+            <label class="control-label"> </label>
+            <div class="controls">
+                <div class="dropdown">
+                    <button class="btn dropdown-toggle" data-toggle="dropdown" data-target="#"> Quickstart suggestions &raquo;
+                    </button>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                        <li class="dropdown-submenu"><a href="#">Rent</a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#" data-points="1000" data-name="Rent" data-shared="Yes" data-reminders='[["10am",5],["10am",2]]'>Rent (paid monthly)</a></li>
+                                <li><a href="#" data-points="600"  data-name="Rent" data-shared="Yes" data-reminders='[["10am",4],["10am",2]]'>Rent (paid fortnightly)</a></li>
+                                <li><a href="#" data-points="350"  data-name="Rent" data-shared="Yes" data-reminders='[["10am",3],["10am",1]]'>Rent (paid weekly)</a></li>
+                            </ul>
+                        </li>
+                        <li class="dropdown-submenu"><a href="#">Cleaning</a>
+                            <ul class="dropdown-menu">
+                                <li> <a href="#" data-points="200">Cleaning the bathroom {{points_helper.points(200)}}</a></li>
+                                <li> <a href="#" data-points="200">Vacuuming {{points_helper.points(150)}}</a></li>
+                                <li> <a href="#" data-points="200">Cleaning the kitchen {{points_helper.points(175)}}</a></li>
+                            </ul>
+                        </li>
+                        <li class="dropdown-submenu"><a href="#">Other jobs</a>
+                            <ul class="dropdown-menu">
+                                <li> <a href="#" data-points="200">Putting the rubbish bins out{{points_helper.points(200)}}</a></li>
+                                <li> <a href="#" data-points="100">Taking out the recycling {{points_helper.points(100)}}</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
 	<div class="control-group">
 	    <label class="control-label">Name</label>
 	    <div class="controls">
@@ -25,28 +57,11 @@
 	    <label class="control-label"> Points
 	    </label>
 	    <div class="controls">
-                <div class="dropdown" style="display: inline;">
-                    <div class="input-append dropdown-toggle" data-toggle="dropdown" data-target="#">
+                
+                    
                         <input type="text" name="points" class="required number input-small" placeholder="How many?">
-                        <span class="add-on tt-right" title="Suggestions"><i class="icon-list-alt"></i></span>
-                    </div>
-                    <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                        <li><a href="#" data-points="1000">Paying rent {{points_helper.points(1000)}}</a></li>
-                        <li class="dropdown-submenu"><a href="#">Cleaning</a>
-                            <ul class="dropdown-menu">
-                                <li> <a href="#" data-points="200">Cleaning the bathroom {{points_helper.points(200)}}</a></li>
-                                <li> <a href="#" data-points="200">Vacuuming {{points_helper.points(150)}}</a></li>
-                                <li> <a href="#" data-points="200">Cleaning the kitchen {{points_helper.points(175)}}</a></li>
-                            </ul>
-                        </li>
-                        <li class="dropdown-submenu"><a href="#">Other jobs</a>
-                            <ul class="dropdown-menu">
-                                <li> <a href="#" data-points="200">Putting the rubbish bins out{{points_helper.points(200)}}</a></li>
-                                <li> <a href="#" data-points="100">Taking out the recycling {{points_helper.points(100)}}</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
+                    
+                    
             </div>
 	</div>
 	<div class="control-group">
@@ -67,7 +82,7 @@
 		<label class="control-label"> Reminder(s)
 		</label>
 		<div class="controls">
-                    <input type="text" class="input input-mini time required" placeholder="9am">
+                    <input type="text" class="input time required" placeholder="eg: 9am, 16:00, 1:30pm">
 		    <select class="select">
                         <option>same day</option>
                         <option selected>the day before</option>
@@ -195,16 +210,38 @@
     
     <script>
         
+       var err_messages = ["Nope", "Keep Trying", "Nadda", "Sorry", "No one\'s home", "Arg", "Bummer", "Faux pas", "Whoops", "Snafu", "Blunder"];
+        
         $('.dropdown-menu a').click(function(){
             $('input[name=points]').val($(this).data('points')).keyup();
-            //$(this).parents('.dropdown-menu').dropdown('toggle');
+            $('input[name=name]').val($(this).data('name')).keyup();
+            if ($(this).data('shared') == "Yes") {
+                $('#shared_task_cb').attr('checked','checked').change();
+            }
+            var reminders = $(this).data('reminders');
+            
+            for (var i =0; i < reminders.length; i++) {
+                var tm = reminders[i][0];
+                var days = reminders[i][1];
+                
+                var rt = '#reminder-details .controls:nth('+i+')';
+                
+                var rl = $(rt);
+                
+                if (rl.length == 0) {
+                    $('#reminder-details .controls:last').children('#add_reminder').click();
+                    var rl = $(rt);
+                }
+                $(rt + ' input').val(tm);
+                $(rt + ' select option:nth('+days+')').attr('selected','selected');
+                
+                
+            }
+            
             $('.dropdown.open .dropdown-toggle').dropdown('toggle');
         });
         
-        $('input[name=points]').click(function(e){
-            e.preventDefault();
-            return false;
-        });
+
 	
 	$('.tt-right').tooltip( {
 	    placement: 'right'
@@ -236,14 +273,13 @@
 	
 	$('#when').bind('keyup',function() {
 	    
-	    var messages = ["Nope", "Keep Trying", "Nadda", "Sorry", "No one\'s home", "Arg", "Bummer", "Faux pas", "Whoops", "Snafu", "Blunder"];
 	    
 	    p = Date.parse($('#when').val());
 	    $('#date-info').remove();
 			   
 	    if (p == null) {
 		$('<span id="date-info" class="inline-help"> <i class="icon-exclamation-sign"></i> ' +
-		    messages[Math.round(messages.length * Math.random())] + "..." +
+		    err_messages[Math.round(err_messages.length * Math.random())] + "..." +
 		  '</span>')
 		    .insertAfter($('#when').parent());
 		    
@@ -382,13 +418,25 @@
 	    
 	});
         
-        $('.time').keyup(function() {
+        $('.time').live('keyup',function() {
             
-                var isValid = /^([0-1]?[0-9]|2[0-4])(?:([0-5][0-9]))(am|pm)?$/.test($.trim($(this).val()));
-        
+                var input = $.trim($(this).val());
+                var isValid = /^[0-1]?[0-9]((:|.)[0-5][0-9])?[\s]*(am|pm)$/i.test(input) ||
+                /^([0-1][0-9]|2[0-4])(:|.)([0-5][0-9])$/.test(input);
+                
+                
+                $(this).parent().find('#time-info').remove();
+                
                 if (isValid) {
                     setTimeout(override_validate,5,$(this),true);
+                    
                 } else {
+                    if (input != '') {
+                        $('<span id="time-info" class="inline-help"> <i class="icon-exclamation-sign"></i> ' +
+                        err_messages[Math.round(err_messages.length * Math.random())] + "..." +
+                      '</span>')
+                        .insertAfter($(this).parent().children().last());
+                    }
                     setTimeout(override_validate,5,$(this),false);
                 }
         });
