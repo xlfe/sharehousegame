@@ -3,6 +3,7 @@ import json
 import logging
 import session
 import shg_utils
+import re
 from models import house, authprovider
 from handlers.jinja import Jinja2Handler
 from pytz.gae import pytz
@@ -67,21 +68,6 @@ class RepeatedTask(ndb.Model):
     ,       'repeat_on'  : ['Sunday', 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday' ]
     ,       'repeat_freq':range(1,31)
     ,       'repeat_period': ['Daily','Weekly','Monthly','Yearly']
-    ,       'reminder_intervals' : {
-                        'That afternoon (about 2pm)'     : timedelta(hours=2),
-                        'Lunch time (about 12pm)'        : timedelta(hours=0),
-                        'That morning (about 10am)'      : timedelta(hours=-2),
-                        'The night before (about 7pm)'   : timedelta(days=-1,hours=+7),
-                        'The evening before (about 5pm)' : timedelta(days=-1,hours=+5),
-                        'The afternoon before (about 3pm)':timedelta(days=-1,hours=+3),
-                        'Anytime the day before'          :timedelta(days=-1),
-                        '2 days before'                   :timedelta(days=-2),
-                        '3 days before'                   :timedelta(days=-3),
-                        '5 days before'                   :timedelta(days=-5),
-                        '7 days before'                   :timedelta(days=-7),
-                        '10 days before'                  :timedelta(days=-10),
-                        '14 days before'                  :timedelta(days=-14),
-                    }
     ,       'wd_names' : {
                         'Monday':   1,
                         'Tuesday':  2,
@@ -117,6 +103,7 @@ class RepeatedTask(ndb.Model):
     
     disabled = ndb.BooleanProperty(default=False)
     
+    event_expiry_tm = time(23,59,59)
 
     @classmethod
     @ndb.transactional(xg=True)
@@ -138,7 +125,11 @@ class RepeatedTask(ndb.Model):
         if 'reminders' in dict:
             assert len(dict['reminders']) <= 10, 'Sorry, a maximum of 10 reminders'
             #make sure we only have one of each...
+            
             dict['reminders'] = set(dict['reminders'])
+            
+            for r in dict['reminders']:
+                assert cls.calc_reminder_delta(r) != None,'Unknown reminder interval {0}'.format(r) 
             
         assert dict['start_date'].year >= 2012,'Start date must be after 2012'
         
@@ -165,6 +156,43 @@ class RepeatedTask(ndb.Model):
             raise
             
         return rt
+    
+    @staticmethod
+    def calc_reminder_delta(desc):
+        """Turns '9am the day before' into a timdelta"""
+        
+        #0 - hours 1-minuts 2-am/pm
+        tm = re.match('([1][0-2]|[0]?[0-9])(?::|.)?([0-5][0-9])?[\s]*(am|pm)',desc,flags=re.I)
+        
+        if not tm:
+            return None
+        
+        assert tm.group(1) and tm.group(3), 'Unknown time from {0}'.format(desc)
+        
+        hours = int(tm.group(1))
+        
+        if tm.group(3).lower() == "pm":
+            hours += 12
+        
+        minutes = 60 - int(tm.group(2)) if tm.group(2) else 0
+            
+        days = desc[len(tm.group(0))+1:]
+        
+        if days == "same day":
+            days = 0
+        elif days == "the day before":
+            days = 1
+        else:
+            days = int(days.split(' ')[0])
+        
+        assert hours >=0 and minutes >= 0 and days >=0,'Unknown time from {0}'.format(desc)
+        assert hours <= 24 and minutes <= 60 and days <=14, 'Unknown time from {0}'.format(desc)
+        
+        return timedelta(days=-days,hours=(hours-23),minutes=-minutes)
+        
+        #logging.info("'{0}' => {1} - {2} days before".format(desc,td,days))
+            
+    
     
     @property
     def shared_desc(self):
@@ -231,10 +259,6 @@ class RepeatedTask(ndb.Model):
         
         return '<span class="tt-right" title="{0}"> {1}</span>'.format(desc,short)
     
-    def reminder_to_time_delta(self,reminder):
-        """takes a description of the reminder and returns the time delta assuming a standard 12pm on the day"""
-        return self.definitions['reminder_intervals'][reminder]
-        
     def weekdays_to_int(self,weekday):
         """uses ISO weekday assignments"""
         return self.definitions['wd_names'][weekday]
@@ -278,12 +302,12 @@ class RepeatedTask(ndb.Model):
     def iter_reminders(self,dt_event,max_reminders=10):
         """ returns datetime objects for reminders for an event occuring on dt_event"""
         
-        sorted_reminders = sorted(self.reminder_to_time_delta(r) for r in self.reminders)
+        sorted_reminders = sorted(self.calc_reminder_delta(r) for r in self.reminders)
         n= 0
         
         for r in sorted_reminders:
             n+=1
-            yield  dt_event + r 
+            yield  dt_event + r + timedelta(minutes=1)
         
             if max_reminders and n > max_reminders:
                 return
@@ -308,7 +332,7 @@ class RepeatedTask(ndb.Model):
         """ returns a list of localized datetime objects for a repeating event"""
         
         local_tz = pytz.timezone(self.timezone)
-        last_event = datetime.combine( self.start_date , time(12,0,0) )
+        last_event = datetime.combine( self.start_date , self.event_expiry_tm)
         
         if not self.repeat:
             #doesn't repeat, so return just the event
@@ -347,7 +371,7 @@ class RepeatedTask(ndb.Model):
             elif self.repeat_period == "Monthly":
                 
                 #closest day possible in the right month
-                last_event = add_months( datetime.combine(self.start_date,time(12,0,0)) ,self.repeat_freq * i)
+                last_event = add_months( datetime.combine(self.start_date, self.event_expiry_tm) ,self.repeat_freq * i)
 
                 if self.repeat_by == "dow":
                     assert(original_dow), 'Something went wrong'
@@ -381,7 +405,7 @@ class RepeatedTask(ndb.Model):
                 
             elif self.repeat_period == "Yearly":
                 
-                last_event = add_years(datetime.combine(self.start_date,time(12,0,0)),i)
+                last_event = add_years(datetime.combine(self.start_date,self.event_expiry_tm),i)
                     
         
     @staticmethod

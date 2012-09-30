@@ -11,27 +11,36 @@
             <label class="control-label"> </label>
             <div class="controls">
                 <div class="dropdown">
-                    <button class="btn dropdown-toggle" data-toggle="dropdown" data-target="#"> Quickstart suggestions &raquo;
+                    <button type="button" class="btn dropdown-toggle" data-toggle="dropdown" data-target="#"> Quickstart suggestions &raquo;
                     </button>
                     <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
                         <li class="dropdown-submenu"><a href="#">Rent</a>
                             <ul class="dropdown-menu">
-                                <li><a href="#" data-points="1000" data-name="Rent" data-shared="Yes" data-reminders='[["10am",5],["10am",2]]'>Rent (paid monthly)</a></li>
-                                <li><a href="#" data-points="600"  data-name="Rent" data-shared="Yes" data-reminders='[["10am",4],["10am",2]]'>Rent (paid fortnightly)</a></li>
-                                <li><a href="#" data-points="350"  data-name="Rent" data-shared="Yes" data-reminders='[["10am",3],["10am",1]]'>Rent (paid weekly)</a></li>
+                                <li><a href="#" data-points="1000" data-name="Pay rent"
+                                       data-shared="Yes" data-reminders='[["10am",5],["10am",2]]'
+                                       data-repeats='[2,0]'>Rent (monthly)</a></li>
+                                <li><a href="#" data-points="600"  data-name="Pay rent"
+                                       data-shared="Yes" data-reminders='[["10am",4],["10am",2]]'
+                                       data-repeats='[0,13]'>Rent (fortnightly)</a></li>
+                                <li><a href="#" data-points="350"  data-name="Pay rent"
+                                       data-shared="Yes" data-reminders='[["10am",3],["10am",1]]'
+                                       data-repeats='[0,6]'>Rent (weekly)</a></li>
                             </ul>
                         </li>
                         <li class="dropdown-submenu"><a href="#">Cleaning</a>
                             <ul class="dropdown-menu">
-                                <li> <a href="#" data-points="200">Cleaning the bathroom {{points_helper.points(200)}}</a></li>
-                                <li> <a href="#" data-points="200">Vacuuming {{points_helper.points(150)}}</a></li>
-                                <li> <a href="#" data-points="200">Cleaning the kitchen {{points_helper.points(175)}}</a></li>
+                                <li> <a href="#" data-points="200"
+                                data-repeats='[1,0]'>Clean the bathroom</a></li>
+                                <li> <a href="#" data-points="250"
+                                data-repeats='[1,1]'>Vacuum the house</a></li>
+                                <li> <a href="#" data-points="200"
+                                data-repeats='[1,0]'>Clean the kitchen </a></li>
                             </ul>
                         </li>
                         <li class="dropdown-submenu"><a href="#">Other jobs</a>
                             <ul class="dropdown-menu">
-                                <li> <a href="#" data-points="200">Putting the rubbish bins out{{points_helper.points(200)}}</a></li>
-                                <li> <a href="#" data-points="100">Taking out the recycling {{points_helper.points(100)}}</a></li>
+                                <li> <a href="#" data-points="200" data-reminders='[["6pm",1]]'>Put the rubbish bins out</a></li>
+                                <li> <a href="#" data-points="100">Taking out the recycling</a></li>
                             </ul>
                         </li>
                     </ul>
@@ -57,13 +66,10 @@
 	    <label class="control-label"> Points
 	    </label>
 	    <div class="controls">
-                
-                    
-                        <input type="text" name="points" class="required number input-small" placeholder="How many?">
-                    
-                    
+                <input type="text" name="points" class="required number input-small" placeholder="How many?">    
             </div>
 	</div>
+        
 	<div class="control-group">
 	    <label class="control-label"> Due date
 	    </label>
@@ -75,24 +81,24 @@
 		<span id="date-info" class="inline-help"></span>
 	    </div>
 	</div>
-	
         
 	<div id="reminder-details">
 	    <div class="control-group" id="reminder-options">
 		<label class="control-label"> Reminder(s)
 		</label>
 		<div class="controls">
-                    <input type="text" class="input time required" placeholder="eg: 9am, 16:00, 1:30pm">
+                    <input type="text" class="" name="reminders">
+                    <input type="text" class="input time required" placeholder="eg: 9am, 1:30pm">
 		    <select class="select">
-                        <option>same day</option>
-                        <option selected>the day before</option>
-                        <option>2 days before</option>
-                        <option>3 days before</option>
-                        <option>4 days before</option>
-                        <option>5 days before</option>
-                        <option>7 days before</option>
-                        <option>10 days before</option>
-                        <option>14 days before</option>
+                        <option value="0">same day</option>
+                        <option value="1" selected>the day before</option>
+                        <option value="2">2 days before</option>
+                        <option value="3">3 days before</option>
+                        <option value="4">4 days before</option>
+                        <option value="5">5 days before</option>
+                        <option value="7">7 days before</option>
+                        <option value="10">10 days before</option>
+                        <option value="14">14 days before</option>
                     </select>
 		    <span id="date-info" class="inline-help"></span>
 		    <i id="add_reminder" class="icon-plus tt-right" title="add another reminder"></i>
@@ -164,7 +170,7 @@
 		<label class="control-label">Repeat by
 		</label>
 		<div class="controls">
-		    <label class="radio inline"><input type="radio" class="required" name="repeat_by" value="dom"> day of the month</label>
+		    <label class="radio inline"><input type="radio" class="required" name="repeat_by" value="dom" checked> day of the month</label>
 		    <label class="radio inline"><input type="radio" name="repeat_by" value="dow"> day of the week</label>
 		</div>
 	    </div>
@@ -201,44 +207,76 @@
 	    </div>
 	</div>
     </form>
-    <script src="/js/vendor/bootstrap-datepicker.js" type="text/javascript"></script>
     <link rel="stylesheet" href="/css/datepicker.css">
-    <link rel="stylesheet" href="/css/jquery-ui-slider.css">
+        
+    <script src="/js/vendor/bootstrap-datepicker.js" type="text/javascript"></script>
     <script src="/js/vendor/datejs/date.js" type="text/javascript"></script>
     <script src="/js/vendor/jquery-validate/jquery.validate.min.js"></script>
-    <script src="/js/vendor/jquery-ui-slider.min.js"></script>
-    
+
     <script>
-        
+       //@externs_url http://code.jquery.com/jquery-1.8.2.js
+       //@externs_url https://raw.github.com/eternicode/bootstrap-datepicker/master/js/bootstrap-datepicker.js
+       //@externs_url http://datejs.googlecode.com/svn/trunk/build/date-en-US.js
+       //@externs_url https://raw.github.com/jzaefferer/jquery-validation/master/jquery.validate.js
+       
        var err_messages = ["Nope", "Keep Trying", "Nadda", "Sorry", "No one\'s home", "Arg", "Bummer", "Faux pas", "Whoops", "Snafu", "Blunder"];
         
         $('.dropdown-menu a').click(function(){
+        
             $('input[name=points]').val($(this).data('points')).keyup();
-            $('input[name=name]').val($(this).data('name')).keyup();
+            
+            if (typeof $(this).data('name') != 'undefined') {
+                $('input[name=name]').val($(this).data('name')).keyup();
+            } else {
+                $('input[name=name]').val($(this).text()).keyup();
+            }
+            
             if ($(this).data('shared') == "Yes") {
                 $('#shared_task_cb').attr('checked','checked').change();
+            } else {
+                $('#shared_task_cb').attr('checked',null).change();
             }
+            
             var reminders = $(this).data('reminders');
             
-            for (var i =0; i < reminders.length; i++) {
-                var tm = reminders[i][0];
-                var days = reminders[i][1];
+            if (typeof reminders == 'undefined') {
+                $('#reminder_cb').attr('checked','checked').change();
                 
-                var rt = '#reminder-details .controls:nth('+i+')';
-                
-                var rl = $(rt);
-                
-                if (rl.length == 0) {
-                    $('#reminder-details .controls:last').children('#add_reminder').click();
+            } else {
+                $('#reminder_cb').attr('checked',null).change();
+                $('#reminder-details #rem_reminder:visible').click();
+                for (var i =0; i < reminders.length; i++) {
+                    var tm = reminders[i][0];
+                    var days = reminders[i][1];
+                    
+                    var rt = '#reminder-details .controls:nth('+i+')';
+                    
                     var rl = $(rt);
+                    
+                    if (rl.length == 0) {
+                        $('#reminder-details .controls:last #add_reminder').click();
+                        var rl = $(rt);
+                    }
+                    $(rt + ' select option:nth('+days+')').attr('selected','selected').change();
+                    $(rt + ' input').val(tm).keyup();
                 }
-                $(rt + ' input').val(tm);
-                $(rt + ' select option:nth('+days+')').attr('selected','selected');
+            }
+            
+            var repeats = $(this).data('repeats');
+            
+            if (typeof repeats != 'undefined') {
+                $('#repeats_cb').attr('checked','checked').change();
+                
+                $('select[name=repeat_period] option:eq('+repeats[0]+')').attr('selected','selected').change();
+                $('select[name=repeat_freq] option:eq('+repeats[1]+')').attr('selected','selected').change();
                 
                 
+            } else {
+                $('#repeats_cb').attr('checked',null).change();
             }
             
             $('.dropdown.open .dropdown-toggle').dropdown('toggle');
+            $('form').validate();
         });
         
 
@@ -392,6 +430,7 @@
 	$('#shared_task_cb').attr('checked',null).change();
         
 	$('#rem_reminder').hide();
+        $('input[name=reminders]').hide();
 	
 	$('#add_reminder').click(function(){
             if ($('div[id=reminder-options]').length > 9) {
@@ -421,9 +460,7 @@
         $('.time').live('keyup',function() {
             
                 var input = $.trim($(this).val());
-                var isValid = /^[0-1]?[0-9]((:|.)[0-5][0-9])?[\s]*(am|pm)$/i.test(input) ||
-                /^([0-1][0-9]|2[0-4])(:|.)([0-5][0-9])$/.test(input);
-                
+                var isValid = /^(1[0-2]|[0]?[0-9])(?::|.)?([0-5][0-9])?[\s]*(am|pm)$/i.test(input);
                 
                 $(this).parent().find('#time-info').remove();
                 
@@ -441,7 +478,27 @@
                 }
         });
         
-        $('.time').blur(function() { $(this).keyup(); })
+        $('.time').blur(function() { $(this).keyup(); });
+        
+        function fill_hidden(e) {
+
+            var hidden = $(e).parent().find('input[name=reminders]')
+            var tm = $(e).parent().find('.input').val();
+            var days = $(e).parent().find('select option:selected').text();
+            
+            $(hidden).val(tm + ' ' + days);
+
+        }
+        
+        $('input[name=name]').focus();
+        
+        $('#reminder-details .input').live('keyup',function(){
+            fill_hidden(this);
+        });
+        
+        $('#reminder-details .select').live('change',function(){
+            fill_hidden(this);
+        });
 	
 	$('form').validate({
 	    errorElement: "span",
