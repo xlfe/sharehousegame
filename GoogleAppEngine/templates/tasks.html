@@ -25,7 +25,7 @@
                 <td><span class="tt-below" title="{{t.desc|truncate(length=64, killwords=False, end='...')}}">
 			{{t.name|truncate(length=32,killwords=False,end='...')}}</span>
                 </td>
-                <td>{% set ne = t.next_event_utc() %}<span class="tt-right" title="{{t.localize(ne)}}">
+                <td>{% set ne = t.next_due_utc() %}<span class="tt-right" title="{{t.localize(ne)}}">
                           {{t.pretty(ne)}}</span>
                 </td>
 		<td>

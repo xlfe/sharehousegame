@@ -10,6 +10,8 @@ from pytz.gae import pytz
 from datetime import datetime, timedelta, time
 from time import sleep
 import calendar
+import os
+DEBUG = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 
 def add_months(sourcedate,months):
     month = sourcedate.month - 1 + months
@@ -25,6 +27,12 @@ def add_years(sourcedate,years):
     day = min(sourcedate.day,calendar.monthrange(year,month)[1])
     return datetime(year,month,day,sourcedate.hour,sourcedate.minute,sourcedate.second)
 
+
+
+
+
+
+
 class StandingTask(ndb.Model):
     _default_indexed=False
     
@@ -36,28 +44,75 @@ class StandingTask(ndb.Model):
     created_by = ndb.IntegerProperty(required=True)
     created = ndb.DateTimeProperty(auto_now_add=True)
 
+
+
+
 class TaskCompletion(ndb.Model):
     """Stores a record of a housemate completing a task"""
     
+    #user who completed the task
     user_id = ndb.IntegerProperty(required=True)
+    
+    #when the task was completed
     when = ndb.DateTimeProperty(auto_now_add=True)
     
-class TaskInteractions(ndb.Model):
-    """Stores a record of reminders / other emails sent"""
-    
-    user_id = ndb.IntegerProperty(required=True)
-    when = ndb.DateTimeProperty(auto_now_add=True)
+    #If the object referenced here exists, the task has not 'refreshed' yet
+    task_instance = ndb.KeyProperty(required=True)
 
-class TaskInstance(ndb.Model):
+
+#Task Event is the base class for lightweight pointers for events
+#that need to happen at a certian utc DT
+
+class TaskEvent(ndb.Model):
     """A pointer to the Owner Task to be called at a regular interval using cron"""
-    _default_indexed = False
     
     owner = ndb.KeyProperty(required=True,indexed=True)
-    next_action_reqd = ndb.DateTimeProperty(required=True,indexed=True)
+    action_reqd = ndb.DateTimeProperty(required=True,indexed=True)
+
+#Task expiry is an example of a task event
+
+class TaskExpiry(TaskEvent):
     
-    completions = ndb.StructuredProperty(TaskCompletion,repeated=True)
-    interactions = ndb.StructuredProperty(TaskInteractions,repeated=True)
+    def action(self):
+        
+        owner_task = self.owner.get()
+        logging.info("Task expiring: '{0}'".format(owner_task.name))    
+
+class TaskOwnerDelete(TaskEvent):
+    """Deletes the owner after action_reqd"""
     
+    def action(self):
+        self.owner.delete()
+
+
+
+class TaskReminderEmail(ndb.Model):
+    """A record of reminder emails sent
+        - provides a unique link for users to click on to action a task
+        - maps back to original task
+    """
+    
+    user_id = ndb.IntegerProperty(required=True)
+    when = ndb.DateTimeProperty(auto_now_add=True)
+    
+        
+        
+class TaskReminder(TaskEvent):
+    """Goes through and sends reminders"""
+    
+    def action(self):
+    
+        owner = self.owner.get()
+        
+        #exclude housemates who
+        #   have completed the task
+        #   have muted the task
+        #   have disabled emails
+        
+        
+ 
+
+
 
 class RepeatedTask(ndb.Model):
     
@@ -80,7 +135,7 @@ class RepeatedTask(ndb.Model):
     }
 
     name = ndb.StringProperty(required=True)
-    start_date = ndb.DateProperty(required=True)
+    due_date = ndb.DateProperty(required=True)
     desc = ndb.TextProperty(required=True)
     repeat = ndb.BooleanProperty(required=True)
     repeat_period = ndb.StringProperty(required = True)
@@ -123,7 +178,7 @@ class RepeatedTask(ndb.Model):
                     assert dict[k] in v, "Incorrect value : {0}".format(dict[k])
         
         if 'reminders' in dict:
-            assert len(dict['reminders']) <= 10, 'Sorry, a maximum of 10 reminders'
+            assert len(dict['reminders']) <= 4, 'Sorry, a maximum of 10 reminders'
             #make sure we only have one of each...
             
             dict['reminders'] = set(dict['reminders'])
@@ -131,7 +186,7 @@ class RepeatedTask(ndb.Model):
             for r in dict['reminders']:
                 assert cls.calc_reminder_delta(r) != None,'Unknown reminder interval {0}'.format(r) 
             
-        assert dict['start_date'].year >= 2012,'Start date must be after 2012'
+        assert dict['due_date'].year >= 2012,'Due date must be after 2012'
         
         try:
             rt.populate(**dict)
@@ -140,23 +195,51 @@ class RepeatedTask(ndb.Model):
             logging.error(dict)
             raise
         
-        try:
-            next_reminder = rt.next_reminder_utc()
-            next_event = rt.next_event_utc()
-            if next_reminder:    
-                nar = next_reminder
-            else:
-                nar = next_event
-                
-            if next_event:
-                logging.info(nar)
-                #We remove the tz info because nar is UTC and the datastore only accepts UTC naive datetimes
-                ti = TaskInstance(owner=rt.key,next_action_reqd=nar.replace(tzinfo=None))
-                ti.put()
-        except:
-            raise
-            
+        #Populates TaskEvents that need to occur...
+        rt.setup_events()
+        
         return rt
+
+    def housemates_completed(self,task_instance):
+        """returns a list of housemates who have completed a particular task instance"""
+        
+        task_completions = TaskCompletion.query(parent=self.key).filter(TaskCompletion.task_instance == task_instance).fetch()
+        
+        housemates = []
+        
+        for tc in task_completions:
+            housemates.append(tc.user_id)
+            
+        return housemates
+
+    def complete_task(self,task_instance,user_id):
+        
+        assert user_id in self.housemates,"User {0} is not found in house {1} for task '{2}'".format(user_id,self.house_id,self.name)
+        assert user_id not in self.housemates_completed(task_instance),'Housemate {0} already completed task {1}'.format(user_id,self.name)
+        
+        tc = TaskCompletion(parent=self.key,user_id=user_id,task_instance=task_instance)
+        tc.put()
+        
+        return True
+
+    def setup_events(self):
+    
+        next_expiry = self.next_expiry_utc()
+        next_expiry = next_expiry.replace(tzinfo=None) if next_expiry else None
+        
+        if next_expiry:
+            
+            te = TaskExpiry(owner=self.key,action_reqd=next_expiry)
+            te.put()
+            
+        next_reminder = self.next_reminder_utc()
+        next_reminder = next_reminder.replace(tzinfo=None) if next_reminder else None
+        
+        if next_reminder:
+            
+            tr = TaskReminder(owner=self.key,action_reqd=next_reminder)
+            tr.put()
+
     
     @staticmethod
     def calc_reminder_delta(desc):
@@ -211,6 +294,11 @@ class RepeatedTask(ndb.Model):
         hse = house.House.get_by_id(self.house_id)
         return hse.timezone
     
+    @property
+    def housemates(self):
+        hse = house.House.get_by_id(self.house_id)
+        return house.House.users
+    
     def describe_repeat(self):
         
         if not self.repeat:
@@ -229,8 +317,8 @@ class RepeatedTask(ndb.Model):
                 
         elif self.repeat_period == "Monthly":
             
-            day =  self.start_date.strftime('%A')
-            date = self.start_date.day
+            day =  self.due_date.strftime('%A')
+            date = self.due_date.day
             
             if date > 28:
                 which = "last"
@@ -263,45 +351,76 @@ class RepeatedTask(ndb.Model):
     def weekdays_to_int(self,weekday):
         """uses ISO weekday assignments"""
         return self.definitions['wd_names'][weekday]
+        
+    def next_expiry_utc(self,now=None):
+        """the next time the task expires based on:
+            -the due date
+            -the repeat options
+            -the expiry options
+            
+            -optionally takes an argument 'after' which finds the next expiry after
+                a certian date (default is now())
+        """
+        if now is None:
+            now = pytz.UTC.localize(datetime.now())
+        
+        if self.doesnt_expire:
+            #must expire half way between the current due date and the next one...
+            
+            now_offset = now
+            
+            last_due, next_due = None, None
+            
+            #iter_due_dates_utc starts at the oldest due and increments forwards in time
+            for dd in self.iter_due_dates_utc(None):
+                
+                if dd < now_offset and not next_due:
+                    last_due = dd
+                
+                if dd > now_offset:
+                    next_due = dd
+                    
+                if last_due and next_due:
+                    
+                    diff = timedelta(seconds = (next_due - last_due).total_seconds()/2)
+                    
+                    if last_due + diff > now:
+                        return last_due + diff
+                    else:
+                        now_offset = now_offset + diff + diff
+                        last_due, next_due = None
+        else:
+            #if a task expires, its expiry date is the next due date after now
+            
+            for dd in self.iter_due_dates_utc(None):
+                if dd > now:
+                    return dd
+                    
     
-    def next_event_utc(self):
-        """the next event trigger"""
+    def next_due_utc(self,after=None):
+        """the next datetime a task is due, after a certian datetime (defaults to now)"""
         
-        now = pytz.UTC.localize(datetime.now())
+        if not after:
+            after = pytz.UTC.localize(datetime.now())
         
-        for event in self.iter_instances(None):
-            if event > now:
-                #logging.info('{0} -> {1}'.format(event,pytz.UTC.normalize(event.astimezone(pytz.UTC))))
-                return pytz.UTC.normalize(event.astimezone(pytz.UTC))
-                #return event
+        for event in self.iter_due_dates_utc(None):
+            if event > after:
+                return event
+                
         
-    def next_reminder_utc(self):
+    def next_reminder_utc(self,after=None):
+        """next reminder for a task
+            -reminders are based on task due date, not expiry date"""
         
-        now = pytz.UTC.localize(datetime.now())
+        if not after:
+            after = pytz.UTC.localize(datetime.now())
         
-        ne = self.next_event_utc()
-        logging.info('iter event {0}'.format(ne))
-        if ne:
-            for reminder in self.iter_reminders(ne,None):
-                logging.info('{0} >? {1}'.format(reminder,now))
-                if reminder > now:
+        next_event = self.next_due_utc(after)
+        
+        if next_event:
+            for reminder in self.iter_reminders(next_event,None):
+                if reminder > after:
                     return reminder
-        
-    def localize(self,dt):
-        """Converts the UTC dt into the local timezone """
-        fmt = '%Y-%m-%d %H:%M %Z'
-        
-        if dt:
-            local = pytz.timezone(self.timezone)
-            return local.normalize(dt.astimezone(local)).strftime(fmt)
-        else:
-            return '-'
-        
-    def pretty(self,dt):
-        if dt:
-            return shg_utils.prettydate(dt)
-        else:
-            return '-'
             
     def iter_reminders(self,dt_event,max_reminders=21):
         """ returns datetime objects for reminders for an event occuring on dt_event"""
@@ -333,11 +452,19 @@ class RepeatedTask(ndb.Model):
         
         return last_event
     
-    def iter_instances(self,max_events=10):
-        """ returns a list of localized datetime objects for a repeating event"""
+    def iter_due_dates_utc(self,max_events=10):
+        """returns a list of UTC datetime objects for a repeating task"""
+        
+        utc = pytz.UTC
+        
+        for e in self.iter_due_dates(max_events):
+            yield utc.normalize(e.astimezone(utc))
+    
+    def iter_due_dates(self,max_events=10):
+        """ returns a list of localized datetime due dates for a repeating task"""
         
         local_tz = pytz.timezone(self.timezone)
-        last_event = datetime.combine( self.start_date , self.event_expiry_tm)
+        last_event = datetime.combine( self.due_date , self.event_expiry_tm)
         
         if not self.repeat:
             #doesn't repeat, so return just the event
@@ -376,7 +503,7 @@ class RepeatedTask(ndb.Model):
             elif self.repeat_period == "Monthly":
                 
                 #closest day possible in the right month
-                last_event = add_months( datetime.combine(self.start_date, self.event_expiry_tm) ,self.repeat_freq * i)
+                last_event = add_months( datetime.combine(self.due_date, self.event_expiry_tm) ,self.repeat_freq * i)
 
                 if self.repeat_by == "dow":
                     assert(original_dow), 'Something went wrong'
@@ -410,8 +537,25 @@ class RepeatedTask(ndb.Model):
                 
             elif self.repeat_period == "Yearly":
                 
-                last_event = add_years(datetime.combine(self.start_date,self.event_expiry_tm),i)
+                last_event = add_years(datetime.combine(self.due_date,self.event_expiry_tm),i)
                     
+    
+    def localize(self,dt):
+        """Converts the UTC dt into the local timezone """
+        fmt = '%Y-%m-%d %H:%M %Z'
+        
+        if dt:
+            local = pytz.timezone(self.timezone)
+            return local.normalize(dt.astimezone(local)).strftime(fmt)
+        else:
+            return '-'
+        
+    def pretty(self,dt):
+        if dt:
+            return shg_utils.prettydate(dt)
+        else:
+            return '-'
+    
         
     @staticmethod
     def get_tasks_by_house_id(house_id):
@@ -476,9 +620,18 @@ class Task(Jinja2Handler):
     
     def send_reminders(self):
         """Cron job that is run every 15 minutes"""
-        #get all task instances which have a next action required in the past or in the next 7 minutes
-        for t in TaskInstance.query(TaskInstance.next_action_reqd < (datetime.now() + timedelta(minutes=+7))).fetch():
-            logging.info(t.owner.get().name)
+        
+        action_entities = [TaskExpiry,TaskReminder,TaskOwnerDelete]
+        
+        if DEBUG:
+            td = timedelta(days=100)
+        else:
+            td = timdelta(minutes=10)
+        
+        for ae in action_entities:
+            for task_event in ae.query(ae.action_reqd < (datetime.now() + td)).fetch():
+                task_event.action()
+                
         
         
         return

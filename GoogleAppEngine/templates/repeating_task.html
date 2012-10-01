@@ -30,11 +30,11 @@
                         <li class="dropdown-submenu"><a href="#">Cleaning</a>
                             <ul class="dropdown-menu">
                                 <li> <a href="#" data-points="200"
-                                data-repeats='[1,0]'>Clean the bathroom</a></li>
+                                data-repeats='[1,0]' data-doesnt_expire="True">Clean the bathroom</a></li>
                                 <li> <a href="#" data-points="250"
-                                data-repeats='[1,1]'>Vacuum the house</a></li>
+                                data-repeats='[1,1]' data-doesnt_expire="True">Vacuum the house</a></li>
                                 <li> <a href="#" data-points="200"
-                                data-repeats='[1,0]'>Clean the kitchen </a></li>
+                                data-repeats='[1,0]' data-doesnt_expire="True">Clean the kitchen </a></li>
                             </ul>
                         </li>
                         <li class="dropdown-submenu"><a href="#">Other jobs</a>
@@ -75,7 +75,7 @@
 	    </label>
 	    <div class="controls">
 		<div class="input-append">
-		    <input id="when" class="input-xlarge required" type="text" name="start_date" placeholder="eg: saturday, tomorrow, next wed">
+		    <input id="when" class="input-xlarge required" type="text" name="due_date" placeholder="eg: saturday, tomorrow, next wed">
 		    <span id="cal-icon" data-date-format="dd-mm-yyyy" class="add-on"><i class="icon-calendar"></i></span>
 		</div>
 		<span id="date-info" class="inline-help"></span>
@@ -229,6 +229,12 @@
                 $('input[name=name]').val($(this).data('name')).keyup();
             } else {
                 $('input[name=name]').val($(this).text()).keyup();
+            }
+            
+            if (typeof $(this).data('doesnt_expire') != 'undefined') {
+                $('#expires_cb').attr('checked','checked').change();
+            } else {
+                $('#expires_cb').attr('checked',null).change();
             }
             
             if ($(this).data('shared') == "Yes") {
@@ -433,8 +439,8 @@
         $('input[name=reminders]').hide();
 	
 	$('#add_reminder').click(function(){
-            if ($('div[id=reminder-options]').length > 9) {
-                alert("Sorry, there is a maximum of 10 reminders allowed.");
+            if ($('div[id=reminder-options]').length >= 4) {
+                alert("Sorry, there is a maximum of 4 reminders allowed.");
             } else {
                 var ro  = $('#reminder-details > div :first').clone().insertAfter('#reminder-details > div :last');
                 $(ro).children('.control-label').remove();

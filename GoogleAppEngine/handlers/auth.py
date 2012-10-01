@@ -132,14 +132,14 @@ class AuthSignup(Jinja2Handler):
 	    return self.json_response(json.dumps({'failure':'Email already exists in system &raquo; <a href="#login" class="btn btn-small btn-success" data-toggle="modal" >Login or reset password</a>'}))
 	
 	password_hash = security.generate_password_hash(password=password,pepper=shg_utils.password_pepper)
-	token = _user.EmailHash.get_or_create(name=name,email=email,password_hash=password_hash)
+	token = _user.EmailVerify.get_or_create(name=name,email=email,password_hash=password_hash)
 	
 	reason = token.limited()
 	
 	if reason:
 	    return self.json_response(json.dumps({'failure':reason}))
 	
-	if token.send_email(self.request.host_url,'new_user'):
+	if token.send_email(self.request.host_url):
 	    return self.json_response(json.dumps({'success':'Validation email sent. Please check your inbox!'}))
 	else:
 	    return self.json_response(json.dumps({'failure':'Unable to send email - please try again shortly'}))
