@@ -1,23 +1,43 @@
-
+import logging
 
 from google.appengine.ext import ndb
-import logging
-from shg_utils import prettydate
+import webapp2
 from webapp2_extras import security,securecookie
 from google.appengine.api import mail
-from models import authprovider
 import datetime
 import os
+
+from models import authprovider
+from handlers.jinja import Jinja2Handler
+from shg_utils import prettydate,get_class
+from handlers.session import manage_user
+
 DEBUG = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 
 
-base_links = {
-        'EmailVerify': 'v'
-    ,   'EmailInvite':  'i'
-    ,   'EmailRemind':  'r'
-    ,   'EmailPasswordReset':'p'
+email_patterns = {
+        'EmailVerify': {'link':'v','module':'models.user'}
+    ,   'EmailInvite': {'link':'i','module':'models.user' }
+    ,   'EmailRemind': {'link':'r','module':'handlers.tasks'}
+    ,   'EmailPwReset':{'link':'p','module':'handlers.auth'}
 }
 
+class EmailHandler(Jinja2Handler):
+    
+    @manage_user
+    def get(self,id,hash):
+    
+        cls = get_class(email_patterns[self.request.route.name]['module'],self.request.route.name)
+        
+        if id and hash:
+            token = cls.get_token(id,hash)
+        
+        if not id or not hash or not token:
+            return self.generic_error(title='Unknown email token',message="We're sorry, we don't recognize that email token.")
+            
+        return token.verified(self)
+    
+        
 
 class EmailHash(ndb.Model):
     """ Base class used to send emails with unique links"""
@@ -29,11 +49,10 @@ class EmailHash(ndb.Model):
     
     token_hash = ndb.StringProperty(indexed=True,required=True)
     email = ndb.StringProperty(indexed=True,required=True)
-    name = ndb.StringProperty(required=True)
     
     @property
     def base_link(self):
-        raise Exception('Need to overwrite this...')
+        return email_patterns[self.__class__.__name__]['link']
     
     @classmethod
     def _get(cls,**kwargs):
@@ -102,8 +121,11 @@ class EmailHash(ndb.Model):
             return False
 
         message = mail.EmailMessage(sender="Sharehouse Game <bert@sharehousegame.com>")
-
-        message.to = "{0} <{1}>".format(self.name,self.email)
+        if 'name' in self.__dict__:
+            message.to = "{0} <{1}>".format(self.name,self.email)
+        else:
+            message.to = "<{0}>".format(self.email)
+            
         message.subject = self.render_subject()
         message.body = self.render_body(base_url)
         
@@ -111,6 +133,7 @@ class EmailHash(ndb.Model):
             logging.debug(message)
         
         if DEBUG:
+            message.send()
             logging.info(message.body)
         else:
             message.send()
@@ -119,4 +142,8 @@ class EmailHash(ndb.Model):
         self.number_of_emails = +1
         self.put()
         return True
+    
+
+    
+    
     

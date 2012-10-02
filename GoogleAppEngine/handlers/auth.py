@@ -1,16 +1,67 @@
 import webapp2
 import webob
-from handlers import session
-from auth_helpers import facebook
 import logging
 import json
-from models import user as _user
-from models import authprovider
 from webapp2_extras import security
 from google.appengine.ext import ndb
+from time import sleep
+
+from handlers import session
+from auth_helpers import facebook
+from models import user as _user
+from models import authprovider
 import shg_utils
 from handlers.jinja import Jinja2Handler
-from time import sleep
+from models.email import EmailHash
+
+
+class EmailPwReset(EmailHash):
+    """Password reset email"""
+    
+    user_id = ndb.IntegerProperty()
+    house_id = ndb.IntegerProperty()
+    referred_by = ndb.StringProperty()
+    password_hash = ndb.StringProperty()
+
+    def render_subject(self):
+	return 'Reset your password'
+
+    def render_body(self,host_url):
+    
+        email_body = 'Hi there!,\n\n' + \
+              "We have received a request to reset the password for the Sharehouse Game account linked to this email address.\n\n" + \
+              "If you did not request a password reset, please ignore this email.\n\n" + \
+              "If you would like to reset your password, please click the link below:\n" + \
+              "{0}\n\n" + \
+              "Bert Bert\n" + \
+              "Sharehouse Game - Support\n" + \
+              "http://www.SharehouseGame.com\n"
+        
+        return email_body.format(host_url+self.get_link())
+    
+    @ndb.transactional(xg=True)
+    def verified(self,jinja):
+	
+	new_password = jinja.request.get('password',None)
+                
+	if new_password:
+	    
+	    auth_id = authprovider.AuthProvider.generate_auth_id('password', self.email)
+	    
+	    at = authprovider.AuthProvider.get_by_auth_id(auth_id)
+	    at.password_hash = security.generate_password_hash(password=new_password,pepper=shg_utils.password_pepper)
+	    at.put()
+	    self.key.delete()
+	    
+	    return jinja.generic_success(title='Account updated',message='You have successfully reset your password',
+					action='Login',action_link='#login" data-toggle="modal')
+	else:
+	    
+	    return jinja.generic_question(title='Reset password',message='Please enter your new password',form_action="",submit_name='Save',
+					 questions = [{'label':'New password','name':'password','type':'password'}])
+
+     
+
 
 class PasswordAuth(Jinja2Handler):
     
@@ -45,15 +96,15 @@ class PasswordAuth(Jinja2Handler):
 	
 	if not auth_token:
 	    return self.generic_error(title='Account not found',message="We're sorry, we couldn't find an account with email address '{0}'".format(email),
-				      action='Sign up &raquo;',action_link='/#signup')
-	token = _user.EmailHash.get_or_create(email=email,user_id=auth_token.user_id,password_hash='reset')
+					action='Sign up &raquo;',action_link='/#signup')
+	token = EmailPwReset.get_or_create(email=email,user_id=auth_token.user_id,password_hash='reset')
 	
 	reason = token.limited()
 	
 	if reason:
 	    return self.generic_error(title='Unable to send verification email',message=reason)
 	
-	if token.send_email(self.request.host_url,'reset_password'):
+	if token.send_email(self.request.host_url):
 	    self.generic_success(title='Verification email sent',message='Please follow the instructions in your email inbox to reset your password')
 	else:
 	    self.generic_error(title='Unable to send verification email',messsage='An unknown error occurred, please try again')
