@@ -9,8 +9,8 @@ import os
 
 from models import authprovider
 from handlers.jinja import Jinja2Handler
+from handlers.session import manage_session
 from shg_utils import prettydate,get_class
-from handlers.session import manage_user
 
 DEBUG = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 
@@ -24,7 +24,10 @@ email_patterns = {
 
 class EmailHandler(Jinja2Handler):
     
-    @manage_user
+    def post(self,id,hash):
+        return self.get(id,hash)
+    
+    @manage_session
     def get(self,id,hash):
     
         cls = get_class(email_patterns[self.request.route.name]['module'],self.request.route.name)

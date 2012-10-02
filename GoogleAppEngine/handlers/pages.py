@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
 import webapp2
 from google.appengine.ext import ndb
 import json
 import logging
-import session
 from models import house, authprovider
 from handlers.jinja import Jinja2Handler
 
 class PageHandler(Jinja2Handler):
     
-    @session.manage_user    
+    @house.manage_house
     def main(self):
         
         session = self.request.session

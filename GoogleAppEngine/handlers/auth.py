@@ -65,7 +65,7 @@ class EmailPwReset(EmailHash):
 
 class PasswordAuth(Jinja2Handler):
     
-    @session.manage_user
+    @_user.manage_user
     def start(self):
 	error_msg = 'We were unable to log you on using the supplied email address and password. Do you need to reset your password?'
 	password = self.request.POST['password']
@@ -86,7 +86,7 @@ class PasswordAuth(Jinja2Handler):
 	
 	return self.redirect('/')
     
-    @session.manage_user
+    @_user.manage_user
     def reset(self):
 	
 	email = self.request.POST['email']
@@ -114,7 +114,7 @@ class PasswordAuth(Jinja2Handler):
 
 class FacebookAuth(Jinja2Handler):
     
-    @session.manage_user
+    @_user.manage_user
     def start(self):
 	
 	redirect_uri = facebook.FacebookAuth().auth_start(self.request)
@@ -123,7 +123,7 @@ class FacebookAuth(Jinja2Handler):
         
         return self.request.get_response(resp)
 
-    @session.manage_user
+    @_user.manage_user
     def callback(self):
         
         callback = facebook.FacebookAuth().auth_callback(self.request)
@@ -156,7 +156,7 @@ class FacebookAuth(Jinja2Handler):
         
 class AuthLogout(webapp2.RequestHandler):
     
-    @session.manage_user
+    @_user.manage_user
     def get(self):        
         session=self.request.session
         if session is not None:

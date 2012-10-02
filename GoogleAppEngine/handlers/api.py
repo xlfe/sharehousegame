@@ -4,6 +4,7 @@ import json
 import logging
 import session
 from models import authprovider,house,user
+from handlers import auth
 from google.appengine.ext import ndb
 from time import sleep
 from handlers.jinja import Jinja2Handler
@@ -17,7 +18,7 @@ def invite_housemate(h,house_id,base_url,referred_by):
 
 class API(Jinja2Handler):
     
-    @session.manage_user
+    @user.manage_user
     def api(self):
         
         session_user = self.request.session.user
@@ -140,7 +141,9 @@ def wipe_datastore():
     ,   house.House.query().fetch()
     ,   house.HouseLog.query().fetch()
     ,   user.Points.query().fetch()
-    ,   user.EmailHash.query().fetch()
+    ,   user.EmailVerify.query().fetch()
+    ,   user.EmailInvite.query().fetch()
+    ,   auth.EmailPwReset.query().fetch()
     ,   session.Session.query().fetch()
     ,   user.User.query().fetch() ]
     

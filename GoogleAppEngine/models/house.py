@@ -2,7 +2,23 @@ from google.appengine.ext import ndb
 
 from shg_utils import prettydate
 from models import user as _user
+from functools import wraps
+
 from datetime import datetime, timedelta
+
+
+def manage_house(fn):
+    @_user.manage_user
+    @wraps(fn)
+    def wrapper(self, *args, **kwargs):
+        
+        if self.request.session.user:
+            if self.request.session.user.house_id:
+                self.request.session.house = House._get_house_by_id(self.request.session.user.house_id)
+        
+        return fn(self,*args, **kwargs)
+    return wrapper
+    
 
 class InvitedUser(ndb.Model):
     _default_indexed=False
