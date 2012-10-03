@@ -17,7 +17,7 @@ DEBUG = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 
 email_patterns = {
         'EmailVerify': {'link':'v','module':'models.user'}
-    ,   'EmailInvite': {'link':'i','module':'models.user' }
+    ,   'HouseInvite': {'link':'i','module':'models.house' }
     ,   'EmailRemind': {'link':'r','module':'handlers.tasks'}
     ,   'EmailPwReset':{'link':'p','module':'handlers.auth'}
 }

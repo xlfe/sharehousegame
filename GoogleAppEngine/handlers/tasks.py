@@ -563,7 +563,7 @@ class RepeatedTask(ndb.Model):
     
 class Task(Jinja2Handler):
     
-    @session.manage_house
+    @house.manage_house
     def post(self,action):
     
         if action == 'create':
@@ -581,23 +581,21 @@ class Task(Jinja2Handler):
             
         return
                 
-    @session.manage_house
+    @house.manage_house
     def list(self):
         
         tasks = RepeatedTask.get_tasks_by_house_id(self.request.session.user.house_id)
-        self.render_template('tasks.html',{'tasks':tasks})
-        return
+        return self.render_template('tasks.html',{'tasks':tasks})
     
-    @session.manage_house
+    @house.manage_house
     def get(self,action):
             
         if action == 'edit':
-                
             pass
         
         elif action == 'create':
-                
             self.render_template('repeating_task.html')
+            
         elif action == 'delete':
             
             id = self.request.GET['id']

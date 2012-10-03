@@ -4,7 +4,7 @@ import json
 import logging
 import session
 from models import authprovider,house,user
-from handlers import auth
+from handlers import auth, tasks
 from google.appengine.ext import ndb
 from time import sleep
 from handlers.jinja import Jinja2Handler
@@ -12,8 +12,8 @@ from google.appengine.ext import deferred
 
 def invite_housemate(h,house_id,base_url,referred_by):
     
-    e_token = user.EmailHash.get_or_create(name=h.name,email=h.email,house_id=house_id,referred_by=referred_by)
-    return e_token.send_email(base_url,'invite_user')
+    e_token = house.HouseInvite.get_or_create(name=h.name,email=h.email,house_id=house_id,referred_by=referred_by)
+    return e_token.send_email(base_url)
     
 
 class API(Jinja2Handler):
@@ -59,7 +59,7 @@ class API(Jinja2Handler):
         assert hse, 'Error retreiving house'
         assert len(hse.invited_users) >= id, 'Unknown housemate ID'
         
-        mail_hash = user.EmailHash.get_or_create(
+        mail_hash = house.HouseInvite.get_or_create(
                                     house_id    = session_user.house_id,
                                     name        = hse.invited_users[id].name,
                                     email       = hse.invited_users[id].email,
@@ -72,7 +72,7 @@ class API(Jinja2Handler):
             return self.json_response(json.dumps( { 'failure' : reason ,'hm':repr(id)} ))
         
         
-        if mail_hash.send_email(self.request.host_url,'invite_user'):
+        if mail_hash.send_email(self.request.host_url):
             return self.json_response(json.dumps({'success':repr(id)}))
         else:
             return self.json_response(json.dumps({'failure':"Sorry: we're unable to send the email! Please try again shortly.",'hm':repr(id)}))
@@ -142,8 +142,11 @@ def wipe_datastore():
     ,   house.HouseLog.query().fetch()
     ,   user.Points.query().fetch()
     ,   user.EmailVerify.query().fetch()
-    ,   user.EmailInvite.query().fetch()
+    ,   house.HouseInvite.query().fetch()
     ,   auth.EmailPwReset.query().fetch()
+    ,   tasks.TaskExpiry.query().fetch()
+    ,   tasks.TaskOwnerDelete.query().fetch()
+    ,   tasks.TaskReminder.query().fetch()
     ,   session.Session.query().fetch()
     ,   user.User.query().fetch() ]
     

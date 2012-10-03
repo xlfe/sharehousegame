@@ -1,11 +1,14 @@
 from google.appengine.ext import ndb
-
+import json
+from webapp2_extras import security
 from shg_utils import prettydate
-from models import user as _user
+import shg_utils
+from models.email import EmailHash
+from models import user as _user, authprovider
 from functools import wraps
 
 from datetime import datetime, timedelta
-
+import logging
 
 def manage_house(fn):
     @_user.manage_user
@@ -14,11 +17,102 @@ def manage_house(fn):
         
         if self.request.session.user:
             if self.request.session.user.house_id:
-                self.request.session.house = House._get_house_by_id(self.request.session.user.house_id)
+                self.request.session.user.house = House._get_house_by_id(self.request.session.user.house_id)
         
         return fn(self,*args, **kwargs)
     return wrapper
     
+        
+class HouseInvite(EmailHash):
+    """Invite email"""
+    
+    name = ndb.StringProperty(required=True)
+    house_id = ndb.IntegerProperty()
+    referred_by = ndb.StringProperty()
+    
+    def render_body(self,host_url):
+        firstname = self.name.split(' ')[0]
+        
+        email_body = 'Dear {0},\n\n' + \
+          "Your housemate {1} would like you to join them in Sharehouse Game!\n" + \
+          "In order to join their sharehouse, please click the link below and follow the instructions on the bottom of the page that opens:\n" + \
+          "{2}\n\n" + \
+          "Bert Bert\n" + \
+          "Sharehouse Game - Support\n" + \
+          "http://www.SharehouseGame.com\n"
+    
+        return email_body.format(firstname,self.referred_by,host_url+self.get_link())
+        
+    def render_subject(self):
+        firstname = self.name.split(' ')[0]
+        return "{0}, {1} has sent you an invitation".format(firstname,self.referred_by)
+    
+    @ndb.transactional(xg=True)
+    def verified(self,jinja):
+        
+        loggedin_user = _user.User._get_by_id(jinja.request.session.user_id) if jinja.request.session.user_id else None
+        auth_id = authprovider.AuthProvider.generate_auth_id('password', self.email)
+        matched_at = authprovider.AuthProvider.get_by_auth_id(auth_id)
+         
+        if matched_at:
+            #existing user - must have joined seperately
+               
+            if not loggedin_user:
+                at_user = _user.User.get_by_id(matched_at.user_id)
+                
+            else:
+                if loggedin_user.verified_email != self.email:
+                    
+                    jinja.request.session.user_id = None
+                    jinja.request.sesion.put()
+                    at_user = _user.User.get_by_id(matched_at.user_id)
+                else:
+                    at_user = loggedin_user
+            
+            at_user.house_id = self.house_id
+            at_user.put()
+            
+            hse = House._get_house_by_id(self.house_id)
+            hse.add_user(at_user)
+            self.key.delete()
+            
+            return jinja.generic_success(title='Welcome to {0}!'.format(hse.name),
+                                 message='You have successfully joined the house',action='Continue &raquo;',action_link='/')
+            
+            
+        else:
+            
+            if jinja.request.get('password'):
+               
+                #create account
+                name = jinja.request.get('name')
+                password = jinja.request.get('password')
+                
+                if not name or not password:
+                    raise Exception('Error not all values passed')
+        
+                password_hash = security.generate_password_hash(password=password,pepper=shg_utils.password_pepper)
+            
+                new_user = _user.User._create(house_id = self.house_id, display_name=name,verified_email=self.email)
+    
+                new_at = authprovider.AuthProvider._create(user=new_user,auth_id=auth_id,password_hash=password_hash)
+            
+                jinja.request.session.upgrade_to_user_session(new_user._get_id())
+                hse = House._get_house_by_id(self.house_id)
+                hse.add_user(new_user)
+                self.key.delete()
+                
+                return jinja.json_response(json.dumps({'success':'Account created!','redirect':'/'}))
+                
+            else:
+                return jinja.render_template('not_logged_in.html',{
+                            'signup_name':self.name,
+                            'referred_by':self.referred_by,
+                            'signup_email':self.email,
+                            'signup_action':jinja.request.host_url + self.get_link()
+                            })
+            
+            
 
 class InvitedUser(ndb.Model):
     _default_indexed=False
