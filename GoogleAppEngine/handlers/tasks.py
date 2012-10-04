@@ -4,7 +4,8 @@ import logging
 import session
 import shg_utils
 import re
-from models import house, authprovider
+from models import house, authprovider,user
+from models.email import EmailHash
 from handlers.jinja import Jinja2Handler
 from pytz.gae import pytz
 from datetime import datetime, timedelta, time
@@ -66,44 +67,117 @@ class TaskCompletion(ndb.Model):
 class TaskEvent(ndb.Model):
     """A pointer to the Owner Task to be called at a regular interval using cron"""
     
-    owner = ndb.KeyProperty(required=True,indexed=True)
+    #
     action_reqd = ndb.DateTimeProperty(required=True,indexed=True)
+
+
+#class TaskOwnerDelete(TaskEvent):
+#    """Deletes the owner after action_reqd"""
+#    
+#    def action(self):
+#        self.owner.delete()
+
 
 #Task expiry is an example of a task event
 
-class TaskExpiry(TaskEvent):
+class TaskInstance(TaskEvent):
+    """The TaskInstance class is used to represent a single occurence of a task.
+    
+    It's key is referenced to determine whether a particular task has expired or not
+    
+    """
     
     def action(self):
+        """Expiry of task"""
         
         owner_task = self.owner.get()
         logging.info("Task expiring: '{0}'".format(owner_task.name))    
 
-class TaskOwnerDelete(TaskEvent):
-    """Deletes the owner after action_reqd"""
-    
-    def action(self):
-        self.owner.delete()
 
-
-
-class TaskReminderEmail(ndb.Model):
+class TaskReminderEmail(EmailHash):
     """A record of reminder emails sent
         - provides a unique link for users to click on to action a task
         - maps back to original task
     """
-    
     user_id = ndb.IntegerProperty(required=True)
-    when = ndb.DateTimeProperty(auto_now_add=True)
+    name = ndb.StringProperty(required=True)
+    #reference to task_instance
+    owner = ndb.KeyProperty(required=True)
+    
+    @classmethod
+    def _get_or_create(cls,**kwargs):
+        
+        assert 'email' in kwargs, 'Unknown email address'
+        owner = kwargs['owner']
+        email = kwargs['email']
+        
+        tre = cls.query(cls.email == email, cls.owner == owner).get()
+        
+        if not tre:
+            tre = cls._create(**kwargs)
+        
+        return tre
+                
+    def render_body(self,host_url):
+        firstname = self.name.split(' ')[0]
+        
+        email_body = 'Dear {0},\n\n' + \
+          "This is a reminder that X is due soon\n" + \
+          ":\n" + \
+          "{1}\n\n" + \
+          "Bert Bert\n" + \
+          "Sharehouse Game - Support\n" + \
+          "http://www.SharehouseGame.com\n"
+    
+        return email_body.format(firstname,host_url+self.get_link())
+        
+    def render_subject(self):
+        firstname = self.name.split(' ')[0]
+        return "{0}, you have a reminder".format(firstname)
+    
+    @ndb.transactional(xg=True)
+    def verified(self,jinja):
+        
+        owner = self.owner.get()
+        if owner:
+        
+            return jinja.generic_success(title="Success",message='Done')
+        else:
+            return jinja.generic_failure(title="unknown owner",message='hmm')
+         
     
         
         
 class TaskReminder(TaskEvent):
     """Goes through and sends reminders"""
+    owner = ndb.KeyProperty(required=True,indexed=True)
+    
+    ndb.transactional(xg=True)
+    def create_new(self,rt,ti):
+        rt.add_next_reminder(self.owner,pytz.UTC.localize(self.action_reqd))
+        self.key.delete()
+        
     
     def action(self):
     
-        owner = self.owner.get()
+        #TaskInstance
+        ti = self.owner.get()
         
+        #Parent of the TaskInstance is a Repeated Task
+        rt = ti.key.parent().get()
+        
+        hse = house.House._get_by_id(rt.house_id)
+        
+        logging.info('House {0} with users {1}'.format(hse,hse.users)   )
+        for housemate_id in hse.users:
+            hm = user.User._get_by_id(housemate_id)
+            
+            tre = TaskReminderEmail._get_or_create(name=hm.display_name,user_id=housemate_id,email=hm.verified_email,owner=ti.key)
+            logging.info('sending reminder to {0}'.format(hm.verified_email))
+            tre.send_email()
+            
+        self.create_new(rt,ti)
+                
         #exclude housemates who
         #   have completed the task
         #   have muted the task
@@ -229,15 +303,22 @@ class RepeatedTask(ndb.Model):
         
         if next_expiry:
             
-            te = TaskExpiry(owner=self.key,action_reqd=next_expiry)
-            te.put()
+            ti = TaskInstance(parent=self.key,action_reqd=next_expiry)    
+        else:
+            ti = TaskInstance(parent=self.key,action_reqd=None)
+        
+        ti.put()
+        
+        self.add_next_reminder(ti.key)
             
-        next_reminder = self.next_reminder_utc()
+    def add_next_reminder(self,task_instance,after=None):
+        
+        next_reminder = self.next_reminder_utc(after)
         next_reminder = next_reminder.replace(tzinfo=None) if next_reminder else None
         
         if next_reminder:
             
-            tr = TaskReminder(owner=self.key,action_reqd=next_reminder)
+            tr = TaskReminder(owner=task_instance,action_reqd=next_reminder)
             tr.put()
 
     
@@ -373,6 +454,8 @@ class RepeatedTask(ndb.Model):
             
             #iter_due_dates_utc starts at the oldest due and increments forwards in time
             for dd in self.iter_due_dates_utc(None):
+                if dd > now_offset:
+                    return dd
                 
                 if dd < now_offset and not next_due:
                     last_due = dd
@@ -619,7 +702,7 @@ class Task(Jinja2Handler):
     def send_reminders(self):
         """Cron job that is run every 15 minutes"""
         
-        action_entities = [TaskExpiry,TaskReminder,TaskOwnerDelete]
+        action_entities = [TaskReminder]
         
         if DEBUG:
             td = timedelta(days=100)

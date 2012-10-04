@@ -144,8 +144,7 @@ def wipe_datastore():
     ,   user.EmailVerify.query().fetch()
     ,   house.HouseInvite.query().fetch()
     ,   auth.EmailPwReset.query().fetch()
-    ,   tasks.TaskExpiry.query().fetch()
-    ,   tasks.TaskOwnerDelete.query().fetch()
+    ,   tasks.TaskInstance.query().fetch()
     ,   tasks.TaskReminder.query().fetch()
     ,   session.Session.query().fetch()
     ,   user.User.query().fetch() ]

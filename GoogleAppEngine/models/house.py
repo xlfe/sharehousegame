@@ -48,6 +48,53 @@ class HouseInvite(EmailHash):
         return "{0}, {1} has sent you an invitation".format(firstname,self.referred_by)
     
     @ndb.transactional(xg=True)
+    def matched_at(self,jinja,matched_at,loggedin_user):
+        
+        #existing user - must have joined seperately   
+        if not loggedin_user:
+            at_user = _user.User.get_by_id(matched_at.user_id)
+            
+        else:
+            if loggedin_user.verified_email != self.email:
+                
+                jinja.request.session.user_id = None
+                jinja.request.sesion.put()
+                at_user = _user.User.get_by_id(matched_at.user_id)
+            else:
+                at_user = loggedin_user
+        
+        at_user.house_id = self.house_id
+        at_user.put()
+        
+        hse = House._get_house_by_id(self.house_id)
+        hse.add_user(at_user)
+        self.key.delete()
+        
+        return jinja.generic_success(title='Welcome to {0}!'.format(hse.name),
+                             message='You have successfully joined the house',action='Continue &raquo;',action_link='/')
+    
+    @ndb.transactional(xg=True)    
+    def create_account(self,jinja):
+        #create account
+        name = jinja.request.get('name')
+        password = jinja.request.get('password')
+        
+        if not name or not password:
+            raise Exception('Error not all values passed')
+        
+        password_hash = security.generate_password_hash(password=password,pepper=shg_utils.password_pepper)
+        
+        new_user = _user.User._create(house_id = self.house_id, display_name=name,verified_email=self.email)
+        
+        new_at = authprovider.AuthProvider._create(user=new_user,auth_id=auth_id,password_hash=password_hash)
+        
+        jinja.request.session.upgrade_to_user_session(new_user._get_id())
+        hse = House._get_house_by_id(self.house_id)
+        hse.add_user(new_user)
+        self.key.delete()
+        
+        return jinja.json_response(json.dumps({'success':'Account created!','redirect':'/'}))
+
     def verified(self,jinja):
         
         loggedin_user = _user.User._get_by_id(jinja.request.session.user_id) if jinja.request.session.user_id else None
@@ -55,54 +102,15 @@ class HouseInvite(EmailHash):
         matched_at = authprovider.AuthProvider.get_by_auth_id(auth_id)
          
         if matched_at:
-            #existing user - must have joined seperately
-               
-            if not loggedin_user:
-                at_user = _user.User.get_by_id(matched_at.user_id)
-                
-            else:
-                if loggedin_user.verified_email != self.email:
-                    
-                    jinja.request.session.user_id = None
-                    jinja.request.sesion.put()
-                    at_user = _user.User.get_by_id(matched_at.user_id)
-                else:
-                    at_user = loggedin_user
-            
-            at_user.house_id = self.house_id
-            at_user.put()
-            
-            hse = House._get_house_by_id(self.house_id)
-            hse.add_user(at_user)
-            self.key.delete()
-            
-            return jinja.generic_success(title='Welcome to {0}!'.format(hse.name),
-                                 message='You have successfully joined the house',action='Continue &raquo;',action_link='/')
-            
+            return self.matched_at(jinja,matched_at,loggedin_user)
             
         else:
             
             if jinja.request.get('password'):
+                
+                return self.create_account(jinja)
                
-                #create account
-                name = jinja.request.get('name')
-                password = jinja.request.get('password')
                 
-                if not name or not password:
-                    raise Exception('Error not all values passed')
-        
-                password_hash = security.generate_password_hash(password=password,pepper=shg_utils.password_pepper)
-            
-                new_user = _user.User._create(house_id = self.house_id, display_name=name,verified_email=self.email)
-    
-                new_at = authprovider.AuthProvider._create(user=new_user,auth_id=auth_id,password_hash=password_hash)
-            
-                jinja.request.session.upgrade_to_user_session(new_user._get_id())
-                hse = House._get_house_by_id(self.house_id)
-                hse.add_user(new_user)
-                self.key.delete()
-                
-                return jinja.json_response(json.dumps({'success':'Account created!','redirect':'/'}))
                 
             else:
                 return jinja.render_template('not_logged_in.html',{

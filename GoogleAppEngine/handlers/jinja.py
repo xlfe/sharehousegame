@@ -27,7 +27,7 @@ class Jinja2Handler(webapp2.RequestHandler):
             template_values = {}
         
         
-        if 'session' in self.request.environ['webob.adhoc_attrs']:
+        if 'webob.adhoc_attrs' in self.request.environ and 'session' in self.request.environ['webob.adhoc_attrs']:
             if self.request.session.user and not 'user' in template_values:
                 template_values['user'] = self.request.session.user
                 if self.request.session.user.house and not 'house' in template_values:

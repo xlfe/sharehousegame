@@ -16,10 +16,11 @@ DEBUG = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 
 
 email_patterns = {
-        'EmailVerify': {'link':'v','module':'models.user'}
-    ,   'HouseInvite': {'link':'i','module':'models.house' }
-    ,   'EmailRemind': {'link':'r','module':'handlers.tasks'}
-    ,   'EmailPwReset':{'link':'p','module':'handlers.auth'}
+        'EmailVerify': {'link':'a','module':'models.user'}
+    ,   'HouseInvite': {'link':'b','module':'models.house' }
+    ,   'EmailRemind': {'link':'c','module':'handlers.tasks'}
+    ,   'EmailPwReset':{'link':'d','module':'handlers.auth'}
+    ,   'TaskReminderEmail':{'link':'e','module':'handlers.tasks'}
 }
 
 class EmailHandler(Jinja2Handler):
@@ -118,7 +119,10 @@ class EmailHash(ndb.Model):
         return False
     
     
-    def send_email(self,base_url):
+    def send_email(self,base_url=None):
+        
+        if not base_url:
+            base_url = "http://localhost:8081" if DEBUG else "http://www.sharehousegame.com"
         
         if self.limited():
             return False
