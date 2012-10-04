@@ -87,6 +87,10 @@ class TaskInstance(TaskEvent):
     
     """
     
+    def expired(self):
+        return self.action_reqd < datetime.now()
+
+    
     def action(self):
         """Expiry of task"""
         
@@ -133,19 +137,31 @@ class TaskReminderEmail(EmailHash):
         
     def render_subject(self):
         firstname = self.name.split(' ')[0]
-        return "{0}, you have a reminder".format(firstname)
+        return "{0}, something is due".format(firstname)
+    
+    @staticmethod
+    @house.manage_house
+    def login(jinja):
+        return jinja
     
     @ndb.transactional(xg=True)
     def verified(self,jinja):
         
-        owner = self.owner.get()
-        if owner:
+        jinja=self.login(jinja)
         
-            return jinja.generic_success(title="Success",message='Done')
+        owner = self.owner.get()
+        if owner.expired():
+        
+            return jinja.generic_error(title="Task expired",message='Sorry')
         else:
-            return jinja.generic_failure(title="unknown owner",message='hmm')
+            
+            rt = owner.key.parent().get()
+            if self.user_id in rt.housemates_completed(owner.key):
+                return jinja.generic_error(title='Already completed',message="You've already completed this task for this <week>, sorry")
+            else:
+                rt.complete_task(owner.key,self.user_id)
+                return jinja.generic_success(title="Link good",message='Task completed')
          
-    
         
         
 class TaskReminder(TaskEvent):
@@ -157,7 +173,6 @@ class TaskReminder(TaskEvent):
         rt.add_next_reminder(self.owner,pytz.UTC.localize(self.action_reqd))
         self.key.delete()
         
-    
     def action(self):
     
         #TaskInstance
@@ -277,7 +292,7 @@ class RepeatedTask(ndb.Model):
     def housemates_completed(self,task_instance):
         """returns a list of housemates who have completed a particular task instance"""
         
-        task_completions = TaskCompletion.query(parent=self.key).filter(TaskCompletion.task_instance == task_instance).fetch()
+        task_completions = TaskCompletion.query(ancestor=self.key).filter(TaskCompletion.task_instance == task_instance).fetch()
         
         housemates = []
         
@@ -288,7 +303,9 @@ class RepeatedTask(ndb.Model):
 
     def complete_task(self,task_instance,user_id):
         
-        assert user_id in self.housemates,"User {0} is not found in house {1} for task '{2}'".format(user_id,self.house_id,self.name)
+        hse = house.House.get_by_id(self.house_id)
+        
+        assert user_id in hse.users,"User {0} is not found in house {1} for task '{2}'".format(user_id,self.house_id,self.name)
         assert user_id not in self.housemates_completed(task_instance),'Housemate {0} already completed task {1}'.format(user_id,self.name)
         
         tc = TaskCompletion(parent=self.key,user_id=user_id,task_instance=task_instance)
