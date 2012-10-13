@@ -55,8 +55,9 @@
 <script>
 
     $('#login').on('show', function () {
-        $('#first').focus();
-        //todo fix this
+        setTimeout(function(){
+            $('#first').focus();
+        },400);
     });
 
     $('.fb-hover').tooltip({

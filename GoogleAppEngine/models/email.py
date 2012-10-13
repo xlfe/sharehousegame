@@ -20,7 +20,7 @@ email_patterns = {
     ,   'HouseInvite': {'link':'b','module':'models.house' }
     ,   'EmailRemind': {'link':'c','module':'handlers.tasks'}
     ,   'EmailPwReset':{'link':'d','module':'handlers.auth'}
-    ,   'TaskReminderEmail':{'link':'e','module':'handlers.tasks'}
+    ,   'TaskReminderEmail':{'link':'e','module':'models.tasks'}
 }
 
 class EmailHandler(Jinja2Handler):

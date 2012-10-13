@@ -74,7 +74,7 @@ class HouseInvite(EmailHash):
                              message='You have successfully joined the house',action='Continue &raquo;',action_link='/')
     
     @ndb.transactional(xg=True)    
-    def create_account(self,jinja):
+    def create_account(self,jinja,auth_id):
         #create account
         name = jinja.request.get('name')
         password = jinja.request.get('password')
@@ -108,7 +108,7 @@ class HouseInvite(EmailHash):
             
             if jinja.request.get('password'):
                 
-                return self.create_account(jinja)
+                return self.create_account(jinja,auth_id)
                
                 
                 

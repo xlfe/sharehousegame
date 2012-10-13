@@ -3,7 +3,7 @@ import webapp2
 import json
 import logging
 import session
-from models import authprovider,house,user
+from models import authprovider,house,user, repeatedtask
 from handlers import auth, tasks
 from google.appengine.ext import ndb
 from time import sleep
@@ -143,6 +143,7 @@ def wipe_datastore():
     ,   user.Points.query().fetch()
     ,   user.EmailVerify.query().fetch()
     ,   house.HouseInvite.query().fetch()
+    ,   repeatedtask.RepeatedTask.query().fetch()
     ,   auth.EmailPwReset.query().fetch()
     ,   tasks.TaskInstance.query().fetch()
     ,   tasks.TaskReminder.query().fetch()

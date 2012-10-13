@@ -4,6 +4,7 @@ import logging
 import shg_utils
 import re
 from models import house, authprovider,user
+import models
 from models.email import EmailHash
 from handlers.jinja import Jinja2Handler
 from pytz.gae import pytz
@@ -42,15 +43,15 @@ class RepeatedTask(ndb.Model):
         ,       'repeat_freq':range(1,31)
         ,       'repeat_period': ['Daily','Weekly','Monthly','Yearly']
         ,       'wd_names' : {
-        'Monday':   1,
-        'Tuesday':  2,
-        'Wednesday':3,
-        'Thursday': 4,
-        'Friday':   5,
-        'Saturday': 6,
-        'Sunday':   7
+            'Monday':   1,
+            'Tuesday':  2,
+            'Wednesday':3,
+            'Thursday': 4,
+            'Friday':   5,
+            'Saturday': 6,
+            'Sunday':   7
+            }
         }
-    }
 
     name            = ndb.StringProperty(required=True)
     due_date        = ndb.DateProperty(required=True)
@@ -78,11 +79,18 @@ class RepeatedTask(ndb.Model):
 
     event_expiry_tm = time(23,59,59)
 
+    @property
+    def due_in(self):
+        nd = self.next_due_utc()
+        return '{0} ({1})'.format(self.pretty(nd),self.localize(nd))
+
+
     @classmethod
     @ndb.transactional(xg=True)
     def create(cls, dict):
 
         rt = cls()
+        logging.info(rt)
 
         #encapsulate repeated properties
         dict = shg_utils.encapsulate_dict(dict,RepeatedTask())
@@ -110,7 +118,7 @@ class RepeatedTask(ndb.Model):
             rt.populate(**dict)
             rt.put()
         except:
-            logging.error(rt)
+            logging.error(rt.__dict__)
             logging.error(dict)
             raise
 
@@ -122,7 +130,7 @@ class RepeatedTask(ndb.Model):
     def housemates_completed(self,task_instance):
         """returns a list of housemates who have completed a particular task instance"""
 
-        task_completions = TaskCompletion.query(ancestor=self.key).filter(TaskCompletion.task_instance == task_instance).fetch()
+        task_completions = models.tasks.TaskCompletion.query(ancestor=self.key).filter(models.tasks.TaskCompletion.task_instance == task_instance).fetch()
 
         housemates = []
 
@@ -136,7 +144,7 @@ class RepeatedTask(ndb.Model):
         assert user_id in self.house.users,"User {0} is not found in house {1} for task '{2}'".format(user_id,self.house_id,self.name)
         assert user_id not in self.housemates_completed(task_instance),'Housemate {0} already completed task {1}'.format(user_id,self.name)
 
-        tc = TaskCompletion(parent=self.key,user_id=user_id,task_instance=task_instance)
+        tc = models.tasks.TaskCompletion(parent=self.key,user_id=user_id,task_instance=task_instance)
         tc.put()
 
         return True
@@ -147,9 +155,9 @@ class RepeatedTask(ndb.Model):
         next_expiry = next_expiry.replace(tzinfo=None) if next_expiry else None
 
         if next_expiry:
-            ti = TaskInstance(parent=self.key,action_reqd=next_expiry)
+            ti = models.tasks.TaskInstance(parent=self.key,action_reqd=next_expiry)
         else:
-            ti = TaskInstance(parent=self.key,action_reqd=None)
+            ti = models.tasks.TaskInstance(parent=self.key,action_reqd=None)
 
         ti.put()
 
@@ -162,7 +170,7 @@ class RepeatedTask(ndb.Model):
 
         if next_reminder:
 
-            tr = TaskReminder(owner=task_instance,action_reqd=next_reminder)
+            tr = models.tasks.TaskReminder(owner=task_instance,action_reqd=next_reminder)
             tr.put()
 
 
@@ -224,12 +232,9 @@ class RepeatedTask(ndb.Model):
 
     @property
     def house(self):
-        if not self._house:
+        if not '_house' in self.__dict__:
             self._house = house.House.get_by_id(self.house_id)
-            return self._house
-
-    def __init__(self):
-        self._house = None
+        return self._house
 
     def describe_repeat(self):
 
@@ -476,7 +481,7 @@ class RepeatedTask(ndb.Model):
 
     def localize(self,dt):
         """Converts the UTC dt into the local timezone """
-        fmt = '%Y-%m-%d %H:%M %Z'
+        fmt = '%a %d %b at %H:%M %Z'
 
         if dt:
             local = pytz.timezone(self.timezone)
@@ -489,5 +494,4 @@ class RepeatedTask(ndb.Model):
             return shg_utils.prettydate(dt)
         else:
             return '-'
-
 
