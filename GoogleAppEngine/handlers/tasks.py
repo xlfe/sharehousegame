@@ -55,7 +55,10 @@ class Task(Jinja2Handler):
             id = self.request.GET['id']
             task = ndb.Key('RepeatedTask',int(id)).get()
 
+            assert task and task.house_id == self.request.user.house_id,'Unknown task'
+
             sp_rem = []
+
             for r in task.reminders:
                 sp = r.split(' ')
                 sp_rem.append([sp[0],' '.join(s for s in sp[1:])])
