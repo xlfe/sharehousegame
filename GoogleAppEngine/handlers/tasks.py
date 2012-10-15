@@ -42,7 +42,6 @@ class Task(Jinja2Handler):
     def list(self):
         house_id = self.request.session.user.house_id
         assert int(house_id) > 0,'No house ID?'
-        logging.info(house_id)
 
         tasks = RepeatedTask.query(RepeatedTask.house_id == house_id).fetch()
 
@@ -53,7 +52,15 @@ class Task(Jinja2Handler):
     def get(self,action):
             
         if action == 'edit':
-            pass
+            id = self.request.GET['id']
+            task = ndb.Key('RepeatedTask',int(id)).get()
+
+            sp_rem = []
+            for r in task.reminders:
+                sp = r.split(' ')
+                sp_rem.append([sp[0],' '.join(s for s in sp[1:])])
+
+            self.render_template('repeating_task.html',{'task':task,'task_reminders':sp_rem})
         
         elif action == 'create':
             self.render_template('repeating_task.html')

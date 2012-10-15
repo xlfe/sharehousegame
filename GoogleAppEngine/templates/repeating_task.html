@@ -7,6 +7,7 @@
     </div>
     
     <form class="form-horizontal">
+        {% if not task %}
         <div class="control-group">
             <label class="control-label"> </label>
             <div class="controls">
@@ -47,7 +48,7 @@
                 </div>
             </div>
         </div>
-        
+        {% endif %}
 	<div class="control-group">
 	    <label class="control-label">Name</label>
 	    <div class="controls">
@@ -220,7 +221,33 @@
        //@externs_url https://raw.github.com/jzaefferer/jquery-validation/master/jquery.validate.js
        
        var err_messages = ["Nope", "Keep Trying", "Nadda", "Sorry", "No one\'s home", "Arg", "Bummer", "Faux pas", "Whoops", "Snafu", "Blunder"];
-        
+
+       function add_reminders(reminders) {
+
+           $('#reminder_cb').attr('checked',null).change();
+           $('#reminder-details #rem_reminder:visible').click();
+           for (var i =0; i < reminders.length; i++) {
+               var tm = reminders[i][0];
+               var days = reminders[i][1];
+
+               var rt = '#reminder-details .controls:nth('+i+')';
+
+               var rl = $(rt);
+
+               if (rl.length == 0) {
+                   $('#reminder-details .controls:last #add_reminder').click();
+                   var rl = $(rt);
+               }
+               if (typeof(days) == "number") {
+                    $(rt + ' select option:nth('+days+')').attr('selected','selected').change();
+               } else {
+                   $(rt + ' select option:contains("'+days+'")').attr('selected','selected').change();
+               }
+               $(rt + ' input').val(tm).keyup();
+           }
+       }
+
+
         $('.dropdown-menu a').click(function(){
         
             $('input[name=points]').val($(this).data('points')).keyup();
@@ -246,26 +273,13 @@
             var reminders = $(this).data('reminders');
             
             if (typeof reminders == 'undefined') {
+
                 $('#reminder_cb').attr('checked','checked').change();
-                
+
             } else {
-                $('#reminder_cb').attr('checked',null).change();
-                $('#reminder-details #rem_reminder:visible').click();
-                for (var i =0; i < reminders.length; i++) {
-                    var tm = reminders[i][0];
-                    var days = reminders[i][1];
-                    
-                    var rt = '#reminder-details .controls:nth('+i+')';
-                    
-                    var rl = $(rt);
-                    
-                    if (rl.length == 0) {
-                        $('#reminder-details .controls:last #add_reminder').click();
-                        var rl = $(rt);
-                    }
-                    $(rt + ' select option:nth('+days+')').attr('selected','selected').change();
-                    $(rt + ' input').val(tm).keyup();
-                }
+
+                add_reminders(reminders);
+
             }
             
             var repeats = $(this).data('repeats');
@@ -430,13 +444,40 @@
         });
 	
 	//Defaults to weekly with reminder
-	$('select[name=repeat_period]').val('Daily').change();
 	//$('#repeat-options').hide();
-	$('#repeats_cb').attr('checked',null).change();
-	$('#shared_task_cb').attr('checked',null).change();
-        
+
+    {% if task and task.repeat %}
+    	$('#repeats_cb').attr('checked','checked').change();
+        $('select[name=repeat_period]').val('{{task.repeat_period}}').change();
+        $('select[name=repeat_freq]').val('{{task.repeat_freq}}').change();
+        {% for d in task.repeat_on %}
+            $('input[name=repeat_on][value={{ d }}]').attr('checked','checked').change();
+        {% endfor %}
+        $('input[name=repeat_by][value={{ task.repeat_by }}]').attr('checked','checked').change();
+        $('input[name=repeats_limited][value={{ task.repeats_limited }}]').attr('checked','checked').change();
+        $('input[name=repeats_limited][value={{ not (task.repeats_limited) }}]').attr('checked',null).change();
+        {% if task.repeats_times %}
+            $('input[name=repeats_times]').val({{ task.repeats_times }});
+        {% endif %}
+    {% else %}
+        $('#repeats_cb').attr('checked',null).change();
+        $('select[name=repeat_period]').val('Daily').change();
+    {% endif %}
+
+
+    {% if task and task.shared_task %}
+        $('#shared_task_cb').attr('checked','checked').change();
+        $('input[name=shared_all_reqd][value={{ task.shared_all_reqd }}]').attr('checked','checked').change();
+        $('input[name=shared_all_reqd][value={{ not (task.shared_all_reqd ) }}]').attr('checked',null).change();
+        {% if task.shared_number %}
+            $('input[name=shared_number]').val({{ task.shared_number }});
+        {% endif %}
+    {% else %}
+        $('#shared_task_cb').attr('checked',null).change();
+    {% endif %}
+
 	$('#rem_reminder').hide();
-        $('input[name=reminders]').hide();
+    $('input[name=reminders]').hide();
 	
 	$('#add_reminder').click(function(){
             if ($('div[id=reminder-options]').length >= 4) {
@@ -529,7 +570,40 @@
 		post_form('/task/create',form,$('form'));
 	    }
     });
-	
+
+       {% if task %}
+           setTimeout(function() {
+
+               $('input[name=name]').val('{{ task.name }}');
+               $('input[name=points]').val('{{ task.points }}');
+               $('input[name=due_date]').val('{{ task.due_date }}');
+               $('#when').keyup();
+               $('#when').blur();
+
+               $('textarea[name=desc]').val('{{ task.desc }}');
+
+               var reminders = Array();
+
+               {% for r,d in task_reminders %}
+
+                    reminders.push( ["{{ r|safe }}","{{ d|safe }}"] );
+
+               {% endfor %}
+
+               add_reminders(reminders);
+
+               {% if task.no_reminder %}
+                   $('#reminder_cb').attr('checked','checked').change();
+               {% else %}
+                   $('#reminder_cb').attr('checked',null).change();
+               {% endif %}
+
+           },100);
+
+
+
+       {% endif %}
+
     </script>
         
         

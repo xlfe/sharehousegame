@@ -2,19 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9ba5a0df-2e9a-4c68-99e3-4fc8d6726069" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/tasks.py" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/handlers/session[Conflict].py" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/templates/house_wizzard[Conflict].html" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/templates/repeating_task[Conflict].html" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/handlers/api.py" afterPath="$PROJECT_DIR$/handlers/api.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/handlers/auth.py" afterPath="$PROJECT_DIR$/handlers/auth.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/handlers/tasks.py" afterPath="$PROJECT_DIR$/handlers/tasks.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/email.py" afterPath="$PROJECT_DIR$/models/email.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/house.py" afterPath="$PROJECT_DIR$/models/house.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/repeatedtask.py" afterPath="$PROJECT_DIR$/models/repeatedtask.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/shg_utils.py" afterPath="$PROJECT_DIR$/shg_utils.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/actions/login_modal.html" afterPath="$PROJECT_DIR$/templates/actions/login_modal.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/tasks.py" afterPath="$PROJECT_DIR$/models/tasks.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/repeating_task.html" afterPath="$PROJECT_DIR$/templates/repeating_task.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/tasks.html" afterPath="$PROJECT_DIR$/templates/tasks.html" />
     </list>
     <ignored path="GoogleAppEngine.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -37,7 +32,7 @@
       <file leaf-file-name="tasks.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/handlers/tasks.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="90" column="0" selection-start="2782" selection-end="2782" vertical-scroll-proportion="0.0">
+            <state line="60" column="64" selection-start="1871" selection-end="1871" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="e#0#36#0" expanded="true" />
               </folding>
@@ -56,10 +51,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tasks.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="tasks.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/tasks.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="113" column="48" selection-start="3195" selection-end="3195" vertical-scroll-proportion="-1.0172712">
+            <state line="44" column="0" selection-start="1292" selection-end="1292" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="e#0#36#0" expanded="true" />
               </folding>
@@ -67,53 +62,27 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="main.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/main.py">
+      <file leaf-file-name="home.html" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/templates/home.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="52" column="52" selection-start="1941" selection-end="1941" vertical-scroll-proportion="0.0">
-              <folding>
-                <element signature="e#0#13#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="shg_utils.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/shg_utils.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="13" column="0" selection-start="374" selection-end="374" vertical-scroll-proportion="0.0">
-              <folding>
-                <element signature="e#0#15#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="email.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/models/email.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="41" column="35" selection-start="1300" selection-end="1300" vertical-scroll-proportion="0.0">
-              <folding>
-                <element signature="e#0#14#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="facebook.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/auth_helpers/facebook.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="48" column="38" selection-start="1665" selection-end="1665" vertical-scroll-proportion="0.0">
+            <state line="4" column="0" selection-start="59" selection-end="59" vertical-scroll-proportion="-0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="auth.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/handlers/auth.py">
+      <file leaf-file-name="repeating_task.html" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/templates/repeating_task.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="42" column="27" selection-start="1334" selection-end="1334" vertical-scroll-proportion="0.0">
-              <folding />
+            <state line="448" column="19" selection-start="18433" selection-end="18433" vertical-scroll-proportion="0.0">
+              <folding>
+                <marker date="1350298457000" expanded="true" signature="18744:18749" placeholder="{...}" />
+                <marker date="1350298457000" expanded="true" signature="18851:18869" placeholder="{...}" />
+                <marker date="1350298457000" expanded="true" signature="18956:18980" placeholder="{...}" />
+                <marker date="1350298457000" expanded="true" signature="19067:19097" placeholder="{...}" />
+                <marker date="1350298457000" expanded="true" signature="19565:19589" placeholder="{...}" />
+                <marker date="1350298457000" expanded="true" signature="19676:19707" placeholder="{...}" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -135,13 +104,15 @@
         <option value="$PROJECT_DIR$/handlers/api.py" />
         <option value="$PROJECT_DIR$/templates/actions/login_modal.html" />
         <option value="$PROJECT_DIR$/models/house.py" />
-        <option value="$PROJECT_DIR$/handlers/tasks.py" />
         <option value="$PROJECT_DIR$/shg_utils.py" />
         <option value="$PROJECT_DIR$/models/repeatedtask.py" />
         <option value="$PROJECT_DIR$/handlers/auth.py" />
         <option value="$PROJECT_DIR$/models/email.py" />
         <option value="$PROJECT_DIR$/main.py" />
         <option value="$PROJECT_DIR$/models/tasks.py" />
+        <option value="$PROJECT_DIR$/templates/tasks.html" />
+        <option value="$PROJECT_DIR$/handlers/tasks.py" />
+        <option value="$PROJECT_DIR$/templates/repeating_task.html" />
       </list>
     </option>
   </component>
@@ -348,6 +319,13 @@
       <option name="USE_PATTERN" value="false" />
       <method />
     </configuration>
+    <configuration default="true" type="JavascriptDebugSession" factoryName="Local">
+      <JSDebuggerConfigurationSettings>
+        <option name="engineId" />
+        <option name="fileUrl" />
+      </JSDebuggerConfigurationSettings>
+      <method />
+    </configuration>
     <configuration default="false" name="GoogleAppEngine" type="Python.AppEngineServer" factoryName="App Engine server">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -488,24 +466,6 @@
     <breakpoint-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/models/user.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="105" column="21" selection-start="3206" selection-end="3206" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="e#0#14#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/house.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="79" column="43" selection-start="2807" selection-end="2807" vertical-scroll-proportion="0.2625216">
-          <folding>
-            <element signature="e#0#36#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/templates/actions/login_modal.html">
       <provider selected="true" editor-type-id="text-editor">
         <state line="60" column="0" selection-start="2135" selection-end="2135" vertical-scroll-proportion="-4.071429">
@@ -522,20 +482,80 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/handlers/tasks.py">
+    <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="90" column="0" selection-start="2782" selection-end="2782" vertical-scroll-proportion="0.0">
+        <state line="52" column="52" selection-start="1941" selection-end="1941" vertical-scroll-proportion="0.5793919">
           <folding>
-            <element signature="e#0#36#0" expanded="true" />
+            <element signature="e#0#13#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/shg_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="13" column="0" selection-start="374" selection-end="374" vertical-scroll-proportion="0.0">
+        <state line="13" column="0" selection-start="374" selection-end="374" vertical-scroll-proportion="0.16047297">
           <folding>
             <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/handlers/auth.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="42" column="27" selection-start="1334" selection-end="1334" vertical-scroll-proportion="0.089810014">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/auth_helpers/facebook.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="48" column="38" selection-start="1665" selection-end="1665" vertical-scroll-proportion="0.4543919">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/email.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="41" column="35" selection-start="1300" selection-end="1300" vertical-scroll-proportion="0.7547496">
+          <folding>
+            <element signature="e#0#14#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/tasks.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="74" column="33" selection-start="2483" selection-end="2483" vertical-scroll-proportion="0.6551724">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/profile.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="8" column="0" selection-start="96" selection-end="96" vertical-scroll-proportion="0.26950353">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/dashboard.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="94" column="0" selection-start="2552" selection-end="2552" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/base.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="80" column="0" selection-start="3213" selection-end="3213" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/tasks.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="44" column="0" selection-start="1292" selection-end="1292" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="e#0#36#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -549,43 +569,32 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/auth_helpers/facebook.py">
+    <entry file="file://$PROJECT_DIR$/templates/home.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="48" column="38" selection-start="1665" selection-end="1665" vertical-scroll-proportion="0.0">
+        <state line="4" column="0" selection-start="59" selection-end="59" vertical-scroll-proportion="-0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/handlers/auth.py">
+    <entry file="file://$PROJECT_DIR$/handlers/tasks.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="42" column="27" selection-start="1334" selection-end="1334" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/email.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="41" column="35" selection-start="1300" selection-end="1300" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="e#0#14#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="52" column="52" selection-start="1941" selection-end="1941" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/tasks.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="113" column="48" selection-start="3195" selection-end="3195" vertical-scroll-proportion="-1.0172712">
+        <state line="60" column="64" selection-start="1871" selection-end="1871" vertical-scroll-proportion="0.0">
           <folding>
             <element signature="e#0#36#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/repeating_task.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="448" column="19" selection-start="18433" selection-end="18433" vertical-scroll-proportion="0.0">
+          <folding>
+            <marker date="1350298457000" expanded="true" signature="18744:18749" placeholder="{...}" />
+            <marker date="1350298457000" expanded="true" signature="18851:18869" placeholder="{...}" />
+            <marker date="1350298457000" expanded="true" signature="18956:18980" placeholder="{...}" />
+            <marker date="1350298457000" expanded="true" signature="19067:19097" placeholder="{...}" />
+            <marker date="1350298457000" expanded="true" signature="19565:19589" placeholder="{...}" />
+            <marker date="1350298457000" expanded="true" signature="19676:19707" placeholder="{...}" />
           </folding>
         </state>
       </provider>

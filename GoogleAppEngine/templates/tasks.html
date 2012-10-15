@@ -14,8 +14,9 @@
                     <th>Repeats</th>
 		    <th>Shared task</th>
 		    <th>Reminders</th>
-                    <th></th>
-                </tr>
+            <th></th>
+            <th></th>
+            </tr>
             </thead>
             <tbody>
                 
@@ -23,24 +24,24 @@
             <tr>
                 <td>{{points_helper.points(t.points)}}</td>
                 <td><span class="tt-below" title="{{t.desc|truncate(length=64, killwords=False, end='...')}}">
-			{{t.name|truncate(length=32,killwords=False,end='...')}}</span>
+        			{{t.name|truncate(length=32,killwords=False,end='...')}}</span>
                 </td>
                 <td>{% set ne = t.next_due_utc() %}<span class="tt-right" title="{{t.localize(ne)}}">
                           {{t.pretty(ne)}}</span>
                 </td>
-		<td>
+		        <td>
                     {% set ne = t.next_reminder_utc() %}<span class="tt-right" title="{{t.localize(ne)}}">
                           {{t.pretty(ne)}}</span>
                 </td>
-                    
                 <td>{{t.describe_repeat()|safe}}</td>
-		<td>{% if t.shared_task %}
+		        <td>{% if t.shared_task %}
                         <i class="icon-ok tt-right" title="{{t.shared_desc}} housemates must complete the task before it is marked as 'done'"></i>
                         {%else%}
                             -
                         {%endif%}
                 </td>
-		<td>{% if t.no_reminder %}-{%else%}<i class="tt-right icon-ok" title="{{ t.reminders|join(', ') }}"></i>{%endif%}</td>
+        		<td>{% if t.no_reminder %}-{%else%}<i class="tt-right icon-ok" title="{{ t.reminders|join(', ') }}"></i>{%endif%}</td>
+                <td value="{{t.key.id()}}" class="tt-below edit-task" title="Edit task"><i class="icon-edit"></i></td>
                 <td value="{{t.key.id()}}" class="tt-below delete-task" title="Delete task"><i class="icon-remove"></i></td>
             </tr>
         {%endfor%}
@@ -68,6 +69,10 @@ $('.tt-below').tooltip( {
         
 $('#add-repeated-task').click(function() {
     window.location = '/task/create';
+});
+
+$('.edit-task').bind('click',function() {
+    window.location = '/task/edit?id=' + $(this).attr('value');
 });
 
 $('.delete-task').bind('click',function() {

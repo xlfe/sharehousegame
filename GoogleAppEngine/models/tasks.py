@@ -123,7 +123,7 @@ class TaskReminderEmail(EmailHash):
         return "{0}, the task '{1}' is due in {2}".format(self.firstname,self.task_name,self.due_in)
 
     @staticmethod
-    @house.manage_house
+    @user.manage_user
     def login(jinja):
         return jinja
 
@@ -140,7 +140,8 @@ class TaskReminderEmail(EmailHash):
 
             rt = owner.key.parent().get()
             if self.user_id in rt.housemates_completed(owner.key):
-                return jinja.generic_error(title='Already completed',message="You've already completed this task for this <week>, sorry")
+                return jinja.generic_error(title='Already completed',
+                    message="You've already completed this task for this <week>, sorry")
             else:
                 rt.complete_task(owner.key,self.user_id)
                 return jinja.generic_success(title="Link good",message='Task completed')
@@ -179,6 +180,7 @@ class TaskReminder(TaskEvent):
             )
 
             tre.send_email()
+
         self.create_new(rt,ti)
 
 
