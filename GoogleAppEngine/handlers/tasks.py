@@ -55,7 +55,8 @@ class Task(Jinja2Handler):
             id = self.request.GET['id']
             task = ndb.Key('RepeatedTask',int(id)).get()
 
-            assert task and task.house_id == self.request.user.house_id,'Unknown task'
+            if not task or task.house_id != self.request.session.user.house_id:
+               return self.generic_error(title='Unknown task',message="We're sorry, but we can't find that task")
 
             sp_rem = []
 
@@ -63,7 +64,7 @@ class Task(Jinja2Handler):
                 sp = r.split(' ')
                 sp_rem.append([sp[0],' '.join(s for s in sp[1:])])
 
-            self.render_template('repeating_task.html',{'task':task,'task_reminders':sp_rem})
+            return self.render_template('repeating_task.html',{'task':task,'task_reminders':sp_rem})
         
         elif action == 'create':
             self.render_template('repeating_task.html')

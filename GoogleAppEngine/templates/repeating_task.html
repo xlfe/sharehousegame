@@ -3,7 +3,12 @@
 
 {%block main %}
     <div class="row">
-        <div class="span1"></div>
+        <div class="span9">
+            {% if task %}
+            <h4>Edit task</h4>
+            {% endif %}
+
+        </div>
     </div>
     
     <form class="form-horizontal">
@@ -529,8 +534,8 @@
         
         function fill_hidden(e) {
 
-            var hidden = $(e).parent().find('input[name=reminders]')
-            var tm = $(e).parent().find('.input').val();
+            var hidden = $(e).parent().find('input[name=reminders]');
+            var tm = String($(e).parent().find('.input').val()).replace(/\s+/g,'').toLowerCase();
             var days = $(e).parent().find('select option:selected').text();
             
             $(hidden).val(tm + ' ' + days);

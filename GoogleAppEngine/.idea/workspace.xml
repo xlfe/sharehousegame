@@ -5,8 +5,9 @@
       <change type="DELETED" beforePath="$PROJECT_DIR$/handlers/session[Conflict].py" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/templates/house_wizzard[Conflict].html" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/templates/repeating_task[Conflict].html" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/handlers/auth.py" afterPath="$PROJECT_DIR$/handlers/auth.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/handlers/tasks.py" afterPath="$PROJECT_DIR$/handlers/tasks.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/repeating_task.html" afterPath="$PROJECT_DIR$/templates/repeating_task.html" />
     </list>
     <ignored path="GoogleAppEngine.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -26,19 +27,10 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="tasks.py" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="tasks.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/handlers/tasks.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="57" column="71" selection-start="1783" selection-end="1783" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="auth.py" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/handlers/auth.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="196" column="0" selection-start="7565" selection-end="7565" vertical-scroll-proportion="0.7383821">
+            <state line="66" column="19" selection-start="2090" selection-end="2090" vertical-scroll-proportion="0.6077441">
               <folding />
             </state>
           </provider>
@@ -47,7 +39,7 @@
       <file leaf-file-name="repeatedtask.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/repeatedtask.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="483" column="31" selection-start="15954" selection-end="15954" vertical-scroll-proportion="0.0">
+            <state line="115" column="0" selection-start="3904" selection-end="3904" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -74,14 +66,14 @@
       <file leaf-file-name="repeating_task.html" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/templates/repeating_task.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="448" column="19" selection-start="18433" selection-end="18433" vertical-scroll-proportion="-0.6785714">
+            <state line="7" column="20" selection-start="140" selection-end="140" vertical-scroll-proportion="-4.75">
               <folding>
-                <marker date="1350298457000" expanded="true" signature="18744:18749" placeholder="{...}" />
-                <marker date="1350298457000" expanded="true" signature="18851:18869" placeholder="{...}" />
-                <marker date="1350298457000" expanded="true" signature="18956:18980" placeholder="{...}" />
-                <marker date="1350298457000" expanded="true" signature="19067:19097" placeholder="{...}" />
-                <marker date="1350298457000" expanded="true" signature="19565:19589" placeholder="{...}" />
-                <marker date="1350298457000" expanded="true" signature="19676:19707" placeholder="{...}" />
+                <marker date="1350302377000" expanded="true" signature="18835:18840" placeholder="{...}" />
+                <marker date="1350302377000" expanded="true" signature="18942:18960" placeholder="{...}" />
+                <marker date="1350302377000" expanded="true" signature="19047:19071" placeholder="{...}" />
+                <marker date="1350302377000" expanded="true" signature="19158:19188" placeholder="{...}" />
+                <marker date="1350302377000" expanded="true" signature="19656:19680" placeholder="{...}" />
+                <marker date="1350302377000" expanded="true" signature="19767:19798" placeholder="{...}" />
               </folding>
             </state>
           </provider>
@@ -105,14 +97,14 @@
         <option value="$PROJECT_DIR$/templates/actions/login_modal.html" />
         <option value="$PROJECT_DIR$/models/house.py" />
         <option value="$PROJECT_DIR$/shg_utils.py" />
-        <option value="$PROJECT_DIR$/models/repeatedtask.py" />
         <option value="$PROJECT_DIR$/models/email.py" />
         <option value="$PROJECT_DIR$/main.py" />
         <option value="$PROJECT_DIR$/models/tasks.py" />
         <option value="$PROJECT_DIR$/templates/tasks.html" />
+        <option value="$PROJECT_DIR$/handlers/auth.py" />
+        <option value="$PROJECT_DIR$/models/repeatedtask.py" />
         <option value="$PROJECT_DIR$/templates/repeating_task.html" />
         <option value="$PROJECT_DIR$/handlers/tasks.py" />
-        <option value="$PROJECT_DIR$/handlers/auth.py" />
       </list>
     </option>
   </component>
@@ -526,13 +518,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/repeatedtask.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="483" column="31" selection-start="15954" selection-end="15954" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/templates/home.html">
       <provider selected="true" editor-type-id="text-editor">
         <state line="4" column="0" selection-start="59" selection-end="59" vertical-scroll-proportion="-0.0">
@@ -540,30 +525,37 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/handlers/auth.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="196" column="0" selection-start="7565" selection-end="7565" vertical-scroll-proportion="0.7383821">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/repeatedtask.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="115" column="0" selection-start="3904" selection-end="3904" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/templates/repeating_task.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="448" column="19" selection-start="18433" selection-end="18433" vertical-scroll-proportion="-0.6785714">
+        <state line="7" column="20" selection-start="140" selection-end="140" vertical-scroll-proportion="-4.75">
           <folding>
-            <marker date="1350298457000" expanded="true" signature="18744:18749" placeholder="{...}" />
-            <marker date="1350298457000" expanded="true" signature="18851:18869" placeholder="{...}" />
-            <marker date="1350298457000" expanded="true" signature="18956:18980" placeholder="{...}" />
-            <marker date="1350298457000" expanded="true" signature="19067:19097" placeholder="{...}" />
-            <marker date="1350298457000" expanded="true" signature="19565:19589" placeholder="{...}" />
-            <marker date="1350298457000" expanded="true" signature="19676:19707" placeholder="{...}" />
+            <marker date="1350302377000" expanded="true" signature="18835:18840" placeholder="{...}" />
+            <marker date="1350302377000" expanded="true" signature="18942:18960" placeholder="{...}" />
+            <marker date="1350302377000" expanded="true" signature="19047:19071" placeholder="{...}" />
+            <marker date="1350302377000" expanded="true" signature="19158:19188" placeholder="{...}" />
+            <marker date="1350302377000" expanded="true" signature="19656:19680" placeholder="{...}" />
+            <marker date="1350302377000" expanded="true" signature="19767:19798" placeholder="{...}" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/handlers/tasks.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="57" column="71" selection-start="1783" selection-end="1783" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/handlers/auth.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="196" column="0" selection-start="7565" selection-end="7565" vertical-scroll-proportion="0.7383821">
+        <state line="66" column="19" selection-start="2090" selection-end="2090" vertical-scroll-proportion="0.6077441">
           <folding />
         </state>
       </provider>
