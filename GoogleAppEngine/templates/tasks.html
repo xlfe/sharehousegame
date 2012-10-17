@@ -42,7 +42,7 @@
                 </td>
         		<td>{% if t.no_reminder %}-{%else%}<i class="tt-right icon-ok" title="{{ t.reminders|join(', ') }}"></i>{%endif%}</td>
                 <td value="{{t.key.id()}}" class="tt-below edit-task" title="Edit task"><i class="icon-edit"></i></td>
-                <td value="{{t.key.id()}}" class="tt-below delete-task" title="Delete task"><i class="icon-remove"></i></td>
+                <td value="{{t.key.id()}}" class="tt-below delete-task" title="Delete task"><i class="icon-trash"></i></td>
             </tr>
         {%endfor%}
         

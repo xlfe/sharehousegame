@@ -208,8 +208,12 @@
 	
 	<div class="control-group">
 	    <div class="controls">
-		
+		{% if task %}
+        <input type="hidden" name="id" value="{{ task.key.id() }}">
+        <button type="submit" class="btn btn-success">Update task &raquo;</button>
+        {% else %}
 		<button type="submit" class="btn btn-success">Create task &raquo;</button>
+        {% endif %}
 	    </div>
 	</div>
     </form>
@@ -572,7 +576,7 @@
 		},2000);
 	    },						   
 	    submitHandler: function(form) {
-		post_form('/task/create',form,$('form'));
+		post_form('',form,$('form'));
 	    }
     });
 

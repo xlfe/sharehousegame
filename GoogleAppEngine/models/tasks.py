@@ -22,58 +22,36 @@ class StandingTask(ndb.Model):
     created = ndb.DateTimeProperty(auto_now_add=True)
 
 
-
-
-class TaskCompletion(ndb.Model):
-    """Stores a record of a housemate completing a task"""
-
-    #user who completed the task
-    user_id = ndb.IntegerProperty(required=True)
-
-    #when the task was completed
-    when = ndb.DateTimeProperty(auto_now_add=True)
-
-    #If the object referenced here exists, the task has not 'refreshed' yet
-    task_instance = ndb.KeyProperty(required=True)
-
-
 #Task Event is the base class for lightweight pointers for events
 #that need to happen at a certian utc DT
 
 class TaskEvent(ndb.Model):
     """A pointer to the Owner Task to be called at a regular interval using cron"""
-
-    #
     action_reqd = ndb.DateTimeProperty(required=True,indexed=True)
 
 
-#class TaskOwnerDelete(TaskEvent):
-#    """Deletes the owner after action_reqd"""
-#
-#    def action(self):
-#        self.owner.delete()
-
-
-#Task expiry is an example of a task event
 
 class TaskInstance(TaskEvent):
     """The TaskInstance class is used to represent a single occurence of a task.
 
-    It's key is referenced to determine whether a particular task has expired or not
+    It's key is referenced to determine whether a particular task has expired or not.
 
+    It is the child of a (Repeated)Task
     """
     @property
-    def ptask(self):
-        return self.key.parent.get()
+    def parent_task(self):
+        return self.key.parent().get()
 
-    def expired(self):
-        return self.action_reqd < datetime.now()
-
+    def expired(self,when=None):
+        if not when:
+            when = datetime.now()
+        return self.action_reqd < when
 
     def action(self):
         """Expiry of task"""
 
-        logging.info("Task expiring: '{0}'".format(self.ptask.name))
+        logging.info("Task expiring: '{0}'".format(self.parent_task.name))
+        self.parent_task.setup_events()
 
 
 class TaskReminderEmail(EmailHash):
@@ -134,11 +112,11 @@ class TaskReminderEmail(EmailHash):
 
         owner = self.owner.get()
         if owner.expired():
-
+            #maybe direct them to the current instance of the task...
             return jinja.generic_error(title="Task expired",message='Sorry')
         else:
 
-            rt = owner.key.parent().get()
+            rt = owner.parent_task
             if self.user_id in rt.housemates_completed(owner.key):
                 return jinja.generic_error(title='Already completed',
                     message="You've already completed this task for this <week>, sorry")
@@ -149,20 +127,20 @@ class TaskReminderEmail(EmailHash):
 
 class TaskReminder(TaskEvent):
     """Goes through and sends reminders"""
-    owner = ndb.KeyProperty(required=True,indexed=True)
+    owner_instance = ndb.KeyProperty(required=True,indexed=True)
 
     ndb.transactional(xg=True)
     def create_new(self,rt,ti):
-        rt.add_next_reminder(self.owner,pytz.UTC.localize(self.action_reqd))
+        rt.add_next_reminder(self.owner_instance,pytz.UTC.localize(self.action_reqd))
         self.key.delete()
 
     def action(self):
 
         #TaskInstance
-        ti = self.owner.get()
+        ti = self.owner_instance.get()
 
         #Parent of the TaskInstance is a Repeated Task
-        rt = ti.key.parent().get()
+        rt = ti.parent_task
 
         logging.info('Task {0} is due in {1}'.format(rt.name,rt.due_in)   )
 
@@ -183,4 +161,14 @@ class TaskReminder(TaskEvent):
 
         self.create_new(rt,ti)
 
+
+
+
+
+class TaskCompletion(ndb.Model):
+    """Stores a record of a housemate completing a task"""
+
+    user_id = ndb.IntegerProperty(required=True)
+    when = ndb.DateTimeProperty(auto_now_add=True)
+    task_instance = ndb.KeyProperty(required=True)
 

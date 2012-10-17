@@ -16,8 +16,6 @@ import os
 DEBUG = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 
 
-
-
 class Task(Jinja2Handler):
     
     @house.manage_house
@@ -34,9 +32,22 @@ class Task(Jinja2Handler):
             hse = house.House.get_by_id(self.request.session.user.house_id)
             hse.add_house_event(self.request.session.user._get_id(),'created a task named {0}'.format(dict['name']),0)
                 
-            self.json_response(json.dumps({'success':'Task created','redirect':'/tasks'}))
-            
-        return
+            return self.json_response(json.dumps({'success':'Task created','redirect':'/tasks'}))
+
+        elif action=="edit":
+
+            dict = self.request.POST
+
+            id = dict.pop('id')
+            task = ndb.Key('RepeatedTask',int(id)).get()
+
+            if not task or task.house_id != self.request.session.user.house_id:
+                return self.json_response(json.dumps({'error':'Sorry, something went wrong!'}))
+
+            if task.update(dict):
+                return self.json_response(json.dumps({'success':'Task updated','redirect':'/tasks'}))
+            else:
+                return self.json_response(json.dumps({'failure':'Unable to update task'}))
 
     @house.manage_house
     def list(self):
@@ -88,7 +99,8 @@ class Task(Jinja2Handler):
             self.redirect('/tasks?deleted')
             
         return
-    
+
+
     def send_reminders(self):
         """Cron job that is run every 15 minutes"""
         

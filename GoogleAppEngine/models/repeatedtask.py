@@ -38,7 +38,7 @@ class RepeatedTask(ndb.Model):
     _default_indexed= False
 
     definitions = {
-        'repeat_by'  : [ 'dom', 'dow']
+        'repeat_by'  : [ 'dom', 'dow' ]
         ,       'repeat_on'  : ['Sunday', 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday' ]
         ,       'repeat_freq':range(1,31)
         ,       'repeat_period': ['Daily','Weekly','Monthly','Yearly']
@@ -84,18 +84,12 @@ class RepeatedTask(ndb.Model):
         nd = self.next_due_utc()
         return '{0} ({1})'.format(self.pretty(nd),self.localize(nd))
 
-
-    @classmethod
     @ndb.transactional(xg=True)
-    def create(cls, dict):
-
-        rt = cls()
-        logging.info(rt)
-
+    def update(self,dict):
         #encapsulate repeated properties
         dict = shg_utils.encapsulate_dict(dict,RepeatedTask())
 
-        for k,v in cls.definitions.iteritems():
+        for k,v in self.definitions.iteritems():
             if k in dict:
                 if type(dict[k]) == type([]):
                     for i in dict[k]:
@@ -110,18 +104,22 @@ class RepeatedTask(ndb.Model):
             dict['reminders'] = set(dict['reminders'])
 
             for r in dict['reminders']:
-                assert cls.calc_reminder_delta(r) != None,'Unknown reminder interval {0}'.format(r)
+                assert self.calc_reminder_delta(r) != None,'Unknown reminder interval {0}'.format(r)
 
         assert dict['due_date'].year >= 2012,'Due date must be after 2012'
 
-        try:
-            rt.populate(**dict)
-            rt.put()
-        except:
-            logging.error(rt.__dict__)
-            logging.error(dict)
-            raise
+        self.populate(**dict)
+        self.put()
 
+        return True
+
+    @classmethod
+    @ndb.transactional(xg=True)
+    def create(cls, dict):
+
+        rt = cls()
+
+        rt.update(dict)
         #Populates TaskEvents that need to occur...
         rt.setup_events()
 
@@ -167,11 +165,12 @@ class RepeatedTask(ndb.Model):
 
         next_reminder = self.next_reminder_utc(after)
         next_reminder = next_reminder.replace(tzinfo=None) if next_reminder else None
-
         if next_reminder:
 
-            tr = models.tasks.TaskReminder(owner=task_instance,action_reqd=next_reminder)
-            tr.put()
+            #Only add a reminder if it occurs before the TaskInstance expires...
+            if not task_instance.get().expired(next_reminder):
+                tr = models.tasks.TaskReminder(owner_instance=task_instance,action_reqd=next_reminder)
+                tr.put()
 
 
     @staticmethod
