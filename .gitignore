@@ -11,3 +11,4 @@ lib/
 pytz/
 img/
 jquery-ui*
+.idea/

@@ -5,10 +5,6 @@
       <change type="DELETED" beforePath="$PROJECT_DIR$/handlers/session[Conflict].py" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/templates/house_wizzard[Conflict].html" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/templates/repeating_task[Conflict].html" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/handlers/tasks.py" afterPath="$PROJECT_DIR$/handlers/tasks.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/repeatedtask.py" afterPath="$PROJECT_DIR$/models/repeatedtask.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/tasks.py" afterPath="$PROJECT_DIR$/models/tasks.py" />
     </list>
     <ignored path="GoogleAppEngine.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -37,19 +33,39 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="api.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/handlers/api.py">
+      <file leaf-file-name="user.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/models/user.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="140" column="0" selection-start="4756" selection-end="4756" vertical-scroll-proportion="0.0">
+            <state line="44" column="0" selection-start="1150" selection-end="1150" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tasks.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="house.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/models/house.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+              <folding>
+                <element signature="e#0#36#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="session.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/handlers/session.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="3" column="0" selection-start="74" selection-end="74" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="tasks.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/tasks.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="103" column="0" selection-start="3175" selection-end="3175" vertical-scroll-proportion="0.0">
+            <state line="148" column="0" selection-start="4622" selection-end="4622" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -206,20 +222,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="models" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="GoogleAppEngine" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="GoogleAppEngine" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="js" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -475,16 +477,6 @@
     <breakpoint-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/models/email.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="41" column="35" selection-start="1300" selection-end="1300" vertical-scroll-proportion="0.7547496" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/profile.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="8" column="0" selection-start="96" selection-end="96" vertical-scroll-proportion="0.26950353" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/templates/dashboard.html">
       <provider selected="true" editor-type-id="text-editor">
         <state line="94" column="0" selection-start="2552" selection-end="2552" vertical-scroll-proportion="0.0" />
@@ -498,11 +490,6 @@
     <entry file="file://$PROJECT_DIR$/handlers/auth.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="196" column="0" selection-start="7565" selection-end="7565" vertical-scroll-proportion="0.7383821" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/user.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="100" column="0" selection-start="3091" selection-end="3091" vertical-scroll-proportion="0.96729773" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/templates/home.html">
@@ -561,9 +548,23 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/handlers/tasks.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="106" column="64" selection-start="3670" selection-end="3670" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/tasks.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="148" column="0" selection-start="4622" selection-end="4622" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/handlers/api.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="140" column="0" selection-start="4756" selection-end="4756" vertical-scroll-proportion="0.0">
+        <state line="140" column="0" selection-start="4756" selection-end="4756" vertical-scroll-proportion="0.6859504">
           <folding />
         </state>
       </provider>
@@ -575,16 +576,25 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/handlers/tasks.py">
+    <entry file="file://$PROJECT_DIR$/models/user.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="106" column="64" selection-start="3670" selection-end="3670" vertical-scroll-proportion="0.0">
+        <state line="44" column="0" selection-start="1150" selection-end="1150" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/tasks.py">
+    <entry file="file://$PROJECT_DIR$/models/house.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="103" column="0" selection-start="3175" selection-end="3175" vertical-scroll-proportion="0.0">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="e#0#36#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/handlers/session.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="3" column="0" selection-start="74" selection-end="74" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
