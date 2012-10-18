@@ -104,7 +104,7 @@ class Task(Jinja2Handler):
     def send_reminders(self):
         """Cron job that is run every 15 minutes"""
         
-        action_entities = [tasks.TaskReminder]
+        action_entities = [tasks.TaskReminder,tasks.TaskInstance]
         
         td = timedelta()
 

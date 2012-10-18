@@ -50,8 +50,13 @@ class TaskInstance(TaskEvent):
     def action(self):
         """Expiry of task"""
 
-        logging.info("Task expiring: '{0}'".format(self.parent_task.name))
-        self.parent_task.setup_events()
+        pt = self.parent_task
+        if pt:
+            pt.setup_events()
+            logging.info("Task expiring: '{0}'".format(pt.name))
+        else:
+            logging.info('Removing TaskInstance without parent')
+            self.key.delete()
 
 
 class TaskReminderEmail(EmailHash):

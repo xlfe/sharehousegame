@@ -157,9 +157,8 @@ class RepeatedTask(ndb.Model):
         else:
             ti = models.tasks.TaskInstance(parent=self.key,action_reqd=None)
 
-        ti.put()
-
         self.add_next_reminder(ti.key)
+        ti.put()
 
     def add_next_reminder(self,task_instance,after=None):
 
