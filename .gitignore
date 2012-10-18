@@ -1,6 +1,7 @@
 .DS*
 *.pyc
 latest.zip*
+*Conflict*
 commit.msg
 *.pdf
 Docs/
