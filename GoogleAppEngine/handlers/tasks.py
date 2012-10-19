@@ -110,7 +110,7 @@ class Task(Jinja2Handler):
         td = timedelta()
 
         for ae in action_entities:
-            for task_event in ae.query(ae.action_   reqd < (datetime.now() + td)).fetch():
-                deferred.defer(task_event.action)
+            for task_event in ae.query(ae.action_reqd < (datetime.now() + td)).fetch():
+                task_event.action()
 
         return

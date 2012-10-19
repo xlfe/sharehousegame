@@ -209,7 +209,7 @@ class RepeatedTask(ndb.Model):
         if not dt_event:
             return True
 
-        td = (dt_event + timedelta(days=-days)).replace(hour=hours,minute=minutes) -\
+        td = (dt_event + timedelta(days=-days)).replace(hour=hours,minute=minutes,second=0) -\
             dt_event.replace(hour=self.event_expiry_tm.hour,minute=self.event_expiry_tm.minute)
 
 #        td = (self.event_expiry_tm - time(hour=hours,minute=minutes)) + timedelta(days=-days)
@@ -312,7 +312,7 @@ class RepeatedTask(ndb.Model):
                 a certian date (default is now())
         """
         if now is None:
-            now = pytz.UTC.localize(datetime.now())
+            now = pytz.UTC.localize(datetime.now()) + timedelta(minutes=1)
 
         if self.doesnt_expire:
             #must expire half way between the current due date and the next one...
@@ -356,7 +356,7 @@ class RepeatedTask(ndb.Model):
         """the next datetime a task is due, after a certian datetime (defaults to now)"""
 
         if not after:
-            after = pytz.UTC.localize(datetime.now())
+            after = pytz.UTC.localize(datetime.now()) + timedelta(minutes=1)
 
         for event in self.iter_due_dates_utc(None):
             if event > after:
@@ -369,7 +369,7 @@ class RepeatedTask(ndb.Model):
             -reminders are based on task due date, not expiry date"""
 
         if not after:
-            after = pytz.UTC.localize(datetime.now())
+            after = pytz.UTC.localize(datetime.now()) + timedelta(minutes=1)
 
         next_event = self.next_due_utc(after)
 

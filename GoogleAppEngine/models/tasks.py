@@ -116,12 +116,21 @@ class TaskReminderEmail(EmailHash):
         jinja=self.login(jinja)
 
         owner = self.owner.get()
+
+        if not owner:
+            return jinja.generic_error(title="Task not found",message='Sorry, we were unable to find that task.')
+
+
         if owner.expired():
             #maybe direct them to the current instance of the task...
             return jinja.generic_error(title="Task expired",message='Sorry')
         else:
 
             rt = owner.parent_task
+
+            if not rt:
+                return jinja.generic_error(title="Task not found",message='Sorry, we were unable to find that task.')
+
             if self.user_id in rt.housemates_completed(owner.key):
                 return jinja.generic_error(title='Already completed',
                     message="You've already completed this task for this <week>, sorry")
