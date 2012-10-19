@@ -24,6 +24,10 @@ handlers:
 - url: /backend/send-reminders
   script: main.app
   login: admin
+
+- url: /api/wipe
+  script: main.app
+  login: admin
   
 libraries:
 - name: webapp2

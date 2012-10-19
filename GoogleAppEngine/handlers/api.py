@@ -3,8 +3,8 @@ import webapp2
 import json
 import logging
 import session
-from models import authprovider,house,user, repeatedtask
-from handlers import auth, tasks
+from models import authprovider,house,user, repeatedtask,tasks
+from handlers import auth
 from google.appengine.ext import ndb
 from time import sleep
 from handlers.jinja import Jinja2Handler
@@ -147,14 +147,18 @@ def wipe_datastore():
     ,   auth.EmailPwReset.query().fetch()
     ,   tasks.TaskInstance.query().fetch()
     ,   tasks.TaskReminder.query().fetch()
+    ,   tasks.TaskCompletion.query().fetch()
+    ,   tasks.TaskReminderEmail.query().fetch()
     ,   session.Session.query().fetch()
     ,   user.User.query().fetch() ]
     
-
+    ent = 0
     for t in w:
         for i in t:
+            ent +=1
             i.key.delete()
-            print i.key
+    return ent
+
 
 class WipeDSHandler(webapp2.RequestHandler):
 
@@ -163,4 +167,4 @@ class WipeDSHandler(webapp2.RequestHandler):
         # function causes problems with jinja2 filters.
         #from google.appengine.ext import deferred
         #deferred.defer(wipe_datastore)
-        wipe_datastore()   
+        logging.debug('{0} entities deleted'.format(wipe_datastore()))

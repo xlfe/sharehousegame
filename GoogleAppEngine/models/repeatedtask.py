@@ -31,8 +31,6 @@ def add_years(sourcedate,years):
 
 
 
-
-
 class RepeatedTask(ndb.Model):
 
     _default_indexed= False
@@ -147,33 +145,39 @@ class RepeatedTask(ndb.Model):
 
         return True
 
+    @ndb.transactional(xg=True)
     def setup_events(self):
 
         next_expiry = self.next_expiry_utc()
+        logging.info('setup_events - next_expiry {0}'.format(next_expiry))
         next_expiry = next_expiry.replace(tzinfo=None) if next_expiry else None
+        logging.info('setup_events - next_expiry no zt {0}'.format(next_expiry))
 
         if next_expiry:
             ti = models.tasks.TaskInstance(parent=self.key,action_reqd=next_expiry)
         else:
             ti = models.tasks.TaskInstance(parent=self.key,action_reqd=None)
 
-        self.add_next_reminder(ti.key)
         ti.put()
+        self.add_next_reminder(ti.key)
 
     def add_next_reminder(self,task_instance,after=None):
 
         next_reminder = self.next_reminder_utc(after)
+        logging.info('add_next_reminder next_reminder {0}'.format(next_reminder))
         next_reminder = next_reminder.replace(tzinfo=None) if next_reminder else None
+        logging.info('add_next_reminder next_reminder no tz {0}'.format(next_reminder))
+
         if next_reminder:
 
             #Only add a reminder if it occurs before the TaskInstance expires...
             if not task_instance.get().expired(next_reminder):
+                logging.info('reminder occurs before task instance, adding...'.format(next_reminder))
                 tr = models.tasks.TaskReminder(owner_instance=task_instance,action_reqd=next_reminder)
                 tr.put()
 
 
-    @staticmethod
-    def calc_reminder_delta(desc):
+    def calc_reminder_delta(self,desc,dt_event=None):
         """Turns '9am the day before' into a timdelta"""
 
         #0 - hours 1-minutes 2-am/pm
@@ -189,7 +193,7 @@ class RepeatedTask(ndb.Model):
         if tm.group(3).lower() == "pm":
             hours += 12
 
-        minutes = 60 - int(tm.group(2)) if tm.group(2) else 0
+        minutes = int(tm.group(2)) if tm.group(2) else 0
 
         days = desc[len(tm.group(0))+1:]
 
@@ -202,8 +206,19 @@ class RepeatedTask(ndb.Model):
 
         assert hours >=0 and minutes >= 0 and days >=0,'Unknown time from {0}'.format(desc)
         assert hours <= 24 and minutes <= 60 and days <=14, 'Unknown time from {0}'.format(desc)
+        if not dt_event:
+            return True
 
-        return timedelta(days=-days,hours=(hours-23),minutes=-minutes)
+        td = (dt_event + timedelta(days=-days)).replace(hour=hours,minute=minutes) -\
+            dt_event.replace(hour=self.event_expiry_tm.hour,minute=self.event_expiry_tm.minute)
+
+#        td = (self.event_expiry_tm - time(hour=hours,minute=minutes)) + timedelta(days=-days)
+
+
+
+#        td = timedelta(days=-days,hours=(hours-24),minutes=-minutes)
+        logging.info('{0} -> {1}'.format(desc,td))
+        return td
 
         #logging.info("'{0}' => {1} - {2} days before".format(desc,td,days))
 
@@ -309,6 +324,7 @@ class RepeatedTask(ndb.Model):
             #iter_due_dates_utc starts at the oldest due and increments forwards in time
             for dd in self.iter_due_dates_utc(None):
                 if dd > now_offset:
+                    logging.info('dd = {0}'.format(dd))
                     return dd
 
                 if dd < now_offset and not next_due:
@@ -322,6 +338,7 @@ class RepeatedTask(ndb.Model):
                     diff = timedelta(seconds = (next_due - last_due).total_seconds()/2)
 
                     if last_due + diff > now:
+                        logging.info('last_due + diff = {0}'.format(last_due+diff))
                         return last_due + diff
                     else:
                         now_offset = now_offset + diff + diff
@@ -331,6 +348,7 @@ class RepeatedTask(ndb.Model):
 
             for dd in self.iter_due_dates_utc(None):
                 if dd > now:
+                    logging.info('dd = {0}'.format(dd))
                     return dd
 
 
@@ -342,6 +360,7 @@ class RepeatedTask(ndb.Model):
 
         for event in self.iter_due_dates_utc(None):
             if event > after:
+                logging.info('next_due_utc event {0} > after {1} returning event'.format(event,after))
                 return event
 
 
@@ -357,18 +376,20 @@ class RepeatedTask(ndb.Model):
         if next_event:
             for reminder in self.iter_reminders(next_event,None):
                 if reminder > after:
+                    logging.info('{0} > {1} returning {0}'.format(reminder,after))
                     return reminder
 
     def iter_reminders(self,dt_event,max_reminders=21):
         """ returns datetime objects for reminders for an event occuring on dt_event"""
 
-        sorted_reminders = sorted([self.calc_reminder_delta(r) for r in self.reminders])#,key=lambda k: k.total_seconds())
+        sorted_reminders = sorted([self.calc_reminder_delta(r,dt_event) for r in self.reminders])#,key=lambda k: k.total_seconds())
 
         n= 0
 
         for r in sorted_reminders:
             n+=1
-            yield  dt_event + r + timedelta(seconds=1)
+            logging.info('Yeilding {0} + {1}'.format(dt_event,r))
+            yield  dt_event + r #+ timedelta(seconds=1)
 
             if max_reminders and n > max_reminders:
                 return
@@ -395,7 +416,9 @@ class RepeatedTask(ndb.Model):
         utc = pytz.UTC
 
         for e in self.iter_due_dates(max_events):
-            yield utc.normalize(e.astimezone(utc))
+            idd= utc.normalize(e.astimezone(utc))
+            logging.info('iter_due_dates_utc {0}'.format(idd))
+            yield idd
 
     def iter_due_dates(self,max_events=10):
         """ returns a list of localized datetime due dates for a repeating task"""
@@ -405,6 +428,7 @@ class RepeatedTask(ndb.Model):
 
         if not self.repeat:
             #doesn't repeat, so return just the event
+            logging.info(local_tz.localize(last_event))
             yield local_tz.localize( last_event )
             return
 
@@ -425,6 +449,7 @@ class RepeatedTask(ndb.Model):
                 return
 
             i+=1
+            logging.info('iter_due_dates rep {0}'.format(local_tz.localize(last_event)))
             yield local_tz.localize( last_event )
 
             if self.repeat_period == "Daily":
