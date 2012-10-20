@@ -27,7 +27,7 @@ class StandingTask(ndb.Model):
 
 class TaskEvent(ndb.Model):
     """A pointer to the Owner Task to be called at a regular interval using cron"""
-    action_reqd = ndb.DateTimeProperty(required=True,indexed=True)
+    action_reqd = ndb.DateTimeProperty(indexed=True)
 
 
 
@@ -43,13 +43,16 @@ class TaskInstance(TaskEvent):
         return self.key.parent().get()
 
     def expired(self,when=None):
+        if not self.action_reqd:
+            return True
         if not when:
             when = datetime.now()
         return self.action_reqd < when
 
     def action(self):
         """Expiry of task"""
-
+        self.action_reqd = None
+        self.put()
         pt = self.parent_task
         if pt:
             pt.setup_events()
@@ -79,7 +82,7 @@ class TaskReminderEmail(EmailHash):
         owner = kwargs['owner']
         email = kwargs['email']
 
-        tre = cls.query(cls.email == email, cls.owner == owner).get()
+        tre = cls.query().filter(cls.email == email,cls.owner == owner).get()
 
         if not tre:
             tre = cls._create(**kwargs)

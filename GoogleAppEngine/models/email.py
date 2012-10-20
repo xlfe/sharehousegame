@@ -65,7 +65,7 @@ class EmailHash(ndb.Model):
         assert 'email' in kwargs, 'Unknown email address'
         email = kwargs['email']
         
-        return cls.query(cls.email == email).get()
+        return cls.query().filter(cls.email == email).get()
         
     @classmethod
     def _create(cls,**kwargs):

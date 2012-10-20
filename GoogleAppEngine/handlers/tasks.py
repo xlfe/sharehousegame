@@ -55,7 +55,7 @@ class Task(Jinja2Handler):
         house_id = self.request.session.user.house_id
         assert int(house_id) > 0,'No house ID?'
 
-        tasks = RepeatedTask.query(RepeatedTask.house_id == house_id).fetch()
+        tasks = RepeatedTask.query().filter(RepeatedTask.house_id == house_id).fetch()
 
         #assert len(tasks) > 0,'No tasks found'
         return self.render_template('tasks.html',{'tasks':tasks})
@@ -110,7 +110,8 @@ class Task(Jinja2Handler):
         td = timedelta()
 
         for ae in action_entities:
-            for task_event in ae.query(ae.action_reqd < (datetime.now() + td)).fetch():
+            for task_event in ae.query().filter(ae.action_reqd < (datetime.now() + td),ae.action_reqd != None).fetch():
+                assert task_event.action_reqd != None,'action_reqd is None'
                 task_event.action()
 
         return

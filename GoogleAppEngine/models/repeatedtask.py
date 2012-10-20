@@ -75,7 +75,9 @@ class RepeatedTask(ndb.Model):
 
     disabled        = ndb.BooleanProperty(default=False)
 
-    event_expiry_tm = time(23,59,59)
+#    event_expiry_tm = time(23,59,59)
+    event_expiry_tm = time(15,59,59)
+
 
     @property
     def due_in(self):
@@ -175,6 +177,8 @@ class RepeatedTask(ndb.Model):
                 logging.info('reminder occurs before task instance, adding...'.format(next_reminder))
                 tr = models.tasks.TaskReminder(owner_instance=task_instance,action_reqd=next_reminder)
                 tr.put()
+            else:
+                logging.info('task instance would have expired by {0} - not adding a reminder {1}'.format(task_instance.get().action_reqd,next_reminder))
 
 
     def calc_reminder_delta(self,desc,dt_event=None):
