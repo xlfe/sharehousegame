@@ -512,12 +512,15 @@ class RepeatedTask(ndb.Model):
         if not dt:
             return '-'
 
+
         local_tz = pytz.timezone(self.timezone)
         localized_dt = local_tz.normalize(dt.astimezone(local_tz))
         now = pytz.UTC.localize(datetime.now())
+
+        assert localized_dt > now,'smart_date only works with dates in the future'
         diff = localized_dt - now
 
-        end_of_today = now.replace(hour=23,minute=59,second=59)
+        end_of_today = local_tz.normalize(now.astimezone(local_tz)).replace(hour=23,minute=59,second=59)
 
         if diff < timedelta(days=1):
             if localized_dt < end_of_today:

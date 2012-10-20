@@ -1,4 +1,10 @@
 
+get children of task (ie emails, instances, etc)
+delete them when deleting task
+access them for summary about a task
+replace/update when updating a task
+
+
 multiple emails are sent out because multiple task instances are created...
 (fixed?)
 
