@@ -527,7 +527,7 @@
                     if (input != '') {
                         $('<span id="time-info" class="inline-help"> <i class="icon-exclamation-sign"></i> ' +
                         err_messages[Math.round(err_messages.length * Math.random())] + "..." +
-                      '</span>')
+                      ' (try 10:30pm or 9am)</span>')
                         .insertAfter($(this).parent().children().last());
                     }
                     setTimeout(override_validate,5,$(this),false);

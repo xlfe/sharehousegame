@@ -28,6 +28,14 @@ handlers:
 - url: /api/wipe
   script: main.app
   login: admin
+
+- url: /stats.*
+  script: google.appengine.ext.appstats.ui.app
+
+admin_console:
+ pages:
+ - name: Appstats
+   url: /_ah/stats
   
 libraries:
 - name: webapp2
@@ -40,3 +48,4 @@ libraries:
 builtins:
 - deferred: on
 - remote_api: on
+- appstats: on
