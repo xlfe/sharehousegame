@@ -86,6 +86,11 @@ class TaskReminderEmail(EmailHash):
 
         if not tre:
             tre = cls._create(**kwargs)
+        else:
+            kwargs.pop('email')
+            kwargs.pop('owner')
+            tre.populate(**kwargs)
+            tre.put()
 
         return tre
 
@@ -106,7 +111,7 @@ class TaskReminderEmail(EmailHash):
         return email_body.format(self.firstname,self.task_name,self.due_in,host_url+self.get_link(),self.details)
 
     def render_subject(self):
-        return "{0}, the task '{1}' is due in {2}".format(self.firstname,self.task_name,self.due_in)
+        return "{0}, the task '{1}' is due at {2}".format(self.firstname,self.task_name,self.due_in)
 
     @staticmethod
     @user.manage_user

@@ -4,6 +4,7 @@
     <list default="true" id="9ba5a0df-2e9a-4c68-99e3-4fc8d6726069" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/repeatedtask.py" afterPath="$PROJECT_DIR$/models/repeatedtask.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/tasks.py" afterPath="$PROJECT_DIR$/models/tasks.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/repeating_task.html" afterPath="$PROJECT_DIR$/templates/repeating_task.html" />
     </list>
     <ignored path="GoogleAppEngine.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -26,7 +27,7 @@
       <file leaf-file-name="repeatedtask.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/repeatedtask.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="527" column="14" selection-start="18313" selection-end="18313" vertical-scroll-proportion="0.0">
+            <state line="165" column="8" selection-start="5678" selection-end="5678" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -35,7 +36,7 @@
       <file leaf-file-name="tasks.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/models/tasks.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="166" column="44" selection-start="5277" selection-end="5277" vertical-scroll-proportion="0.907767">
+            <state line="155" column="11" selection-start="4870" selection-end="4870" vertical-scroll-proportion="0.33251232">
               <folding />
             </state>
           </provider>
@@ -73,14 +74,14 @@
       <file leaf-file-name="repeating_task.html" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/templates/repeating_task.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="529" column="27" selection-start="21812" selection-end="21812" vertical-scroll-proportion="0.0">
+            <state line="610" column="76" selection-start="24586" selection-end="24586" vertical-scroll-proportion="-15.857142">
               <folding>
-                <marker date="1350686488000" expanded="true" signature="19038:19043" placeholder="{...}" />
-                <marker date="1350686488000" expanded="true" signature="19145:19163" placeholder="{...}" />
-                <marker date="1350686488000" expanded="true" signature="19250:19274" placeholder="{...}" />
-                <marker date="1350686488000" expanded="true" signature="19361:19391" placeholder="{...}" />
-                <marker date="1350686488000" expanded="true" signature="19859:19883" placeholder="{...}" />
-                <marker date="1350686488000" expanded="true" signature="19970:20001" placeholder="{...}" />
+                <marker date="1350717444000" expanded="true" signature="19038:19043" placeholder="{...}" />
+                <marker date="1350717444000" expanded="true" signature="19145:19163" placeholder="{...}" />
+                <marker date="1350717444000" expanded="true" signature="19250:19274" placeholder="{...}" />
+                <marker date="1350717444000" expanded="true" signature="19361:19391" placeholder="{...}" />
+                <marker date="1350717444000" expanded="true" signature="19859:19883" placeholder="{...}" />
+                <marker date="1350717444000" expanded="true" signature="19970:20001" placeholder="{...}" />
               </folding>
             </state>
           </provider>
@@ -105,7 +106,6 @@
         <option value="$PROJECT_DIR$/handlers/auth.py" />
         <option value="$PROJECT_DIR$/templates/tasks.html" />
         <option value="$PROJECT_DIR$/handlers/api.py" />
-        <option value="$PROJECT_DIR$/templates/repeating_task.html" />
         <option value="$PROJECT_DIR$/main.py" />
         <option value="$PROJECT_DIR$/appengine_config.py" />
         <option value="$PROJECT_DIR$/app.yaml" />
@@ -113,8 +113,9 @@
         <option value="$PROJECT_DIR$/handlers/tasks.py" />
         <option value="$PROJECT_DIR$/models/email.py" />
         <option value="$PROJECT_DIR$/models/user.py" />
-        <option value="$PROJECT_DIR$/models/repeatedtask.py" />
         <option value="$PROJECT_DIR$/models/tasks.py" />
+        <option value="$PROJECT_DIR$/templates/repeating_task.html" />
+        <option value="$PROJECT_DIR$/models/repeatedtask.py" />
       </list>
     </option>
   </component>
@@ -400,10 +401,10 @@
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32850242" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32850242" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32868218" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32868218" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.17272727" sideWeight="0.33333334" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.175" sideWeight="0.6713178" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.175" sideWeight="0.40775195" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.175" sideWeight="0.25271317" order="1" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32850242" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
@@ -494,27 +495,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/js/main.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="0" selection-start="866" selection-end="866" vertical-scroll-proportion="0.030744337" />
+        <state line="27" column="0" selection-start="866" selection-end="866" vertical-scroll-proportion="0.030744337">
+          <folding />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/templates/tasks.html">
       <provider selected="true" editor-type-id="text-editor">
         <state line="44" column="112" selection-start="1886" selection-end="1886" vertical-scroll-proportion="0.0">
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/repeating_task.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="529" column="27" selection-start="21812" selection-end="21812" vertical-scroll-proportion="0.0">
-          <folding>
-            <marker date="1350686488000" expanded="true" signature="19038:19043" placeholder="{...}" />
-            <marker date="1350686488000" expanded="true" signature="19145:19163" placeholder="{...}" />
-            <marker date="1350686488000" expanded="true" signature="19250:19274" placeholder="{...}" />
-            <marker date="1350686488000" expanded="true" signature="19361:19391" placeholder="{...}" />
-            <marker date="1350686488000" expanded="true" signature="19859:19883" placeholder="{...}" />
-            <marker date="1350686488000" expanded="true" signature="19970:20001" placeholder="{...}" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -576,13 +565,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/repeatedtask.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="527" column="14" selection-start="18313" selection-end="18313" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/handlers/tasks.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="112" column="33" selection-start="3826" selection-end="3826" vertical-scroll-proportion="0.0">
@@ -590,9 +572,30 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/templates/repeating_task.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="610" column="76" selection-start="24586" selection-end="24586" vertical-scroll-proportion="-15.857142">
+          <folding>
+            <marker date="1350717444000" expanded="true" signature="19038:19043" placeholder="{...}" />
+            <marker date="1350717444000" expanded="true" signature="19145:19163" placeholder="{...}" />
+            <marker date="1350717444000" expanded="true" signature="19250:19274" placeholder="{...}" />
+            <marker date="1350717444000" expanded="true" signature="19361:19391" placeholder="{...}" />
+            <marker date="1350717444000" expanded="true" signature="19859:19883" placeholder="{...}" />
+            <marker date="1350717444000" expanded="true" signature="19970:20001" placeholder="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/repeatedtask.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="165" column="8" selection-start="5678" selection-end="5678" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/models/tasks.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="166" column="44" selection-start="5277" selection-end="5277" vertical-scroll-proportion="0.907767">
+        <state line="155" column="11" selection-start="4870" selection-end="4870" vertical-scroll-proportion="0.33251232">
           <folding />
         </state>
       </provider>

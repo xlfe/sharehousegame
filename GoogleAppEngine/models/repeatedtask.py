@@ -75,14 +75,14 @@ class RepeatedTask(ndb.Model):
 
     disabled        = ndb.BooleanProperty(default=False)
 
-#    event_expiry_tm = time(23,59,59)
-    event_expiry_tm = time(16,34,59)
+    event_expiry_tm = time(23,59,59)
+#       event_expiry_tm = time(16,59,59)
 
 
     @property
     def due_in(self):
         nd = self.next_due_utc()
-        return '{0} ({1})'.format(self.pretty(nd),self.localize(nd))
+        return '{1} ({0})'.format(self.pretty(nd),self.localize(nd))
 
     @ndb.transactional(xg=True)
     def update(self,dict):
@@ -306,6 +306,10 @@ class RepeatedTask(ndb.Model):
         """uses ISO weekday assignments"""
         return self.definitions['wd_names'][weekday]
 
+    @property
+    def now_utc(self):
+        return pytz.UTC.localize(datetime.now()) + timedelta(seconds=10)
+
     def next_expiry_utc(self,now=None):
         """the next time the task expires based on:
             -the due date
@@ -316,38 +320,23 @@ class RepeatedTask(ndb.Model):
                 a certian date (default is now())
         """
         if now is None:
-            now = pytz.UTC.localize(datetime.now()) + timedelta(minutes=1)
+            now = self.now_utc
 
         if self.doesnt_expire:
-            #must expire half way between the current due date and the next one...
+            logging.info("task doesn't expire - setting expiry half way between the current due date and the next one...")
 
             now_offset = now
 
-            last_due, next_due = None, None
+            #get the next two due dates
+            next_due = self.next_due_utc(after = now)
+            next_due_1 = self.next_due_utc(after=next_due)
 
-            #iter_due_dates_utc starts at the oldest due and increments forwards in time
-            for dd in self.iter_due_dates_utc(None):
-                if dd > now_offset:
-                    logging.info('dd = {0}'.format(dd))
-                    return dd
+            diff = timedelta(seconds = (next_due_1 - next_due).total_seconds()/2)
 
-                if dd < now_offset and not next_due:
-                    last_due = dd
-
-                if dd > now_offset:
-                    next_due = dd
-
-                if last_due and next_due:
-
-                    diff = timedelta(seconds = (next_due - last_due).total_seconds()/2)
-
-                    if last_due + diff > now:
-                        logging.info('last_due + diff = {0}'.format(last_due+diff))
-                        return last_due + diff
-                    else:
-                        now_offset = now_offset + diff + diff
-                        last_due, next_due = None
+            logging.info('{0} + {1}'.format(next_due,diff))
+            return next_due + diff
         else:
+            logging.info("Task expires, expiry is set as due date")
             #if a task expires, its expiry date is the next due date after now
 
             for dd in self.iter_due_dates_utc(None):
@@ -360,7 +349,7 @@ class RepeatedTask(ndb.Model):
         """the next datetime a task is due, after a certian datetime (defaults to now)"""
 
         if not after:
-            after = pytz.UTC.localize(datetime.now()) + timedelta(minutes=1)
+            after = self.now_utc
 
         for event in self.iter_due_dates_utc(None):
             if event > after:
@@ -373,7 +362,7 @@ class RepeatedTask(ndb.Model):
             -reminders are based on task due date, not expiry date"""
 
         if not after:
-            after = pytz.UTC.localize(datetime.now()) + timedelta(minutes=1)
+            after = self.now_utc
 
         next_event = self.next_due_utc(after)
 
@@ -508,6 +497,7 @@ class RepeatedTask(ndb.Model):
 
     def localize(self,dt):
         """Converts the UTC dt into the local timezone """
+        return self.smart_date(dt)
         fmt = '%a %d %b at %H:%M %Z'
 
         if  not dt:
@@ -515,7 +505,7 @@ class RepeatedTask(ndb.Model):
 
         local_tz = pytz.timezone(self.timezone)
         localized_dt = local_tz.normalize(dt.astimezone(local_tz))
-
+        self.smart_date(dt)
         return localized_dt.strftime(fmt)
     def smart_date(self,dt):
 
@@ -524,8 +514,31 @@ class RepeatedTask(ndb.Model):
 
         local_tz = pytz.timezone(self.timezone)
         localized_dt = local_tz.normalize(dt.astimezone(local_tz))
-
         now = pytz.UTC.localize(datetime.now())
+        diff = localized_dt - now
+
+        end_of_today = now.replace(hour=23,minute=59,second=59)
+
+        if diff < timedelta(days=1):
+            if localized_dt < end_of_today:
+                fmt = "%I:%M%p"
+            else:
+                fmt = "%I:%M%p tomorrow"
+        elif diff < timedelta(days=6):
+            fmt = "%I:%M%p on %a"
+        else:
+            fmt = "%I:%M%p on %a %d %b"
+
+        r = localized_dt.strftime(fmt)
+        on = r.split('on')
+        if len(on) > 1:
+            r = on[0].lower() +' on '+ on[1]
+        else:
+            r=r.lower()
+        if r[0] == "0":
+            return r[1:]
+        else:
+            return r
 
 
 

@@ -607,6 +607,11 @@
                    $('#reminder_cb').attr('checked',null).change();
                {% endif %}
 
+               {% if task.doesnt_expire %}
+                   $('input#expires_cb').attr('checked','checked').change();
+               {% endif %}
+
+
            },100);
 
 
