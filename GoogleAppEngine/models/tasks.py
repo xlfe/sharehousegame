@@ -164,7 +164,7 @@ class TaskReminder(TaskEvent):
         for housemate_id in rt.house.users:
             hm = user.User._get_by_id(housemate_id)
             firstname = hm.display_name.split(' ')[0]
-            tre = TaskReminderEmail._create(
+            tre = TaskReminderEmail._get_or_create(
                 due_in=rt.due_in
                 ,   user_id = housemate_id
                 ,   task_name = rt.name

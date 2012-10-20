@@ -76,7 +76,7 @@ class RepeatedTask(ndb.Model):
     disabled        = ndb.BooleanProperty(default=False)
 
 #    event_expiry_tm = time(23,59,59)
-    event_expiry_tm = time(15,59,59)
+    event_expiry_tm = time(16,34,59)
 
 
     @property
@@ -510,11 +510,25 @@ class RepeatedTask(ndb.Model):
         """Converts the UTC dt into the local timezone """
         fmt = '%a %d %b at %H:%M %Z'
 
-        if dt:
-            local = pytz.timezone(self.timezone)
-            return local.normalize(dt.astimezone(local)).strftime(fmt)
-        else:
+        if  not dt:
             return '-'
+
+        local_tz = pytz.timezone(self.timezone)
+        localized_dt = local_tz.normalize(dt.astimezone(local_tz))
+
+        return localized_dt.strftime(fmt)
+    def smart_date(self,dt):
+
+        if not dt:
+            return '-'
+
+        local_tz = pytz.timezone(self.timezone)
+        localized_dt = local_tz.normalize(dt.astimezone(local_tz))
+
+        now = pytz.UTC.localize(datetime.now())
+
+
+
 
     def pretty(self,dt):
         if dt:

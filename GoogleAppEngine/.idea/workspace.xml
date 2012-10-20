@@ -2,12 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9ba5a0df-2e9a-4c68-99e3-4fc8d6726069" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/handlers/session.py" afterPath="$PROJECT_DIR$/handlers/session.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/handlers/tasks.py" afterPath="$PROJECT_DIR$/handlers/tasks.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/email.py" afterPath="$PROJECT_DIR$/models/email.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/repeatedtask.py" afterPath="$PROJECT_DIR$/models/repeatedtask.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/tasks.py" afterPath="$PROJECT_DIR$/models/tasks.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/user.py" afterPath="$PROJECT_DIR$/models/user.py" />
     </list>
     <ignored path="GoogleAppEngine.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -27,19 +23,19 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="repeatedtask.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="repeatedtask.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/repeatedtask.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="130" column="55" selection-start="4366" selection-end="4366" vertical-scroll-proportion="0.048346058">
+            <state line="527" column="14" selection-start="18313" selection-end="18313" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tasks.py" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="tasks.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/models/tasks.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="84" column="52" selection-start="2567" selection-end="2567" vertical-scroll-proportion="0.0">
+            <state line="166" column="44" selection-start="5277" selection-end="5277" vertical-scroll-proportion="0.907767">
               <folding />
             </state>
           </provider>
@@ -113,12 +109,12 @@
         <option value="$PROJECT_DIR$/main.py" />
         <option value="$PROJECT_DIR$/appengine_config.py" />
         <option value="$PROJECT_DIR$/app.yaml" />
-        <option value="$PROJECT_DIR$/models/repeatedtask.py" />
         <option value="$PROJECT_DIR$/handlers/session.py" />
         <option value="$PROJECT_DIR$/handlers/tasks.py" />
         <option value="$PROJECT_DIR$/models/email.py" />
-        <option value="$PROJECT_DIR$/models/tasks.py" />
         <option value="$PROJECT_DIR$/models/user.py" />
+        <option value="$PROJECT_DIR$/models/repeatedtask.py" />
+        <option value="$PROJECT_DIR$/models/tasks.py" />
       </list>
     </option>
   </component>
@@ -404,7 +400,7 @@
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32850242" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32850242" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32868218" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32868218" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.17272727" sideWeight="0.33333334" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.175" sideWeight="0.6713178" order="1" side_tool="false" content_ui="combo" />
@@ -564,23 +560,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/tasks.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="84" column="52" selection-start="2567" selection-end="2567" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/models/email.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="67" column="33" selection-start="2066" selection-end="2066" vertical-scroll-proportion="0.33333334">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/handlers/tasks.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="112" column="33" selection-start="3826" selection-end="3826" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -596,7 +578,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/models/repeatedtask.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="130" column="55" selection-start="4366" selection-end="4366" vertical-scroll-proportion="0.048346058">
+        <state line="527" column="14" selection-start="18313" selection-end="18313" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/handlers/tasks.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="112" column="33" selection-start="3826" selection-end="3826" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/tasks.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="166" column="44" selection-start="5277" selection-end="5277" vertical-scroll-proportion="0.907767">
           <folding />
         </state>
       </provider>
