@@ -21,7 +21,7 @@
             <tbody>
                 
         {% for t in tasks %}
-            <tr>
+            <tr value="{{ t.key.id() }}" class="info-task">
                 <td>{{points_helper.points(t.points)}}</td>
                 <td><span class="tt-below" title="{{t.desc|truncate(length=64, killwords=False, end='...')}}">
         			{{t.name|truncate(length=32,killwords=False,end='...')}}</span>
@@ -66,16 +66,20 @@ $('.tt-right').tooltip( {
 $('.tt-below').tooltip( {
 	    placement: 'bottom'
 	});
-        
+
+$('.info-task td').bind('click',function() {
+    window.location = '/task/info?id=' + $(this).closest('.info-task').attr('value');
+});
+
 $('#add-repeated-task').click(function() {
     window.location = '/task/create';
 });
 
-$('.edit-task').bind('click',function() {
+$('.edit-task').unbind().bind('click',function() {
     window.location = '/task/edit?id=' + $(this).attr('value');
 });
 
-$('.delete-task').bind('click',function() {
+$('.delete-task').unbind().bind('click',function() {
    window.location = '/task/delete?id=' + $(this).attr('value');
 });
 

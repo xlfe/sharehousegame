@@ -28,6 +28,7 @@ class StandingTask(ndb.Model):
 class TaskEvent(ndb.Model):
     """A pointer to the Owner Task to be called at a regular interval using cron"""
     action_reqd = ndb.DateTimeProperty(indexed=True)
+    updated      = ndb.DateTimeProperty(indexed=True,auto_now=True)
 
 
 
@@ -164,11 +165,23 @@ class TaskReminder(TaskEvent):
         #Parent of the TaskInstance is a Repeated Task
         rt = ti.parent_task
 
+        if ti.expired() or rt.is_task_complete(ti.key):
+            self.key.delete()
+            logging.info('Task is complete or expired, removing reminder')
+            return
+
         logging.info('Task {0} is due in {1}'.format(rt.name,rt.due_in)   )
 
+        already_completed = rt.housemates_completed(ti.key)
+
         for housemate_id in rt.house.users:
+
+            if housemate_id in already_completed:
+                continue
+
             hm = user.User._get_by_id(housemate_id)
             firstname = hm.display_name.split(' ')[0]
+
             tre = TaskReminderEmail._get_or_create(
                 due_in=rt.due_in
                 ,   user_id = housemate_id

@@ -93,12 +93,46 @@ class Task(Jinja2Handler):
                     hse = house.House.get_by_id(self.request.session.user.house_id)
                     hse.add_house_event(self.request.session.user._get_id(),'deleted the task called {0}'.format(task.name),0)
                     task.key.delete()
-                
-                
-                
+
             sleep(1)
             self.redirect('/tasks?deleted')
-            
+
+        elif action == 'info':
+
+            id=self.request.GET['id']
+
+            task = ndb.Key('RepeatedTask',int(id)).get()
+
+            if task:
+
+                if self.request.session.user.house_id == task.house_id:
+
+                    ti = tasks.TaskInstance.\
+                    query(ancestor=task.key,
+                        default_options=ndb.QueryOptions(keys_only=True)).\
+                    order(-tasks.TaskInstance.updated).\
+                    fetch(limit=10)
+
+                    results = []
+                    for t in ti:
+                        results.append(str(t))
+
+                    return self.json_response(json.dumps(results))
+
+            return self.json_response(json.dumps({'failure':'task not found'}))
+
+
+        else:
+
+            try:
+                id = int(action)
+            except:
+                return
+
+            task = ndb.Key('RepeatedTask',id).get()
+
+                
+                
         return
 
 

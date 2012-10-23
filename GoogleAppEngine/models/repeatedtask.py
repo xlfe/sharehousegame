@@ -102,9 +102,13 @@ class RepeatedTask(ndb.Model):
             #make sure we only have one of each...
 
             dict['reminders'] = set(dict['reminders'])
-
+            new_r = []
             for r in dict['reminders']:
-                assert self.calc_reminder_delta(r) != None,'Unknown reminder interval {0}'.format(r)
+                if self.calc_reminder_delta(r) != None:
+                    new_r.append(r)
+            if len(new_r) ==0:
+                dict['no_reminder'] = True
+            dict['reminders'] = new_r
 
         assert dict['due_date'].year >= 2012,'Due date must be after 2012'
 
@@ -136,6 +140,25 @@ class RepeatedTask(ndb.Model):
             housemates.append(tc.user_id)
 
         return housemates
+
+    def is_task_complete(self,task_instance):
+
+        task_completions = models.tasks.TaskCompletion.query(ancestor=self.key).filter(models.tasks.TaskCompletion.task_instance == task_instance).count()
+
+        if task_completions > 0:
+
+            if not self.shared_task:
+                return True
+
+            if self.shared_all_reqd:
+
+                if task_completions >= len(self.house.users):
+                    return True
+
+            elif task_completions >= self.shared_number:
+                return True
+
+        return False
 
     def complete_task(self,task_instance,user_id):
 
@@ -323,6 +346,11 @@ class RepeatedTask(ndb.Model):
             now = self.now_utc
 
         if self.doesnt_expire:
+
+            if self.repeat == False:
+                logging.info("task doesn't expire or repeat - expiry is one year from now")
+                return now + timedelta(days=365)
+
             logging.info("task doesn't expire - setting expiry half way between the current due date and the next one...")
 
             now_offset = now
@@ -497,21 +525,42 @@ class RepeatedTask(ndb.Model):
 
     def localize(self,dt):
         """Converts the UTC dt into the local timezone """
-        return self.smart_date(dt)
-        fmt = '%a %d %b at %H:%M %Z'
+        return self.smart_days(dt)
+        return self.smart_time(dt)
 
-        if  not dt:
-            return '-'
 
-        local_tz = pytz.timezone(self.timezone)
-        localized_dt = local_tz.normalize(dt.astimezone(local_tz))
-        self.smart_date(dt)
-        return localized_dt.strftime(fmt)
-    def smart_date(self,dt):
+
+
+    def smart_days(self,dt):
 
         if not dt:
             return '-'
 
+        local_tz = pytz.timezone(self.timezone)
+        localized_dt = local_tz.normalize(dt.astimezone(local_tz))
+        now = pytz.UTC.localize(datetime.now())
+
+        diff = localized_dt - now
+
+        if abs(diff).days ==0:
+            return 'today'
+        elif diff.days > 0:
+            if diff.days == 1:
+                return 'tomorrow'
+            else:
+                return '{0} days'.format(diff.days)
+        else:
+            if diff.days == -1:
+                return 'yesterday'
+            else:
+                return '{0} days ago'.format(diff.days)
+
+
+
+    def smart_time(self,dt):
+
+        if not dt:
+            return '-'
 
         local_tz = pytz.timezone(self.timezone)
         localized_dt = local_tz.normalize(dt.astimezone(local_tz))

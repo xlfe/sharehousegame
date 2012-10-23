@@ -555,30 +555,6 @@
         $('#reminder-details .select').live('change',function(){
             fill_hidden(this);
         });
-	
-	$('form').validate({
-	    errorElement: "span",
-	    validClass: "success",
-	    errorPlacement: function(error, element) {
-		var cg = $(element).parents('.control-group').removeClass('success').addClass("error");
-		$(error).appendTo( cg.children('.controls') ).addClass('inline-help');
-	    },
-	    success: function(label) {
-		$(label).parent().closest('.control-group').removeClass('error').addClass('success');
-		$(label).remove();
-	    },
-	    invalidHandler : function(form,validator) {
-		var alert = $('<div class="alert alert-error"><button type="button" class="close" data-dismiss="alert">×</button>' +
-		    'Please correct the errors above.</div>').insertAfter($(this)).fadeIn('slow');
-		    
-		setTimeout(function(){
-		    $(alert).fadeOut('slow');
-		},2000);
-	    },						   
-	    submitHandler: function(form) {
-		post_form('',form,$('form'));
-	    }
-    });
 
        {% if task %}
            setTimeout(function() {
@@ -614,11 +590,30 @@
 
            },100);
 
-
-
        {% endif %}
 
+       $('form').validate({
+           errorElement: "span",
+           validClass: "success",
+           errorPlacement: function(error, element) {
+               var cg = $(element).parents('.control-group').removeClass('success').addClass("error");
+               $(error).appendTo( cg.children('.controls') ).addClass('inline-help');
+           },
+           success: function(label) {
+               $(label).parent().closest('.control-group').removeClass('error').addClass('success');
+               $(label).remove();
+           },
+           invalidHandler : function(form,validator) {
+               var alert = $('<div class="alert alert-error"><button type="button" class="close" data-dismiss="alert">×</button>' +
+                       'Please correct the errors above.</div>').insertAfter($(this)).fadeIn('slow');
+
+               setTimeout(function(){
+                   $(alert).fadeOut('slow');
+               },2000);
+           },
+           submitHandler: function(form) {
+               post_form('',form,$('form'));
+           }
+       });
     </script>
-        
-        
  {%endblock%}
