@@ -12,6 +12,10 @@ body{
     padding-bottom: 40px;
 }
 
+tr .centered {
+    text-align: center;
+}
+
 footer {
     color: #666;
     background: #222;

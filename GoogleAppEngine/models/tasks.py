@@ -98,12 +98,8 @@ class TaskReminderEmail(EmailHash):
     def render_body(self,host_url):
 
         email_body = 'Dear {0},\n\n' + \
-          "Your SharehouseGame task '{1}' is due soon:\n\n" \
-          "Due: {2}.\n" +\
-          "Quick action links:\n" +\
-          "Task details: {3}\n" +\
-          "Task done: {3}?done\n" +\
-          "Mute future email notifications: {3}?mute\n" +\
+          "The task '{1}' is due {2}!\n" +\
+          "{3}\n" +\
           "Details: \n{4}\n\n" + \
           "Bert Bert\n" + \
           "Sharehouse Game - Support\n" + \
@@ -112,7 +108,7 @@ class TaskReminderEmail(EmailHash):
         return email_body.format(self.firstname,self.task_name,self.due_in,host_url+self.get_link(),self.details)
 
     def render_subject(self):
-        return "{0}, the task '{1}' is due at {2}".format(self.firstname,self.task_name,self.due_in)
+        return "{0}, the task '{1}' is due {2}".format(self.firstname,self.task_name,self.due_in)
 
     @staticmethod
     @user.manage_user

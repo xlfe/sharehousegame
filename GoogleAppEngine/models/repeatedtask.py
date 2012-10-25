@@ -81,8 +81,11 @@ class RepeatedTask(ndb.Model):
 
     @property
     def due_in(self):
-        nd = self.next_due_utc()
-        return self.human_date(nd)
+        hd = self.human_date(self.next_due_utc())
+        if 'days' in hd:
+            return 'in ' + hd
+        else:
+            return hd
 
     @ndb.transactional(xg=True)
     def update(self,dict):
@@ -141,9 +144,14 @@ class RepeatedTask(ndb.Model):
         task_completions = self.completed_info(task_instance)
         return [tc['housemate'] for tc in task_completions]
 
-    def is_task_complete(self,task_instance):
+    def is_task_complete(self,task_instance=None):
+        #todo - the task should stay completed, even if a new housemate joins..
+        if not task_instance:
+            task_instance = self.get_last_ti().key
 
-        task_completions = models.tasks.TaskCompletion.query(ancestor=self.key).filter(models.tasks.TaskCompletion.task_instance == task_instance).count()
+        task_completions = models.tasks.\
+        TaskCompletion.query(ancestor=self.key).\
+        filter(models.tasks.TaskCompletion.task_instance == task_instance).count()
 
         if task_completions > 0:
 
@@ -168,17 +176,19 @@ class RepeatedTask(ndb.Model):
         tc = models.tasks.TaskCompletion(parent=self.key,user_id=user_id,task_instance=task_instance)
         tc.put()
 
+        user.User._get_user_from_id(user_id).insert_points_transaction(points=self.points,desc='Completed ' + self.name)
+        if self.is_task_complete(task_instance):
+            self.house.add_house_event(user_id=user_id,desc='Completed ' + self.name,points=self.points)
+
         return True
-
-    def update_events(self):
-
-
-
-        last_ti = models.tasks.TaskInstance.\
+    def get_last_ti(self):
+        return models.tasks.TaskInstance.\
             query(ancestor=self.key).\
             order(-models.tasks.TaskInstance.action_reqd).\
             get()
 
+    def update_events(self):
+        last_ti = self.get_last_ti()
         child_reminders = models.tasks.TaskReminder.query().filter(models.tasks.TaskReminder.owner_instance==last_ti.key).fetch()
 
         for c in child_reminders:

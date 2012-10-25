@@ -8,8 +8,9 @@
             <thead>
                 <tr>
                     <th></th>
+                    <th>Done?</th>
                     <th>Name</th>
-                    <th>Next due</th>
+                    <th>Due</th>
 		    <th>Next reminder</th>
                     <th>Repeats</th>
 		    <th>Shared task</th>
@@ -23,6 +24,7 @@
         {% for t in tasks %}
             <tr value="{{ t.key.id() }}" class="info-task">
                 <td>{{points_helper.points(t.points)}}</td>
+                <td>{% if t.is_task_complete() %}<i class="icon icon-ok-circle"></i>{% else %}-{% endif %}</td>
                 <td><span class="tt-below" title="{{t.desc|truncate(length=64, killwords=False, end='...')}}">
         			{{t.name|truncate(length=32,killwords=False,end='...')}}</span>
                 </td>
