@@ -46,6 +46,7 @@ class Task(Jinja2Handler):
                 return self.json_response(json.dumps({'error':'Sorry, something went wrong!'}))
 
             if task.update(dict):
+                task.update_events()
                 return self.json_response(json.dumps({'success':'Task updated','redirect':'/tasks'}))
             else:
                 return self.json_response(json.dumps({'failure':'Unable to update task'}))
@@ -107,15 +108,9 @@ class Task(Jinja2Handler):
 
                 if self.request.session.user.house_id == task.house_id:
 
-                    ti = tasks.TaskInstance.\
-                    query(ancestor=task.key,
-                        default_options=ndb.QueryOptions(keys_only=True)).\
-                    order(-tasks.TaskInstance.updated).\
-                    fetch(limit=10)
+                    results = get_task_info(task)
 
-                    results = []
-                    for t in ti:
-                        results.append(str(t))
+
 
                     return self.json_response(json.dumps(results))
 
@@ -149,3 +144,30 @@ class Task(Jinja2Handler):
                 task_event.action()
 
         return
+
+def get_task_info(task):
+
+    prev_ti = tasks.TaskInstance.\
+        query(ancestor=task.key,
+        default_options=ndb.QueryOptions(keys_only=True)).\
+        order(-tasks.TaskInstance.updated).\
+        fetch(limit=10)
+
+    results ={}
+    for ti_key in prev_ti:
+
+        instance = {}
+
+        child_reminders = tasks.TaskReminder.query().filter(tasks.TaskReminder.owner_instance==ti_key).fetch(10)
+
+        for c in child_reminders:
+            instance['Reminder ' + str(c.key)] = str(c)
+
+        child_completions = task.completed_info(ti_key)
+
+        instance['Completed ' + str(ti_key)] = str(child_completions)
+
+        results[str(ti_key)] = instance
+
+
+    return results

@@ -141,8 +141,11 @@ class TaskReminderEmail(EmailHash):
                 return jinja.generic_error(title="Task not found",message='Sorry, we were unable to find that task.')
 
             if self.user_id in rt.housemates_completed(owner.key):
-                return jinja.generic_error(title='Already completed',
+                return jinja.generic_success(title='Already completed',
                     message="You've already completed this task for this <week>, sorry")
+            elif rt.is_task_complete(owner.key):
+                return jinja.generic_success(title='Already completed',
+                message="One of your housemates has already completed this task")
             else:
                 rt.complete_task(owner.key,self.user_id)
                 return jinja.generic_success(title="Link good",message='Task completed')

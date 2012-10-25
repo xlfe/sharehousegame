@@ -23,5 +23,11 @@ indexes:
 - kind: TaskInstance
   ancestor: yes
   properties:
+  - name: action_reqd
+    direction: desc
+
+- kind: TaskInstance
+  ancestor: yes
+  properties:
   - name: updated
     direction: desc

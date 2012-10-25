@@ -26,12 +26,12 @@
                 <td><span class="tt-below" title="{{t.desc|truncate(length=64, killwords=False, end='...')}}">
         			{{t.name|truncate(length=32,killwords=False,end='...')}}</span>
                 </td>
-                <td>{% set ne = t.next_due_utc() %}<span class="tt-right" title="{{t.localize(ne)}}">
-                          {{t.pretty(ne)}}</span>
+                <td>{% set ne = t.next_due_utc() %}<span class="tt-right">
+                          {{t.human_date(ne)}}</span>
                 </td>
 		        <td>
-                    {% set ne = t.next_reminder_utc() %}<span class="tt-right" title="{{t.localize(ne)}}">
-                          {{t.pretty(ne)}}</span>
+                    {% set ne = t.next_reminder_utc() %}<span class="tt-right" title="{{t.human_time(ne)}}">
+                          {{t.human_relative_time(ne)}}</span>
                 </td>
                 <td>{{t.describe_repeat()|safe}}</td>
 		        <td>{% if t.shared_task %}

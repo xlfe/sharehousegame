@@ -82,7 +82,7 @@ class RepeatedTask(ndb.Model):
     @property
     def due_in(self):
         nd = self.next_due_utc()
-        return '{1} ({0})'.format(self.pretty(nd),self.localize(nd))
+        return self.human_date(nd)
 
     @ndb.transactional(xg=True)
     def update(self,dict):
@@ -128,18 +128,18 @@ class RepeatedTask(ndb.Model):
         rt.setup_events()
 
         return rt
+    def completed_info(self,task_instance):
+
+        task_completions = models.tasks.TaskCompletion.query(ancestor=self.key).\
+        filter(models.tasks.TaskCompletion.task_instance == task_instance).fetch()
+
+        return [{'housemate':tc.user_id,'when':tc.when} for tc in task_completions]
 
     def housemates_completed(self,task_instance):
         """returns a list of housemates who have completed a particular task instance"""
 
-        task_completions = models.tasks.TaskCompletion.query(ancestor=self.key).filter(models.tasks.TaskCompletion.task_instance == task_instance).fetch()
-
-        housemates = []
-
-        for tc in task_completions:
-            housemates.append(tc.user_id)
-
-        return housemates
+        task_completions = self.completed_info(task_instance)
+        return [tc['housemate'] for tc in task_completions]
 
     def is_task_complete(self,task_instance):
 
@@ -170,13 +170,33 @@ class RepeatedTask(ndb.Model):
 
         return True
 
+    def update_events(self):
+
+
+
+        last_ti = models.tasks.TaskInstance.\
+            query(ancestor=self.key).\
+            order(-models.tasks.TaskInstance.action_reqd).\
+            get()
+
+        child_reminders = models.tasks.TaskReminder.query().filter(models.tasks.TaskReminder.owner_instance==last_ti.key).fetch()
+
+        for c in child_reminders:
+            c.key.delete()
+
+        next_expiry = self.next_expiry_utc()
+        next_expiry = next_expiry.replace(tzinfo=None) if next_expiry else None
+        last_ti.action_reqd = next_expiry
+        last_ti.put()
+        self.add_next_reminder(last_ti.key)
+
+        return
+
     @ndb.transactional(xg=True)
     def setup_events(self):
 
         next_expiry = self.next_expiry_utc()
-        logging.info('setup_events - next_expiry {0}'.format(next_expiry))
         next_expiry = next_expiry.replace(tzinfo=None) if next_expiry else None
-        logging.info('setup_events - next_expiry no zt {0}'.format(next_expiry))
 
         if next_expiry:
             ti = models.tasks.TaskInstance(parent=self.key,action_reqd=next_expiry)
@@ -189,15 +209,12 @@ class RepeatedTask(ndb.Model):
     def add_next_reminder(self,task_instance,after=None):
 
         next_reminder = self.next_reminder_utc(after)
-        logging.info('add_next_reminder next_reminder {0}'.format(next_reminder))
         next_reminder = next_reminder.replace(tzinfo=None) if next_reminder else None
-        logging.info('add_next_reminder next_reminder no tz {0}'.format(next_reminder))
 
         if next_reminder:
 
             #Only add a reminder if it occurs before the TaskInstance expires...
             if not task_instance.get().expired(next_reminder):
-                logging.info('reminder occurs before task instance, adding...'.format(next_reminder))
                 tr = models.tasks.TaskReminder(owner_instance=task_instance,action_reqd=next_reminder)
                 tr.put()
             else:
@@ -239,16 +256,7 @@ class RepeatedTask(ndb.Model):
         td = (dt_event + timedelta(days=-days)).replace(hour=hours,minute=minutes,second=0) -\
             dt_event.replace(hour=self.event_expiry_tm.hour,minute=self.event_expiry_tm.minute)
 
-#        td = (self.event_expiry_tm - time(hour=hours,minute=minutes)) + timedelta(days=-days)
-
-
-
-#        td = timedelta(days=-days,hours=(hours-24),minutes=-minutes)
-        logging.info('{0} -> {1}'.format(desc,td))
         return td
-
-        #logging.info("'{0}' => {1} - {2} days before".format(desc,td,days))
-
 
 
     @property
@@ -348,10 +356,7 @@ class RepeatedTask(ndb.Model):
         if self.doesnt_expire:
 
             if self.repeat == False:
-                logging.info("task doesn't expire or repeat - expiry is one year from now")
                 return now + timedelta(days=365)
-
-            logging.info("task doesn't expire - setting expiry half way between the current due date and the next one...")
 
             now_offset = now
 
@@ -360,16 +365,12 @@ class RepeatedTask(ndb.Model):
             next_due_1 = self.next_due_utc(after=next_due)
 
             diff = timedelta(seconds = (next_due_1 - next_due).total_seconds()/2)
-
-            logging.info('{0} + {1}'.format(next_due,diff))
             return next_due + diff
         else:
-            logging.info("Task expires, expiry is set as due date")
             #if a task expires, its expiry date is the next due date after now
 
             for dd in self.iter_due_dates_utc(None):
                 if dd > now:
-                    logging.info('dd = {0}'.format(dd))
                     return dd
 
 
@@ -381,7 +382,6 @@ class RepeatedTask(ndb.Model):
 
         for event in self.iter_due_dates_utc(None):
             if event > after:
-                logging.info('next_due_utc event {0} > after {1} returning event'.format(event,after))
                 return event
 
 
@@ -397,7 +397,6 @@ class RepeatedTask(ndb.Model):
         if next_event:
             for reminder in self.iter_reminders(next_event,None):
                 if reminder > after:
-                    logging.info('{0} > {1} returning {0}'.format(reminder,after))
                     return reminder
 
     def iter_reminders(self,dt_event,max_reminders=21):
@@ -409,7 +408,6 @@ class RepeatedTask(ndb.Model):
 
         for r in sorted_reminders:
             n+=1
-            logging.info('Yeilding {0} + {1}'.format(dt_event,r))
             yield  dt_event + r #+ timedelta(seconds=1)
 
             if max_reminders and n > max_reminders:
@@ -438,7 +436,6 @@ class RepeatedTask(ndb.Model):
 
         for e in self.iter_due_dates(max_events):
             idd= utc.normalize(e.astimezone(utc))
-            logging.info('iter_due_dates_utc {0}'.format(idd))
             yield idd
 
     def iter_due_dates(self,max_events=10):
@@ -449,7 +446,6 @@ class RepeatedTask(ndb.Model):
 
         if not self.repeat:
             #doesn't repeat, so return just the event
-            logging.info(local_tz.localize(last_event))
             yield local_tz.localize( last_event )
             return
 
@@ -470,7 +466,6 @@ class RepeatedTask(ndb.Model):
                 return
 
             i+=1
-            logging.info('iter_due_dates rep {0}'.format(local_tz.localize(last_event)))
             yield local_tz.localize( last_event )
 
             if self.repeat_period == "Daily":
@@ -523,15 +518,13 @@ class RepeatedTask(ndb.Model):
                 last_event = add_years(datetime.combine(self.due_date,self.event_expiry_tm),i)
 
 
-    def localize(self,dt):
-        """Converts the UTC dt into the local timezone """
-        return self.smart_days(dt)
-        return self.smart_time(dt)
+
+    #todo - pretty
+    #todo localize
 
 
-
-
-    def smart_days(self,dt):
+    def human_date(self,dt):
+        """Human readable format with precision ~1day"""
 
         if not dt:
             return '-'
@@ -556,8 +549,8 @@ class RepeatedTask(ndb.Model):
                 return '{0} days ago'.format(diff.days)
 
 
-
-    def smart_time(self,dt):
+    def human_time(self,dt):
+        """Human readable format with precision the minute"""
 
         if not dt:
             return '-'
@@ -571,12 +564,20 @@ class RepeatedTask(ndb.Model):
 
         end_of_today = local_tz.normalize(now.astimezone(local_tz)).replace(hour=23,minute=59,second=59)
 
+        # 2:00pm
+        # 20 minutes ago
+        # 2pm yesterday
+        # 2pm on X
+
+
+        #within 24 hours
         if diff < timedelta(days=1):
+
             if localized_dt < end_of_today:
                 fmt = "%I:%M%p"
             else:
                 fmt = "%I:%M%p tomorrow"
-        elif diff < timedelta(days=6):
+        elif abs(diff) < timedelta(days=6):
             fmt = "%I:%M%p on %a"
         else:
             fmt = "%I:%M%p on %a %d %b"
@@ -592,12 +593,12 @@ class RepeatedTask(ndb.Model):
         else:
             return r
 
+    def human_relative_time(self,dt):
+        """relative time with precision to the second"""
 
-
-
-    def pretty(self,dt):
-        if dt:
-            return shg_utils.prettydate(dt)
-        else:
+        if not dt:
             return '-'
+
+        return shg_utils.prettydate(dt)
+
 
