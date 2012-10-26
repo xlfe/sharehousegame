@@ -24,7 +24,8 @@
         {% for t in tasks %}
             <tr value="{{ t.key.id() }}" class="info-task">
                 <td>{{points_helper.points(t.points)}}</td>
-                <td>{% if t.is_task_complete() %}<i class="icon icon-ok-circle"></i>{% else %}-{% endif %}</td>
+                <td>{% if t.is_task_complete() %}<i class="icon icon-ok-circle"></i>{% else %}
+                    <button class="btn btn-mini complete">Complete</button>{% endif %}</td>
                 <td><span class="tt-below" title="{{t.desc|truncate(length=64, killwords=False, end='...')}}">
         			{{t.name|truncate(length=32,killwords=False,end='...')}}</span>
                 </td>
@@ -69,20 +70,20 @@ $('.tt-below').tooltip( {
 	    placement: 'bottom'
 	});
 
-$('.info-task td').bind('click',function() {
-    window.location = '/task/info?id=' + $(this).closest('.info-task').attr('value');
-});
-
 $('#add-repeated-task').click(function() {
     window.location = '/task/create';
 });
 
-$('.edit-task').unbind().bind('click',function() {
+$('.edit-task').bind('click',function() {
     window.location = '/task/edit?id=' + $(this).attr('value');
 });
 
-$('.delete-task').unbind().bind('click',function() {
+$('.delete-task').bind('click',function() {
    window.location = '/task/delete?id=' + $(this).attr('value');
+});
+
+$('.complete').bind('click',function() {
+    window.location = '/task/complete?id=' + $(this).closest('.info-task').attr('value');
 });
 
 </script>

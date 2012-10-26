@@ -22,6 +22,7 @@ class EmailPwReset(EmailHash):
     house_id = ndb.IntegerProperty()
     referred_by = ndb.StringProperty()
     password_hash = ndb.StringProperty()
+    _default_hash_length = 32
 
     def render_subject(self):
         return 'Reset your password'

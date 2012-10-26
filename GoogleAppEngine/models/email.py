@@ -47,6 +47,7 @@ class EmailHash(ndb.Model):
     """ Base class used to send emails with unique links"""
     
     _default_indexed = False
+    _default_hash_length = 16
 
     last_emailed = ndb.DateTimeProperty()
     number_of_emails = ndb.IntegerProperty(default=0)
@@ -72,7 +73,7 @@ class EmailHash(ndb.Model):
         
         assert 'email' in kwargs, 'No email supplied'
         
-        new_hash = cls(token_hash=security.generate_random_string(length=35,pool=security.ALPHANUMERIC))
+        new_hash = cls(token_hash=security.generate_random_string(length=cls._default_hash_length,pool=security.ALPHANUMERIC))
         new_hash.populate(**kwargs)
         new_hash.put()
         return new_hash

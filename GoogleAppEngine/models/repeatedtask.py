@@ -138,20 +138,27 @@ class RepeatedTask(ndb.Model):
 
         return [{'housemate':tc.user_id,'when':tc.when} for tc in task_completions]
 
-    def housemates_completed(self,task_instance):
+    def housemates_completed(self,task_instance=None):
         """returns a list of housemates who have completed a particular task instance"""
+        if task_instance == None:
+            task_instance = self.last_instance_key
 
         task_completions = self.completed_info(task_instance)
         return [tc['housemate'] for tc in task_completions]
 
-    def is_task_complete(self,task_instance=None):
-        #todo - the task should stay completed, even if a new housemate joins..
+    def get_task_completions(self,task_instance=None):
         if not task_instance:
-            task_instance = self.get_last_ti().key
+            task_instance = self.last_instance_key
 
-        task_completions = models.tasks.\
+        return models.tasks.\
         TaskCompletion.query(ancestor=self.key).\
         filter(models.tasks.TaskCompletion.task_instance == task_instance).count()
+
+    def is_task_complete(self,task_instance=None,task_completions=None):
+        #todo - the task should stay completed, even if a new housemate joins..
+
+        if task_completions == None:
+            task_completions = self.get_task_completions(task_instance)
 
         if task_completions > 0:
 
@@ -168,28 +175,52 @@ class RepeatedTask(ndb.Model):
 
         return False
 
-    def complete_task(self,task_instance,user_id):
+    def complete_task(self,task_instance_key,user_id):
+
+        if task_instance_key == None:
+            task_instance_key = self.last_instance_key
 
         assert user_id in self.house.users,"User {0} is not found in house {1} for task '{2}'".format(user_id,self.house_id,self.name)
-        assert user_id not in self.housemates_completed(task_instance),'Housemate {0} already completed task {1}'.format(user_id,self.name)
+        assert user_id not in self.housemates_completed(task_instance_key),'Housemate {0} already completed task {1}'.format(user_id,self.name)
 
-        tc = models.tasks.TaskCompletion(parent=self.key,user_id=user_id,task_instance=task_instance)
+        task_completions = self.get_task_completions()
+
+        tc = models.tasks.TaskCompletion(parent=self.key,user_id=user_id,task_instance=task_instance_key)
         tc.put()
 
-        user.User._get_user_from_id(user_id).insert_points_transaction(points=self.points,desc='Completed ' + self.name)
-        if self.is_task_complete(task_instance):
-            self.house.add_house_event(user_id=user_id,desc='Completed ' + self.name,points=self.points)
+        u = user.User._get_user_from_id(user_id)
+        u.insert_points_transaction(points=self.points,desc='Completed ' + self.name,reference=task_instance_key)
+        if self.is_task_complete(task_instance=None,task_completions=task_completions+1):
+            self.house.add_house_event(
+                                user_id=user_id,
+                                desc='Completed ' + self.name,
+                                points=self.points,
+                                reference=task_instance_key)
 
         return True
-    def get_last_ti(self):
+
+    @property
+    def last_instance_key(self):
+        """returns the last (most recent) task instance key for this task"""
         return models.tasks.TaskInstance.\
-            query(ancestor=self.key).\
+            query(ancestor=self.key,default_options=ndb.QueryOptions(keys_only=True)).\
             order(-models.tasks.TaskInstance.action_reqd).\
             get()
 
+    def instance_keys(self,limit=10):
+        """returns a list of task_instance keys that belong to this task in reverse order (most recent first)"""
+
+        return models.tasks.TaskInstance.\
+            query(ancestor=self.key,
+            default_options=ndb.QueryOptions(keys_only=True)).\
+            order(-models.tasks.TaskInstance.updated).\
+            fetch(limit=limit)
+
     def update_events(self):
-        last_ti = self.get_last_ti()
-        child_reminders = models.tasks.TaskReminder.query().filter(models.tasks.TaskReminder.owner_instance==last_ti.key).fetch()
+        last_ti = self.last_instance_key.get()
+
+        child_reminders = models.tasks.TaskReminder.query()\
+        .filter(models.tasks.TaskReminder.owner_instance==last_ti.key).fetch()
 
         for c in child_reminders:
             c.key.delete()

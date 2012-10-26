@@ -29,6 +29,7 @@ class HouseInvite(EmailHash):
     name = ndb.StringProperty(required=True)
     house_id = ndb.IntegerProperty()
     referred_by = ndb.StringProperty()
+    _default_hash_length = 32
     
     def render_body(self,host_url):
         firstname = self.name.split(' ')[0]
@@ -165,8 +166,9 @@ class House(ndb.Model):
             
         return ra
     
-    def add_house_event(self,user_id,desc,points,link=None):
-        hl = HouseLog(parent=self.key,user_id=user_id,points=points,desc=desc,link=link)
+    def add_house_event(self,**kwargs):
+        hl = HouseLog(parent=self.key)
+        hl.populate(**kwargs)
         hl.put()
     
     def get_users(self):
@@ -191,12 +193,14 @@ class House(ndb.Model):
         
     
 class HouseLog(ndb.Model):
-    
-    user_id = ndb.IntegerProperty(indexed=False)
+    _default_indexed = False
+
+    user_id = ndb.IntegerProperty(required=True)
     when = ndb.DateTimeProperty(auto_now_add=True,indexed=True)
-    desc = ndb.StringProperty(indexed=False)
-    link = ndb.StringProperty(indexed=False)
-    points = ndb.IntegerProperty(indexed=False)
+    desc = ndb.StringProperty(required=True)
+    link = ndb.StringProperty()
+    points = ndb.IntegerProperty(required=True)
+    reference = ndb.KeyProperty(indexed=True)
 
         
     

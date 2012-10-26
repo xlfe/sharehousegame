@@ -14,12 +14,9 @@
        
         {% set menu_links = [
         ( house.name|truncate(length=18, killwords=False, end='...'), '','icon-home'),
-        ('Rent and bills','rentbills','icon-list-alt'),
         ('Tasks','tasks','icon-check'),
-        ('Shopping','shopping','icon-shopping-cart'),
         ('Your Details','profile','icon-user'),
-        ('Settings','settings','icon-wrench'),
-        
+
         ]-%}
        {% for name, link, icon in menu_links %}
          

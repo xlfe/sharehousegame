@@ -32,6 +32,19 @@ class TaskEvent(ndb.Model):
 
 
 
+
+def remove_children_of_instance(instance_key):
+    default_options=ndb.QueryOptions(keys_only=True)
+    for c in TaskReminder.query(default_options=default_options)\
+                         .filter(TaskReminder.owner_instance==instance_key).fetch():
+        c.delete()
+
+    for r in TaskReminderEmail.query(default_options=default_options)\
+                            .filter(TaskReminderEmail.owner == instance_key).fetch():
+        r.delete()
+
+
+
 class TaskInstance(TaskEvent):
     """The TaskInstance class is used to represent a single occurence of a task.
 
@@ -74,6 +87,7 @@ class TaskReminderEmail(EmailHash):
     owner = ndb.KeyProperty(required=True)
     details = ndb.StringProperty(required=True)
     task_name = ndb.StringProperty(required=True)
+    task_id = ndb.IntegerProperty(required=True)
     due_in = ndb.StringProperty(required=True)
 
     @classmethod
@@ -119,33 +133,19 @@ class TaskReminderEmail(EmailHash):
     def verified(self,jinja):
 
         jinja=self.login(jinja)
-
         owner = self.owner.get()
 
         if not owner:
             return jinja.generic_error(title="Task not found",message='Sorry, we were unable to find that task.')
 
+        if jinja.request.session.user is None:
+            #todo this is not really secure (assumes users email is secure)
+            jinja.request.session.upgrade_to_user_session(self.user_id)
+            self.key.delete()
 
-        if owner.expired():
-            #maybe direct them to the current instance of the task...
-            return jinja.generic_error(title="Task expired",message='Sorry')
-        else:
+        task_link = "/task/complete?id={0}".format(self.task_id)
 
-            rt = owner.parent_task
-
-            if not rt:
-                return jinja.generic_error(title="Task not found",message='Sorry, we were unable to find that task.')
-
-            if self.user_id in rt.housemates_completed(owner.key):
-                return jinja.generic_success(title='Already completed',
-                    message="You've already completed this task for this <week>, sorry")
-            elif rt.is_task_complete(owner.key):
-                return jinja.generic_success(title='Already completed',
-                message="One of your housemates has already completed this task")
-            else:
-                rt.complete_task(owner.key,self.user_id)
-                return jinja.generic_success(title="Link good",message='Task completed')
-
+        return jinja.redirect(task_link)
 
 class TaskReminder(TaskEvent):
     """Goes through and sends reminders"""
@@ -189,6 +189,7 @@ class TaskReminder(TaskEvent):
                 ,   firstname = firstname
                 ,   email = hm.verified_email
                 ,   details = rt.desc
+                ,   task_id = rt.key.id()
             )
 
             tre.send_email()
