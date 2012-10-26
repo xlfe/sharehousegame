@@ -41,5 +41,5 @@ class AuthProvider(ndb.Model):
         """
         if subprovider is not None:
             provider = '{0}#{1}'.format(provider, subprovider)
-        return '{0}:{1}'.format(provider, uid)
+        return '{0}:{1}'.format(provider, uid.lower())
  
