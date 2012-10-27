@@ -62,7 +62,8 @@ class Task(Jinja2Handler):
     @house.manage_house
     def list(self):
         house_id = self.request.session.user.house_id
-        assert int(house_id) > 0,'No house ID?'
+        if not house_id:
+            return self.generic_error(title='Registration not complete',message='You must complete your sharehouse setup prior to continuing...')
 
         tasks = RepeatedTask.query().filter(RepeatedTask.house_id == house_id,RepeatedTask.disabled==False).fetch()
 
