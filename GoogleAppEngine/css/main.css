@@ -13,6 +13,12 @@ body{
     min-width: 981px;
 }
 
+.input-low {
+    height: 12px !important;
+    padding: 4px !important;
+    margin: 0px !important;
+}
+
 tr .centered {
     text-align: center;
 }

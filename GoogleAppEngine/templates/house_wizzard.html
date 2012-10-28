@@ -33,7 +33,7 @@
                         </div>
                         <div class="control-group">
                             <div class="controls">
-                                <a href="#" id="add_hm"><i class="icon-black icon-plus"></i> Add another housemate</a>
+                                <a href="#" id="add_hm"><i class="icon-black icon-plus"></i> Add another housemate</a> (or you can add more housemates later)
                             </div>
                         </div>
                         <div class="control-group">
@@ -92,7 +92,7 @@
             .slideDown()
             .appendTo('#housemates');
             
-            if (hm_id > 1) {
+            if (hm_id > 0) {
                 $(row).parent().parent().find('span#remove').remove();
                 $('<span id="remove" class="inline-help"><a href="#" class="icon-minus"></a></span>').insertAfter( $(row).find('input :last') );
                 
@@ -102,7 +102,7 @@
         }
         
         add_hm_row('{{user.display_name}}','{{user.verified_email}}','disabled');
-        add_hm_row('','','');
+        //add_hm_row('','','');
         
         $('#add_hm').live('click',function(){
             add_hm_row('','','');
@@ -111,7 +111,7 @@
         $('#remove').live('click',function() {
             $(this).parent().parent().remove();
             hm_id -=1;
-            if (hm_id > 2) {
+            if (hm_id > 1) {
                 $('<span id="remove" class="inline-help"><a href="#" class="icon-minus"></a></span>').insertAfter( $('input :last') );
             }
         });

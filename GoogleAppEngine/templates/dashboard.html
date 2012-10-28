@@ -34,10 +34,15 @@
             <tr>
                 <td>{{u.name}}</td>
                 <td>Hasn't joined the game yet {% if u.elapsed() %}
-		<button class="btn btn-mini btn-info" id="invite-reminder" name="{{i}}">Resend invite <i class="icon-envelope"></i></button>{%endif%}
-		    </td>   {%set i = i+1 %}
+                   		<button class="btn btn-mini btn-info" id="invite-reminder" name="{{i}}">Resend invite <i class="icon-envelope"></i></button>{%endif%}
+		        </td>   {%set i = i+1 %}
+            <td></td>
             </tr>
         {%endfor%}
+
+        <tr>
+            <td id="add-housemate" colspan="100" align="center"> <i class="icon-plus"></i> Add a housemate</td></a>
+        </tr>
             </tbody>
         </table>        
     </div>
@@ -67,6 +72,44 @@
     </div>
     
     <script>
+
+    $('#add-housemate').live('click','',function() {
+        var element = $('<tr><td><input class="input input-low required" placeholder="Name" name="name" type="text"></td>' +
+                '<td><input class="input input-low required email" placeholder="Email address" name="email" type="text"></td>' +
+                '<td><button id="add-hm-btn" class="btn btn-success btn-mini">Add</button></td></tr>')
+                .insertBefore($(this).parents('tr'));
+
+
+    });
+
+    $('#add-hm-btn').live('click','',function() {
+        var housemate_name = $(this).parent().parent().find('input[name=name]').val();
+        var housemate_email = $(this).parent().parent().find('input[name=email]').val();
+
+        $.ajax( {
+            type: 'POST',
+            url: '/api',
+            data: {what:'add_housemate',name:housemate_name,email:housemate_email },
+            dataType: "json",
+            error: function(reason) {
+                alert(reason);
+            },
+            success:function(response) {
+                if (response == null) {
+                    alert('Something went wrong, please try again');
+                } else {
+                    if ("success" in response) {
+                        var d = new Date().getTime();
+                        document.location.href='/?date='+ d;
+                    } else {
+                        alert(response['failure']);
+                    }
+                }
+            }
+
+        });
+
+    });
 	
 	$('#invite-reminder').live('click','',function() {
 		$.ajax( {

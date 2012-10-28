@@ -34,6 +34,8 @@ class API(Jinja2Handler):
                 
             elif what == "leave-house":
                 return self.leave_house(session_user)
+            elif what == "add_housemate":
+                return self.add_housemate(session_user)
                 
     @ndb.transactional(xg=True)
     def leave_house(self,session_user):
@@ -49,14 +51,50 @@ class API(Jinja2Handler):
             session_user.put()
         sleep(1)   
         return self.redirect('/')
-        
+
+    def add_housemate(self,session_user):
+
+        name = self.request.get('name')
+        email = self.request.get('email')
+
+        hse = house.House._get_house_by_id(session_user.house_id)
+        assert hse is not None, 'Error retreiving house'
+
+        mail_hash = house.HouseInvite.get_or_create(
+            house_id    = session_user.house_id,
+            name        = name,
+            email       = email,
+            referred_by = session_user.display_name
+        )
+
+        reason = mail_hash.limited()
+
+        if reason:
+            return self.json_response(json.dumps( { 'failure' : reason } ))
+
+
+        if mail_hash.send_email(self.request.host_url):
+            iu = house.InvitedUser()
+            iu.name = name
+            iu.email = email
+
+            hse.invited_users.append(iu)
+            hse.put()
+
+
+            return self.json_response(json.dumps({'success':'success'}))
+        else:
+            return self.json_response(json.dumps({'failure':"Sorry: we're unable to send the email! Please try again shortly.",'hm':repr(id)}))
+
+
+        return
              
     def refer(self,session_user):
         
         id = int(self.request.get('housemate_id'))
         
         hse = house.House._get_house_by_id(session_user.house_id)
-        assert hse, 'Error retreiving house'
+        assert hse is not None, 'Error retreiving house'
         assert len(hse.invited_users) >= id, 'Unknown housemate ID'
         
         mail_hash = house.HouseInvite.get_or_create(
@@ -70,12 +108,10 @@ class API(Jinja2Handler):
         
         if reason:
             return self.json_response(json.dumps( { 'failure' : reason ,'hm':repr(id)} ))
-        
-        
         if mail_hash.send_email(self.request.host_url):
             return self.json_response(json.dumps({'success':repr(id)}))
         else:
-            return self.json_response(json.dumps({'failure':"Sorry: we're unable to send the email! Please try again shortly.",'hm':repr(id)}))
+            return self.json_response(json.dumps({'failure':"Sorry: we're unable to send the email! Please try again shortly."}))
     
                 
     @ndb.transactional(xg=True)
@@ -114,9 +150,8 @@ class API(Jinja2Handler):
             if i > 10:
                 break
         
-        if len(housemates) > 0:
-            hse = house.House(name = name,invited_users=housemates,users=[session_user._get_id()],timezone=timezone)
-            hse.put()
+        hse = house.House(name = name,invited_users=housemates,users=[session_user._get_id()],timezone=timezone)
+        hse.put()
             
         session_user.house_id = hse.get_house_id()
         session_user.put()

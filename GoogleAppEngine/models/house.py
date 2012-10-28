@@ -59,7 +59,7 @@ class HouseInvite(EmailHash):
             if loggedin_user.verified_email != self.email:
                 
                 jinja.request.session.user_id = None
-                jinja.request.sesion.put()
+                jinja.request.session.put()
                 at_user = _user.User.get_by_id(matched_at.user_id)
             else:
                 at_user = loggedin_user
