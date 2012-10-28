@@ -61,9 +61,11 @@ class Task(Jinja2Handler):
 
     @house.manage_house
     def list(self):
+        if self.request.session.user is None:
+            return self.generic_error(title='Not logged in',message='Please login to access that page')
         house_id = self.request.session.user.house_id
         if not house_id:
-            return self.generic_error(title='Registration not complete',message='You must complete your sharehouse setup prior to continuing...')
+            return self.generic_error(title='Registration not complete',message='You must complete your Sharehouse setup prior to continuing...')
 
         tasks = RepeatedTask.query().filter(RepeatedTask.house_id == house_id,RepeatedTask.disabled==False).fetch()
 
