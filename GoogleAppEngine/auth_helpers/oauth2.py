@@ -38,12 +38,12 @@ class OAuth2(webapp2.RequestHandler):
     def auth_callback(self, req):
         
         if req.GET.get('error'):
-            raise Exception(req.GET.get('error'))
-        
+            return {'error': req.GET.get('error')}
+
         flow = pickle.loads(str(req.session.data.get(self.options['session_key'])))
         
         if flow is None:
-            raise Exception('Error contacting Facebook. Please try again.')
+            return {'error':'Error contacting Facebook. Please try again.'}
         
         #Oauth2 Credentials Object
         req.credentials = flow.step2_exchange(req.params)

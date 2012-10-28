@@ -128,6 +128,8 @@ class FacebookAuth(Jinja2Handler):
     def callback(self):
 
         callback = facebook.FacebookAuth().auth_callback(self.request)
+        if 'error' in callback:
+            return self.generic_error(title='Error',message='Sorry, we were unable to connect to your Facebook account')
         auth_id = authprovider.AuthProvider.generate_auth_id('facebook', callback['user_info']['id'])
 
         #auth_id is their authenticated facebook id
