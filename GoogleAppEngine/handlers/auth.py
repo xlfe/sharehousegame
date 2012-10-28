@@ -69,8 +69,13 @@ class PasswordAuth(Jinja2Handler):
     @_user.manage_user
     def start(self):
         error_msg = 'We were unable to log you on using the supplied email address and password. Do you need to reset your password?'
-        password = self.request.POST['password']
-        email = self.request.POST['email']
+
+        password = self.request.POST.get('password',None)
+        email = self.request.POST.get('email',None)
+
+        if not password or not email:
+            return self.generic_error(title='Error logging in',message="We're sorry, you didn't supply all the required login credentials.")
+
         auth_id = authprovider.AuthProvider.generate_auth_id('password',email)
 
         auth_token = authprovider.AuthProvider._get_by_auth_id(auth_id)
