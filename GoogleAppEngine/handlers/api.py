@@ -118,8 +118,13 @@ class API(Jinja2Handler):
     def house_setup(self,session_user):
                 
         if session_user._get_house_id():
-            raise Exception('User already has house_id, should not be in house setup')
-        
+            resp = {
+                'redirect':'/',
+                'success':'Redirecting you to your new sharehouse'
+            }
+
+            return self.json_response(json.dumps(resp))
+
         name = self.request.get('houseName')
         timezone = self.request.get('timezone')
         

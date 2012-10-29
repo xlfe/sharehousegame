@@ -2,7 +2,11 @@ import webapp2
 from google.appengine.ext import ndb
 import json
 import logging
-from models import house, authprovider
+from time import sleep
+import cPickle as pickle
+from models import house, authprovider, user
+from auth_helpers import facebook
+from handlers.auth import FacebookAuth
 from handlers.jinja import Jinja2Handler
 
 class PageHandler(Jinja2Handler):
@@ -11,16 +15,56 @@ class PageHandler(Jinja2Handler):
     def main(self):
         
         session = self.request.session
-        
+
+        fbauth = None
+        if self.request.get('fb_source',None):
+            code = self.request.get('code',None)
+            if code is not None:
+                try:
+                    fb = facebook.FacebookAuth()
+                    fb.auth_start(self.request,front_page=True)
+                    fbauth = fb.auth_callback(self.request)
+                    if 'error' not in fbauth:
+
+                        matched_at = FacebookAuth.fb_matched(fbauth['user_info']['id'])
+
+                        if not matched_at:
+                            auth_id = authprovider.AuthProvider.generate_auth_id('password', fbauth['user_info']['email'])
+                            matched_at = authprovider.AuthProvider.get_by_auth_id(auth_id)
+                            logging.info(auth_id)
+                            logging.info(matched_at)
+
+                        if matched_at:
+                            self.request.session.upgrade_to_user_session(matched_at.user_id)
+                            session.user = user.User._get_user_from_id(matched_at.user_id)
+
+                        if session.user:
+
+                            auth_id = authprovider.AuthProvider.generate_auth_id('facebook',fbauth['user_info']['id'])
+                            new_fb_at = authprovider.AuthProvider._create(user=session.user,
+                                auth_id=auth_id,
+                                user_info=fbauth['user_info'],
+                                credentials=fbauth['credentials'])
+
+                            return self.redirect('/')
+
+                        else:
+                            session.data['facebook_appcenter'] = pickle.dumps(fbauth)
+                            session.put()
+
+                except Exception as e:
+                    logging.error(e.message)
+                    pass
+
         if not session.user:
-            self.render_template('not_logged_in.html')
+            if fbauth:
+                self.render_template('not_logged_in.html',template_values={'signup_fb':True,
+                                                                           'signup_email':fbauth['user_info']['email'],
+                                                                           'signup_name':fbauth['user_info']['displayName']})
+            else:
+                self.render_template('not_logged_in.html')
             return
         
-        if not session.user.verified_email:
-            self.render_template('actions/verify_email.html',{'user':session.user})
-            return
-        
-          
         hse_id = self.request.session.user._get_house_id()
         
         if hse_id is None:

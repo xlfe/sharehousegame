@@ -5,7 +5,7 @@ import json
 from webapp2_extras import security
 from google.appengine.ext import ndb
 from time import sleep
-
+import cPickle as pickle
 from handlers import session
 from auth_helpers import facebook
 from models import user as _user
@@ -129,17 +129,25 @@ class FacebookAuth(Jinja2Handler):
 
         return self.request.get_response(resp)
 
-    @_user.manage_user
-    def callback(self):
+    @staticmethod
+    def fb_matched(fb_id):
 
-        callback = facebook.FacebookAuth().auth_callback(self.request)
-        if 'error' in callback:
-            return self.generic_error(title='Error',message='Sorry, we were unable to connect to your Facebook account')
-        auth_id = authprovider.AuthProvider.generate_auth_id('facebook', callback['user_info']['id'])
-
-        #auth_id is their authenticated facebook id
-
+        auth_id = authprovider.AuthProvider.generate_auth_id('facebook', fb_id )
         matched_at = authprovider.AuthProvider.get_by_auth_id(auth_id)
+        if matched_at:
+            return matched_at
+        return None
+
+    @_user.manage_user
+    def callback(self,callback=None):
+
+        if not callback:
+            callback = facebook.FacebookAuth().auth_callback(self.request)
+            if 'error' in callback:
+                return self.generic_error(title='Error',message='Sorry, we were unable to connect to your Facebook account')
+
+        auth_id = authprovider.AuthProvider.generate_auth_id('facebook', callback['user_info']['id'])
+        matched_at = self.fb_matched(callback['user_info']['id'])
 
         if matched_at:
             #login the facebook user
@@ -174,11 +182,22 @@ class AuthLogout(webapp2.RequestHandler):
 
 class AuthSignup(Jinja2Handler):
 
+    @session.manage_session
     def post(self):
 
         name = self.request.get('name')
         email = self.request.get('email')
         password = self.request.get('password')
+
+        fbauth = None
+
+        if self.request.session:
+            stored_fb  = self.request.session.data.get('facebook_appcenter',None)
+
+            if stored_fb:
+                fbauth = pickle.loads(str(stored_fb))
+                email = fbauth['user_info']['email']
+                fb_auth_id = authprovider.AuthProvider.generate_auth_id('facebook', fbauth['user_info']['id'])
 
         if not name or not email or not password:
             raise Exception('Error not all values passed')
@@ -187,20 +206,41 @@ class AuthSignup(Jinja2Handler):
 
         matched_at = authprovider.AuthProvider.get_by_auth_id(auth_id)
 
-        if matched_at:
-            return self.json_response(json.dumps({'failure':'Email already exists in system &raquo; <a href="#login" class="btn btn-small btn-success" data-toggle="modal" >Login or reset password</a>'}))
-
         password_hash = security.generate_password_hash(password=password,pepper=shg_utils.password_pepper)
-        token = _user.EmailVerify.get_or_create(name=name,email=email,password_hash=password_hash)
 
-        reason = token.limited()
+        if fbauth is None:
 
-        if reason:
-            return self.json_response(json.dumps({'failure':reason}))
+            if matched_at:
+                return self.json_response(json.dumps({'failure':'Email already exists in system &raquo; <a href="#login" class="btn btn-small btn-success" data-toggle="modal" >Login or reset password</a>'}))
 
-        if token.send_email(self.request.host_url):
-            return self.json_response(json.dumps({'success':'Validation email sent. Please check your inbox!'}))
+            token = _user.EmailVerify.get_or_create(name=name,email=email,password_hash=password_hash)
+
+            reason = token.limited()
+
+            if reason:
+                return self.json_response(json.dumps({'failure':reason}))
+
+            if token.send_email(self.request.host_url):
+                return self.json_response(json.dumps({'success':'Validation email sent. Please check your inbox!'}))
+            else:
+                return self.json_response(json.dumps({'failure':'Unable to send email - please try again shortly'}))
         else:
-            return self.json_response(json.dumps({'failure':'Unable to send email - please try again shortly'}))
+
+            if not matched_at:
+                new_user = _user.User._create(display_name=name,verified_email=email)
+                auth_id = authprovider.AuthProvider.generate_auth_id('password', email)
+                new_at = authprovider.AuthProvider._create(user=new_user,auth_id=auth_id,password_hash=password_hash)
+            else:
+                new_user = _user.User._get_user_from_id(matched_at.user_id)
+
+            new_fb_at = authprovider.AuthProvider._create(user=new_user,
+                auth_id=fb_auth_id,
+                user_info=fbauth['user_info'],
+                credentials=fbauth['credentials'])
+
+            self.request.session.upgrade_to_user_session(new_user._get_id())
+
+            return self.json_response(json.dumps({'success':'Thank you for registering','redirect':'/'}))
+
 
 

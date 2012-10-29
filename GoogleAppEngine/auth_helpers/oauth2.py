@@ -14,19 +14,21 @@ class OAuth2(webapp2.RequestHandler):
         if req.credentials is not None and not req.credentials.invalid:
             return req.credentials.authorize(httplib2.Http())
 
-    def auth_start(self,request):
+    def auth_start(self,request,front_page=False):
         
         provider = self.options['provider']
-        
+        redirect_uri =  '{0}/auth/{1}/callback'.format(request.host_url,provider) if front_page is False else request.host_url + '/?fb_source=appcenter&fb_appcenter=1'
         flow = OAuth2WebServerFlow(            
             self.options['client_id'],
             self.options['client_secret'],
             self.options['scope'],
             auth_uri=self.options['auth_uri'],
             token_uri=self.options['token_uri'],
-            redirect_uri='{0}/auth/{1}/callback'.format(request.host_url,provider)
+            redirect_uri= redirect_uri
         )
-        
+
+        logging.info(redirect_uri)
+
         flow.params['state'] = request.path_url
         authorize_url = flow.step1_get_authorize_url()
 

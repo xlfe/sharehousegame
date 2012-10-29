@@ -26,8 +26,9 @@
                 <td>{{points_helper.points(t.points)}}</td>
                 <td>{% if t.is_task_complete() %}<i class="icon icon-ok-circle"></i>{% else %}
                     <button class="btn btn-mini complete">Complete</button>{% endif %}</td>
-                <td><span class="tt-below" title="{{t.desc|truncate(length=64, killwords=False, end='...')}}">
-        			{{t.name|truncate(length=32,killwords=False,end='...')}}</span>
+                <td><span class="pop-below" data-title="{{t.name}}" data-content="{{ t.desc|escape }}">
+                    {{ t.name }}
+        			</span>
                 </td>
                 <td>{% set ne = t.next_due_utc() %}<span class="tt-right">
                           {{t.human_date(ne)}}</span>
@@ -69,6 +70,13 @@ $('.tt-right').tooltip( {
 $('.tt-below').tooltip( {
 	    placement: 'bottom'
 	});
+
+
+$('.pop-below').popover({
+    placement: 'bottom',
+    trigger: 'hover',
+    delay: { show: 200, hide: 300 }
+});
 
 $('#add-repeated-task').click(function() {
     window.location = '/task/create';

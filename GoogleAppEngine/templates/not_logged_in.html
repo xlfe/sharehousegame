@@ -21,9 +21,14 @@
   
   {% include "actions/login_modal.html" %}
 
-    {% if signup_email %}
+    {% if signup_email and not signup_fb %}
 	<div class="alert alert-success">
 	    <strong>Welcome</strong>! {{referred_by}} would like you to <a href="#signup">join their ShareHouse!</a>
+	<button type="button" class="close" data-dismiss="alert">×</button>
+	</div>
+    {%  elif signup_fb %}
+        <div class="alert alert-success">
+	    <strong>Welcome {{ signup_name }}</strong>! We just need you to <a href="#signup">enter a password for the Sharehouse Game below</a> to complete the registration process!
 	<button type="button" class="close" data-dismiss="alert">×</button>
 	</div>
     {% endif %}
@@ -65,7 +70,7 @@
 <p id="signup" class="extra-bottom-margin">&nbsp</p>
 <div class="hero-unit extra-bottom-margin">
   <h1>Signup</h1>
-    {% if signup_email %}
+    {% if signup_email and not signup_fb %}
     <p>Please confirm your details and enter a password to join {{referred_by}}'s house (or start your own house).</p>
     {% else %}
     <p>Enter your details below to begin</p>
@@ -82,7 +87,7 @@
       <div class="control-group">
 	<label class="control-label">Email</label>
 	<div class="controls">
-	{% if signup_email %}
+	{% if signup_email or signup_fb %}
 	  <input type="text" class="required email" name="email" placeholder="Email" disabled value="{{signup_email}}">
 	  <span class="inline-help"><i rel="tooltip" title="We've already verified your email. You can change it after logging in."
 					 class="tt-hover icon-black icon-info-sign"></i></span>
