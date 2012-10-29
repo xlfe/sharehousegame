@@ -31,26 +31,27 @@ class PageHandler(Jinja2Handler):
                         if not matched_at:
                             auth_id = authprovider.AuthProvider.generate_auth_id('password', fbauth['user_info']['email'])
                             matched_at = authprovider.AuthProvider.get_by_auth_id(auth_id)
-                            logging.info(auth_id)
-                            logging.info(matched_at)
 
-                        if matched_at:
-                            self.request.session.upgrade_to_user_session(matched_at.user_id)
-                            session.user = user.User._get_user_from_id(matched_at.user_id)
+                            if matched_at:
+                                self.request.session.upgrade_to_user_session(matched_at.user_id)
+                                session.user = user.User._get_user_from_id(matched_at.user_id)
 
-                        if session.user:
+                                auth_id = authprovider.AuthProvider.generate_auth_id('facebook',fbauth['user_info']['id'])
+                                new_fb_at = authprovider.AuthProvider._create(user=session.user,
+                                    auth_id=auth_id,
+                                    user_info=fbauth['user_info'],
+                                    credentials=fbauth['credentials'])
+                                sleep(1)
+                                return self.redirect('/')
 
-                            auth_id = authprovider.AuthProvider.generate_auth_id('facebook',fbauth['user_info']['id'])
-                            new_fb_at = authprovider.AuthProvider._create(user=session.user,
-                                auth_id=auth_id,
-                                user_info=fbauth['user_info'],
-                                credentials=fbauth['credentials'])
+                            else:
+                                session.data['facebook_appcenter'] = pickle.dumps(fbauth)
+                                session.put()
 
-                            return self.redirect('/')
 
                         else:
-                            session.data['facebook_appcenter'] = pickle.dumps(fbauth)
-                            session.put()
+                            self.request.session.upgrade_to_user_session(matched_at.user_id)
+                            return self.redirect('/')
 
                 except Exception as e:
                     logging.error(e.message)
