@@ -164,7 +164,7 @@ class FacebookAuth(Jinja2Handler):
                 #at_user = _user.User._create(name=callback['user_info']['displayName'])
 
             new_at = authprovider.AuthProvider._create(user=at_user,auth_id=auth_id,user_info=callback['user_info'],credentials=callback['credentials'])
-            
+
             #self.request.session.upgrade_to_user_session(at_user._get_id())
         sleep(1)
         return self.redirect('/')
