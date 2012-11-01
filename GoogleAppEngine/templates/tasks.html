@@ -3,59 +3,93 @@
 
 {%block main %}
 
- <div class="row">
+ <div class="row span9">
         <table class="table table-hover">
             <thead>
                 <tr>
                     <th></th>
-                    <th>Done?</th>
+                    <th></th>
                     <th>Name</th>
                     <th>Due</th>
-		    <th>Next reminder</th>
-                    <th>Repeats</th>
-		    <th>Shared task</th>
-		    <th>Reminders</th>
-            <th></th>
-            <th></th>
-            </tr>
+                    <th>Done?</th>
+                </tr>
             </thead>
             <tbody>
                 
-        {% for t in tasks %}
-            <tr value="{{ t.key.id() }}" class="info-task">
-                <td>{{points_helper.points(t.points)}}</td>
-                <td>{% if t.is_task_complete() %}<i class="icon icon-ok-circle"></i>{% else %}
-                    <button class="btn btn-mini complete">Complete</button>{% endif %}</td>
-                <td><span class="pop-below" data-title="{{t.name}}" data-content="{{ t.desc|escape }}">
-                    {{ t.name }}
-        			</span>
-                </td>
-                <td>{% set ne = t.next_due_utc() %}<span class="tt-right">
-                          {{t.human_date(ne)}}</span>
-                </td>
-		        <td>
-                    {% set ne = t.next_reminder_utc() %}<span class="tt-right" title="{{t.human_time(ne)}}">
-                          {{t.human_relative_time(ne)}}</span>
-                </td>
-                <td>{{t.describe_repeat()|safe}}</td>
-		        <td>{% if t.shared_task %}
-                        <i class="icon-ok tt-right" title="{{t.shared_desc}} housemates must complete the task before it is marked as 'done'"></i>
-                        {%else%}
-                            -
-                        {%endif%}
-                </td>
-        		<td>{% if t.no_reminder %}-{%else%}<i class="tt-right icon-ok" title="{{ t.reminders|join(', ') }}"></i>{%endif%}</td>
-                <td value="{{t.key.id()}}" class="tt-below edit-task" title="Edit task"><i class="icon-edit"></i></td>
-                <td value="{{t.key.id()}}" class="tt-below delete-task" title="Delete task"><i class="icon-trash"></i></td>
-            </tr>
-        {%endfor%}
-        
-        <tr>
-            <td id="add-repeated-task" colspan="100" align="center"> <i class="icon-plus"></i> Add a task</td></a>
-        </tr>
-        
+                {% for t in tasks %}
+                    <tr value="{{ t.key.id() }}" class="info-task">
+                        <td class="toggle-icon td-fixed">
+                            <i class="icon icon-chevron-right" title='Show details'></i>
+                        </td>
+                        <td class="td-fixed">
+                            {{points_helper.points(t.points)}}
+                        </td>
+                        <td class="td-resize">
+                            {{ t.name }}
+                        </td>
+                        <td class="td-wider">
+                            {% set ne = t.next_due_utc() %}
+                            <span class="tt-right">
+                                {{t.human_date(ne)}}
+                            </span>
+                        </td>
+                        <td class="td-wider">
+                            {% if t.is_task_complete() %}
+                                <i class="icon icon-ok-circle"></i>
+                            {% else %}
+                                <button class="btn btn-mini btn-success complete">Complete</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr class="task-detail">
+                        <td></td>
+                        <td colspan="9">
 
-	
+                            <div>
+                                <span class="details-label">Repeats:</span>
+                                {{t.describe_repeat()|safe}}
+                            </div>
+                            <div>
+                                <span class="details-label">Shared:</span>
+                                {% if t.shared_task %}
+                                    <i class="icon-ok tt-right" title="{{t.shared_desc}} housemates must complete the task before it is marked as 'done'"></i>
+                                {%else%}
+                                    -
+                                {%endif%}
+                            </div>
+                            <div>
+                                <span class="details-label">Reminders:</span>
+                                {% if t.no_reminder %}
+                                    -
+                                {%else%}
+                                    <i class="tt-right icon-ok" title="{{ t.reminders|join(', ') }}"></i>
+                                {%endif%}
+                            </div>
+                            <div>
+                                <span class="details-label">Next reminder:</span>
+                                {% set ne = t.next_reminder_utc() %}
+                                    <span class="tt-right" title="{{t.human_time(ne)}}">
+                                        {{t.human_relative_time(ne)}}
+                                    </span>
+                            </div>
+                            <br/>
+                            <div> <span class="details-label">Details:</span>
+                                <textarea class="no-edit uneditable-textarea input-xxlarge" rows="5">{{t.desc|escape }}</textarea>
+                            </div>
+                            <br/>
+                            <div>
+                                <span class="details-label">Action:</span>
+                                <button class="btn btn-success dc-btn">Complete &nbsp; <i class="icon icon-ok"></i></button>
+                                <button class="btn btn-info de-btn">Edit &nbsp; <i class="icon icon-edit"></i></button>
+                                <button class="btn btn-danger dd-btn">Delete &nbsp; <i class="icon icon-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                {%endfor%}
+                <tr>
+                    <td></td>
+                    <td id="add-repeated-task" colspan="100" align="center"> <i class="icon-plus"></i> Add a task</td></a>
+                </tr>
             </tbody>
         </table>        
     </div>
@@ -78,21 +112,42 @@ $('.pop-below').popover({
     delay: { show: 200, hide: 300 }
 });
 
+$('.info-task').bind('click',function() {
+    var t = $(this).find('.icon-chevron-right');
+    $('.task-detail').hide();
+    $('.icon-chevron-down').removeClass('icon-chevron-down').addClass('icon-chevron-right');
+    if (t.length > 0){
+        $(this).next().show();
+        $(t).removeClass('icon-chevron-right').addClass('icon-chevron-down');
+    }
+});
+
 $('#add-repeated-task').click(function() {
     window.location = '/task/create';
 });
 
-$('.edit-task').bind('click',function() {
-    window.location = '/task/edit?id=' + $(this).attr('value');
-});
+$('.no-edit').bind('keydown',function(e) {
+    e.preventDefault();
+})
 
-$('.delete-task').bind('click',function() {
-   window.location = '/task/delete?id=' + $(this).attr('value');
-});
-
-$('.complete').bind('click',function() {
+$('.complete').bind('click',function(e) {
     window.location = '/task/complete?id=' + $(this).closest('.info-task').attr('value');
+    return false;
 });
+
+$('.de-btn').bind('click',function(){
+    window.location = '/task/edit?id=' + $(this).parents('.task-detail').prev().attr('value');
+});
+
+$('.dc-btn').bind('click',function(){
+    window.location = '/task/complete?id=' + $(this).parents('.task-detail').prev().attr('value');
+});
+
+$('.dd-btn').bind('click',function(){
+
+    window.location = '/task/delete?id=' + $(this).parents('.task-detail').prev().attr('value');
+});
+
 
 </script>
 {%endblock%}

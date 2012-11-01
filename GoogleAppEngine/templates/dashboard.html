@@ -6,71 +6,50 @@
         <div class="span1"></div>
     </div>
 
-    <div class="row">
-        <div class="span5 "><h4>Housemates</h4>    </div>
-    </div>
-    
-    <div class="row">
+
+    <div class="row span8">
         <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Points</th>
-		    <th></th>
-                </tr>
-            </thead>
             <tbody>
-                
-        {% for u in house.get_users() %}
-            <tr>
-                <td>{{u.get_first_name()}}</td>
-                <td>{{ points_helper.points(u.points_balance())}}</td>
-		<td></td>
-            </tr>
-        {%endfor%}
+            {% for u in house.get_users() %}
+                <tr>
+                    <td>{{u.get_first_name()}}</td>
+                    <td>{{ points_helper.points(u.points_balance())}}</td>
+                    <td></td>
+                </tr>
+            {%endfor%}
 
-	{% set i = 0 %}
-        {% for u in house.invited_users %}
-            <tr>
-                <td>{{u.name}}</td>
-                <td>Hasn't joined the game yet {% if u.elapsed() %}
-                   		<button class="btn btn-mini btn-info" id="invite-reminder" name="{{i}}">Resend invite <i class="icon-envelope"></i></button>{%endif%}
-		        </td>   {%set i = i+1 %}
-            <td></td>
-            </tr>
-        {%endfor%}
+            {% set i = 0 %}
+                {% for u in house.invited_users %}
+                <tr>
+                    <td>{{u.name}}</td>
+                    <td>Hasn't joined the game yet {% if u.elapsed() %}
+                            <button class="btn btn-mini btn-info" id="invite-reminder" name="{{i}}">Resend invite <i class="icon-envelope"></i></button>{%endif%}
+                    </td>   {%set i = i+1 %}
+                    <td></td>
+                </tr>
+                {%endfor%}
 
-        <tr>
-            <td id="add-housemate" colspan="100" align="center"> <i class="icon-plus"></i> Add a housemate</td></a>
-        </tr>
+                <tr>
+                    <td id="add-housemate" colspan="100" align="center"> <i class="icon-plus"></i> Add a housemate</td></a>
+                </tr>
             </tbody>
-        </table>        
+        </table>
     </div>
-    
-    <div class="row">
-        <h4>Recent house activity</h4>
+    <div class="row span8">
+        <h4>Recent activity</h4>
          <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>When</th>
-                    <th>What</th>
-                </tr>
-            </thead>
             <tbody>
-
-            {% for a in house.recent_activity() %}
-        
-            <tr>
-                <td>{{a.when}}</td>
-                <td>{{ points_helper.points(a.points) }} {{a.who}} {{a.desc}}</td>
-            </tr>
-        {%endfor%}
+                {% for a in house.recent_activity() %}
+                <tr>
+                    <td>{{ points_helper.points(a.points) }} {{a.who}} {{a.desc}}</td>
+                    <td>{{a.when}}</td>
+                    <td></td>
+                </tr>
+                {%endfor%}
             </tbody>
-        </table>   
-       
-        
+        </table>
     </div>
-    
+
     <script>
 
     $('#add-housemate').live('click','',function() {

@@ -69,7 +69,11 @@ class Task(Jinja2Handler):
 
         tasks = RepeatedTask.query().filter(RepeatedTask.house_id == house_id,RepeatedTask.disabled==False).fetch()
 
-        return self.render_template('tasks.html',{'tasks':tasks})
+ #       logging.info(tasks)
+
+#        sorted_reminders = sorted([self.calc_reminder_delta(r,dt_event) for r in self.reminders])
+        #,key=lambda k: k.total_seconds())
+        return self.render_template('tasks.html',{'tasks':sorted(tasks,key=lambda k:k.due_date) })
 
     def post_create(self):
 

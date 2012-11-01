@@ -12,6 +12,26 @@ body{
     padding-bottom: 40px;
     min-width: 960px;
 }
+.task-detail {
+    display: none;
+}
+
+.td-fixed {
+    width:20px;
+}
+
+.td-wider {
+    width: 70px;
+}
+
+.td-resize {
+    min-width: 100px;
+}
+
+.details-label {
+    width:120px;
+    display: inline-block;
+}
 
 .input-low {
     height: 12px !important;
