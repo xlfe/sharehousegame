@@ -141,7 +141,10 @@ class EmailHash(ndb.Model):
             logging.debug(message)
         
         if DEBUG:
-            message.send()
+            try:
+                message.send()
+            except:
+                pass
             logging.info(message.body)
         else:
             message.send()

@@ -1,4 +1,8 @@
 
+
+
+
+
 get children of task (ie emails, instances, etc)
 delete them when deleting task
 access them for summary about a task
@@ -35,5 +39,42 @@ quickstar examples -> buttons along the top
 Implement other types of tasks:
 	Standing
 	Bounty
+
+
+Points
+Done
+Name
+Due
+Repeats
+Shared
+Reminders
+Mute
+
+Details
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

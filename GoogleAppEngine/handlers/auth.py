@@ -95,7 +95,11 @@ class PasswordAuth(Jinja2Handler):
     @_user.manage_user
     def reset(self):
 
-        email = self.request.POST['email']
+        email = self.request.POST.get('email',None)
+
+        if email is None:
+            return self.generic_error(title='Account not found',message="We're sorry, we couldn't find an account with email address '{0}'".format(email),
+                action='Sign up &raquo;',action_link='/#signup')
 
         auth_id = authprovider.AuthProvider.generate_auth_id('password',email)
         auth_token = authprovider.AuthProvider._get_by_auth_id(auth_id)
