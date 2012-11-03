@@ -37,7 +37,11 @@
                             {% if t.is_task_complete() %}
                                 <i class="icon icon-ok-circle"></i>
                             {% else %}
-                                <button class="btn btn-mini btn-success complete">Complete</button>
+                                {% if t.is_completable() %}
+                                    <button class="btn btn-mini btn-success complete">Complete</button>
+                                {% else %}
+                                    <button class="btn btn-mini tt-right disabled" title="You will be able to complete this task in {{ t.human_relative_time(t.completable_from()) }}">Complete</button>
+                                {% endif %}
                             {% endif %}
                         </td>
                     </tr>
@@ -57,6 +61,15 @@
                                     -
                                 {%endif%}
                             </div>
+                            <div>
+                                <span class="details-label">Extended expiry:</span>
+                                {% if t.doesnt_expire %}
+                                    <i class="icon-ok tt-right" title="This task expires in {{ t.human_relative_time(t.next_expiry_utc()) }}"> </i>
+                                {% else %}
+                                    <span class="tt-right" title="Task expires in {{ t.human_relative_time(t.next_due_utc()) }}">-</span>
+                                {% endif %}
+                            </div>
+
                             <div>
                                 <span class="details-label">Reminders:</span>
                                 {% if t.no_reminder %}
@@ -79,7 +92,13 @@
                             <br/>
                             <div>
                                 <span class="details-label">Action:</span>
-                                <button class="btn btn-success dc-btn">Complete &nbsp; <i class="icon icon-ok"></i></button>
+
+                                {% if t.is_completable() %}
+                                    <button class="btn btn-success dc-btn">Complete &nbsp; <i class="icon icon-ok"></i></button>
+                                {% else %}
+                                    <button class="btn btn-success tt-below disabled" title="You will be able to complete this task in {{ t.human_relative_time(t.completable_from()) }}">
+                                        Complete &nbsp <i class="icon icon-ok"></i></button>
+                                {% endif %}
                                 <button class="btn btn-info de-btn">Edit &nbsp; <i class="icon icon-edit"></i></button>
                                 <button class="btn btn-danger dd-btn">Delete &nbsp; <i class="icon icon-trash"></i></button>
                             </div>

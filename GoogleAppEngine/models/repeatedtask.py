@@ -380,7 +380,7 @@ class RepeatedTask(ndb.Model):
 
     @property
     def now_utc(self):
-        return pytz.UTC.localize(datetime.now()) + timedelta(seconds=10)
+        return pytz.UTC.localize(datetime.now()) # + timedelta(seconds=1)
 
     def next_expiry_utc(self,now=None):
         """the next time the task expires based on:
@@ -398,8 +398,6 @@ class RepeatedTask(ndb.Model):
 
             if self.repeat == False:
                 return now + timedelta(days=365)
-
-            now_offset = now
 
             #get the next two due dates
             next_due = self.next_due_utc(after = now)
@@ -425,10 +423,25 @@ class RepeatedTask(ndb.Model):
             if event > after:
                 return event
 
+    def prev_due_utc(self,before=None):
+        """returns the previous due date before 'before' or None if there wasn't one"""
+
+        if not before:
+            before = self.now_utc
+
+        prev = None
+
+        for event in self.iter_due_dates_utc(None):
+            if event >= before:
+                return prev
+            prev = event
 
     def next_reminder_utc(self,after=None):
         """next reminder for a task
             -reminders are based on task due date, not expiry date"""
+        if self.no_reminder:
+            logging.info('next reminder being called, but no_reminder is set')
+            return None
 
         if not after:
             after = self.now_utc
@@ -439,6 +452,33 @@ class RepeatedTask(ndb.Model):
             for reminder in self.iter_reminders(next_event,None):
                 if reminder > after:
                     return reminder
+
+    def completable_from(self):
+        """returns when the task completable from"""
+
+        if not self.repeat:
+            #tasks that dont repeat are completable from when they are created
+            return pytz.UTC.localize(self.created)
+        else:
+            next_due = self.next_due_utc()
+            prev_due = self.prev_due_utc(before=next_due)
+
+            if prev_due is None:
+                return self.now_utc
+
+            diff = timedelta(seconds = (next_due - prev_due).total_seconds()/2)
+            prev_half = next_due - diff
+
+            first_reminder = self.next_reminder_utc(after=prev_due)
+
+            if first_reminder and first_reminder < prev_half:
+                return first_reminder
+            else:
+                return prev_half
+
+
+    def is_completable(self):
+        return self.completable_from() < self.now_utc
 
     def iter_reminders(self,dt_event,max_reminders=21):
         """ returns datetime objects for reminders for an event occuring on dt_event"""

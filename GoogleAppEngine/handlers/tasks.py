@@ -69,11 +69,12 @@ class Task(Jinja2Handler):
 
         tasks = RepeatedTask.query().filter(RepeatedTask.house_id == house_id,RepeatedTask.disabled==False).fetch()
 
- #       logging.info(tasks)
-
 #        sorted_reminders = sorted([self.calc_reminder_delta(r,dt_event) for r in self.reminders])
         #,key=lambda k: k.total_seconds())
-        return self.render_template('tasks.html',{'tasks':sorted(tasks,key=lambda k:k.due_date) })
+        if tasks:
+            tasks = sorted(tasks,key=lambda k:k.next_due_utc() if k.next_due_utc() != None else pytz.UTC.localize(datetime(2100,1,1)) )
+
+        return self.render_template('tasks.html',{'tasks':tasks})
 
     def post_create(self):
 
@@ -119,7 +120,10 @@ class Task(Jinja2Handler):
 
         if self.request.get('confirm'):
 
-            self.task.complete_task(task_instance_key=None,user_id=self.request.session.user._get_id())
+            if self.task.is_completable() and not self.task.is_task_complete():
+                self.task.complete_task(task_instance_key=None,user_id=self.request.session.user._get_id())
+            else:
+                logging.error('task trying to be completed, but shouldnt be {0}'.format(self.task.key.id()))
             return self.redirect('/tasks')
         else:
 
@@ -132,6 +136,10 @@ class Task(Jinja2Handler):
                 return self.generic_success(title='Already completed',
                                             message="One of your housemates has already completed this task")
 
+            elif self.task.is_completable() == False:
+                return self.generic_error(title="Task not yet completable",
+                message="You will be able to complete this task in {0}".format(self.task.human_relative_time(self.task.completable_from())))
+
             return self.generic_success(title=format(self.task.name),
                          message="Please confirm you have completed this task",
                             action="I have completed this task &raquo;",
@@ -140,23 +148,33 @@ class Task(Jinja2Handler):
 
     def get_delete(self):
 
-        hse = house.House.get_by_id(self.request.session.user.house_id)
-        hse.add_house_event(user_id = self.request.session.user._get_id(),
-                            desc = "deleted '{0}'".format(self.task.name),
-                            points=0,
-                            reference=self.task.key)
 
-        for instance in self.task.instance_keys(limit=None):
-            tasks.remove_children_of_instance(instance)
+        if self.request.get('confirm'):
 
-        inst = self.task.last_instance_key.get()
-        inst.action_reqd = None
-        inst.put()
+            hse = house.House.get_by_id(self.request.session.user.house_id)
+            hse.add_house_event(user_id = self.request.session.user._get_id(),
+                                desc = "deleted '{0}'".format(self.task.name),
+                                points=0,
+                                reference=self.task.key)
 
-        self.task.disabled = True
-        self.task.put()
-        sleep(1)
-        return self.redirect('/tasks?deleted')
+            for instance in self.task.instance_keys(limit=None):
+                tasks.remove_children_of_instance(instance)
+
+            inst = self.task.last_instance_key.get()
+            inst.action_reqd = None
+            inst.put()
+
+            self.task.disabled = True
+            self.task.put()
+            sleep(1)
+            return self.redirect('/tasks?deleted')
+        else:
+
+            return self.generic_error(title="Delete task '{0}?'".format(self.task.name),
+                message="Please confirm you want to delete this task",
+                action="Delete task &raquo;",
+                action_link="/task/delete?id={0}&confirm=yes".format(self.task.key.id()))
+
 
     def get_info(self):
 
