@@ -17,7 +17,6 @@ import calendar
 import os
 DEBUG = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 
-
 class Task(Jinja2Handler):
 
     def match_user_task(self,action):
@@ -67,14 +66,18 @@ class Task(Jinja2Handler):
         if not house_id:
             return self.generic_error(title='Registration not complete',message='You must complete your Sharehouse setup prior to continuing...')
 
-        tasks = RepeatedTask.query().filter(RepeatedTask.house_id == house_id,RepeatedTask.disabled==False).fetch()
+        if self.request.route.name == 'tasks':
+            tasks = RepeatedTask.query().filter(RepeatedTask.house_id == house_id,RepeatedTask.disabled==False).fetch()
 
-#        sorted_reminders = sorted([self.calc_reminder_delta(r,dt_event) for r in self.reminders])
-        #,key=lambda k: k.total_seconds())
-        if tasks:
-            tasks = sorted(tasks,key=lambda k:k.next_due_utc() if k.next_due_utc() != None else pytz.UTC.localize(datetime(2100,1,1)) )
+    #        sorted_reminders = sorted([self.calc_reminder_delta(r,dt_event) for r in self.reminders])
+            #,key=lambda k: k.total_seconds())
+            if tasks:
+                tasks = sorted(tasks,key=lambda k:k.next_due_utc() if k.next_due_utc() != None else pytz.UTC.localize(datetime(2100,1,1)) )
 
-        return self.render_template('tasks.html',{'tasks':tasks})
+            return self.render_template('tasks.html',{'tasks':tasks})
+        elif self.request.route.name =='standing':
+
+            return self.render_template('standing_tasks.html',{'tasks':[]})
 
     def post_create(self):
 
@@ -114,7 +117,10 @@ class Task(Jinja2Handler):
         return self.render_template('repeating_task.html',{'task':self.task,'task_reminders':sp_rem})
 
     def get_create(self):
-        return self.render_template('repeating_task.html')
+        page_map = {'task':'repeating_task.html',
+                    'standing':'standing_task.html'}
+
+        return self.render_template(page_map[self.request.route.name])
 
     def get_complete(self):
 
