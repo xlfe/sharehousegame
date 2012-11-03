@@ -113,8 +113,8 @@ class TaskReminderEmail(EmailHash):
 
         email_body = 'Dear {0},\n\n' + \
           "The task '{1}' is due {2}!\n" +\
-          "{3}\n" +\
           "Details: \n{4}\n\n" + \
+          "If you have completed the task: \n{3}\n\n" +\
           "Bert Bert\n" + \
           "Sharehouse Game - Support\n" + \
           "http://www.SharehouseGame.com\n"
@@ -136,6 +136,7 @@ class TaskReminderEmail(EmailHash):
         owner = self.owner.get()
 
         if not owner:
+            self.key.delete()
             return jinja.generic_error(title="Task not found",message='Sorry, we were unable to find that task.')
 
         if jinja.request.session.user is None:

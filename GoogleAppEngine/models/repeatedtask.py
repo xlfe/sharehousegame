@@ -478,7 +478,7 @@ class RepeatedTask(ndb.Model):
 
 
     def is_completable(self):
-        return self.completable_from() < self.now_utc
+        return self.completable_from() <= self.now_utc
 
     def iter_reminders(self,dt_event,max_reminders=21):
         """ returns datetime objects for reminders for an event occuring on dt_event"""
