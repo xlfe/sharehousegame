@@ -15,6 +15,8 @@ import os
 
 DEBUG = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 
+#Helper functions
+
 def add_months(sourcedate,months):
     month = sourcedate.month - 1 + months
     year = sourcedate.year + month / 12
@@ -29,6 +31,150 @@ def add_years(sourcedate,years):
     day = min(sourcedate.day,calendar.monthrange(year,month)[1])
     return datetime(year,month,day,sourcedate.hour,sourcedate.minute,sourcedate.second)
 
+def next_wd(weekdays,last_event,repeat_freq):
+    eow = True
+    for d in weekdays:
+        if d > last_event.isoweekday():
+            last_event += timedelta(days=d-last_event.isoweekday())
+            eow = False
+            break
+    if eow:
+        #reset to the begining of the week
+        last_event += timedelta(days=weekdays[0] -last_event.isoweekday())
+
+    last_event += timedelta(weeks=repeat_freq)
+
+    return last_event
+
+def human_date(timezone,dt):
+    """Human readable format with precision ~1day"""
+
+    if not dt:
+        return '-'
+
+    local_tz = pytz.timezone(timezone)
+    localized_dt = local_tz.normalize(dt.astimezone(local_tz))
+    now = pytz.UTC.localize(datetime.now())
+
+    diff = localized_dt - now
+
+    if abs(diff).days ==0:
+        if diff.days >= 0:
+            return 'today'
+        else:
+            return 'yesterday'
+    elif diff.days > 0:
+        if diff.days == 1:
+            return 'tomorrow'
+        else:
+            return '{0} days'.format(diff.days)
+    else:
+        return '{0} days ago'.format(abs(diff.days))
+
+
+
+def human_time(timezone,dt):
+    """Human readable format with precision the minute"""
+
+    if not dt:
+        return '-'
+
+    local_tz = pytz.timezone(timezone)
+    localized_dt = local_tz.normalize(dt.astimezone(local_tz))
+    now = pytz.UTC.localize(datetime.now())
+
+    assert localized_dt > now,'smart_date only works with dates in the future'
+    diff = localized_dt - now
+
+    end_of_today = local_tz.normalize(now.astimezone(local_tz)).replace(hour=23,minute=59,second=59)
+
+    # 2:00pm
+    # 20 minutes ago
+    # 2pm yesterday
+    # 2pm on X
+
+    #within 24 hours
+    if diff < timedelta(days=1):
+
+        if localized_dt < end_of_today:
+            fmt = "%I:%M%p"
+        else:
+            fmt = "%I:%M%p tomorrow"
+    elif abs(diff) < timedelta(days=6):
+        fmt = "%I:%M%p on %a"
+    else:
+        fmt = "%I:%M%p on %a %d %b"
+
+    r = localized_dt.strftime(fmt)
+    on = r.split('on')
+    if len(on) > 1:
+        r = on[0].lower() +' on '+ on[1]
+    else:
+        r=r.lower()
+    if r[0] == "0":
+        return r[1:]
+    else:
+        return r
+
+def parse_time(delta_string):
+    """Turns '9am the day before' into
+
+    f('9am the day before') = {'days':1,'hours':9,'minutes':0}
+    """
+
+    #0 - hours 1-minutes 2-am/pm
+    tm = re.match('([1][0-2]|[0]?[0-9])(?::|.)?([0-5][0-9])?[\s]*(am|pm)',delta_string,flags=re.I)
+
+    if not tm:
+        return None
+
+    assert tm.group(1) and tm.group(3), 'Unknown time from {0}'.format(delta_string)
+
+    hours = int(tm.group(1))
+
+    if tm.group(3).lower() == "pm":
+        hours += 12
+
+    minutes = int(tm.group(2)) if tm.group(2) else 0
+
+    days = delta_string[len(tm.group(0))+1:]
+
+    if days == "same day":
+        days = 0
+    elif days == "the day before":
+        days = 1
+    else:
+        days = int(days.split(' ')[0])
+
+    assert hours >=0 and minutes >= 0 and days >=0,'Unknown time from {0}'.format(delta_string)
+    assert hours <= 24 and minutes <= 60 and days <=14, 'Unknown time from {0}'.format(delta_string)
+
+    return {'days':days,
+            'hours':hours,
+            'minutes':minutes}
+
+def dates_around(iterator,dt,need_post,need_prev=0):
+    dates = []
+    prev = 0
+    post = 0
+
+    for date in iterator:
+
+        dates.append(date)
+
+        if date <= dt:
+            prev += 1
+
+        if date > dt:
+            post +=1
+
+        if post > need_post:
+            break
+
+    dates_after  = [d for d in dates if d > dt]
+    dates_before = [d for d in dates if d <= dt]
+
+    return dates_before[-need_prev:] + dates_after[:need_post]
 
 
 class RepeatedTask(ndb.Model):
@@ -76,7 +222,7 @@ class RepeatedTask(ndb.Model):
     disabled        = ndb.BooleanProperty(default=False)
 
     event_expiry_tm = time(23,59,59)
-#       event_expiry_tm = time(16,59,59)
+    #event_expiry_tm = time(14,30,59)
 
 
     @property
@@ -107,7 +253,7 @@ class RepeatedTask(ndb.Model):
             dict['reminders'] = set(dict['reminders'])
             new_r = []
             for r in dict['reminders']:
-                if self.calc_reminder_delta(r) != None:
+                if parse_time(r) != None:
                     new_r.append(r)
             if len(new_r) ==0:
                 dict['no_reminder'] = True
@@ -262,43 +408,13 @@ class RepeatedTask(ndb.Model):
                 logging.info('task instance would have expired by {0} - not adding a reminder {1}'.format(task_instance.get().action_reqd,next_reminder))
 
 
-    def calc_reminder_delta(self,desc,dt_event=None):
-        """Turns '9am the day before' into a timdelta"""
+    def calc_reminder_delta(self,desc,dt_event):
+        """take a reminder description and a datetime and calculate the offset"""
 
-        #0 - hours 1-minutes 2-am/pm
-        tm = re.match('([1][0-2]|[0]?[0-9])(?::|.)?([0-5][0-9])?[\s]*(am|pm)',desc,flags=re.I)
+        delta = parse_time(desc)
 
-        if not tm:
-            return None
-
-        assert tm.group(1) and tm.group(3), 'Unknown time from {0}'.format(desc)
-
-        hours = int(tm.group(1))
-
-        if tm.group(3).lower() == "pm":
-            hours += 12
-
-        minutes = int(tm.group(2)) if tm.group(2) else 0
-
-        days = desc[len(tm.group(0))+1:]
-
-        if days == "same day":
-            days = 0
-        elif days == "the day before":
-            days = 1
-        else:
-            days = int(days.split(' ')[0])
-
-        assert hours >=0 and minutes >= 0 and days >=0,'Unknown time from {0}'.format(desc)
-        assert hours <= 24 and minutes <= 60 and days <=14, 'Unknown time from {0}'.format(desc)
-        if not dt_event:
-            return True
-
-        td = (dt_event + timedelta(days=-days)).replace(hour=hours,minute=minutes,second=0) -\
+        return (dt_event + timedelta(days=-delta['days'])).replace(hour=delta['hours'],minute=delta['minutes'],second=0) -\
             dt_event.replace(hour=self.event_expiry_tm.hour,minute=self.event_expiry_tm.minute)
-
-        return td
-
 
     @property
     def shared_desc(self):
@@ -394,17 +510,37 @@ class RepeatedTask(ndb.Model):
         if now is None:
             now = self.now_utc
 
+        if self.due_date is None:
+            return None
+
         if self.doesnt_expire:
 
-            if self.repeat == False:
+            if not self.repeat:
                 return now + timedelta(days=365)
 
-            #get the next two due dates
-            next_due = self.next_due_utc(after = now)
-            next_due_1 = self.next_due_utc(after=next_due)
+            dates = dates_around(iterator=self.iter_due_dates(),dt=now,need_prev=2,need_post=2)
 
-            diff = timedelta(seconds = (next_due_1 - next_due).total_seconds()/2)
-            return next_due + diff
+            expiries = []
+            last_exp = dates.pop(0)
+            for d in dates:
+
+                diff = d - last_exp
+                expiries.append( last_exp + timedelta(seconds = diff.total_seconds()/2) )
+                last_exp =d
+
+            expiry_before = [e for e in expiries if e <= now]
+            expiry_after = [e for e in expiries if e > now]
+
+            logging.info('{0} expiries returned around {1}'.format(len(expiries),now))
+
+            for d in expiries:
+                logging.info(d)
+
+            assert len(expiry_after) > 0,'No expiry found after'
+            #assert len(expiry_before) > 0,'No expiry found before'
+
+            return expiry_after[0]
+
         else:
             #if a task expires, its expiry date is the next due date after now
 
@@ -414,7 +550,7 @@ class RepeatedTask(ndb.Model):
 
 
     def next_due_utc(self,after=None):
-        """the next datetime a task is due, after a certian datetime (defaults to now)"""
+        """the next datetime a task is due, after a certain datetime (defaults to now)"""
 
         if not after:
             after = self.now_utc
@@ -423,24 +559,74 @@ class RepeatedTask(ndb.Model):
             if event > after:
                 return event
 
-    def prev_due_utc(self,before=None):
-        """returns the previous due date before 'before' or None if there wasn't one"""
+    def completable_from(self):
+        """returns when the task completable from"""
 
-        if not before:
-            before = self.now_utc
+        if not self.repeat:
+            #tasks that dont repeat are completable from when they are created
+            return pytz.UTC.localize(self.created)
 
-        prev = None
+        now = self.now_utc
+        dates = dates_around(iterator=self.iter_due_dates(),dt=now,need_prev=2,need_post=2)
 
-        for event in self.iter_due_dates_utc(None):
-            if event >= before:
-                return prev
-            prev = event
+        expiries = []
+        last_exp = dates.pop(0)
+        for d in dates:
+
+            diff = d - last_exp
+            expiries.append( last_exp + timedelta(seconds = diff.total_seconds()/2) )
+            last_exp =d
+
+        expiry_before = [e for e in expiries if e <= now]
+        expiry_after = [e for e in expiries if e > now]
+        if self.doesnt_expire:
+
+            if len(expiry_before) >0:
+                return expiry_before[-1]
+            else:
+                return now
+        else:
+            next_dd = self.next_due_utc()
+            logging.info('nextdd: {0}'.format(next_dd))
+            prev_expiry = None
+
+            for e in expiries:
+                if e >= next_dd:
+                    if prev_expiry:
+                        logging.info('prevex: {0}'.format(prev_expiry))
+                        return prev_expiry
+                    else:
+                        logging.info('nopre: {0}'.format(e))
+                        return now
+                prev_expiry = e
+
+
+    def is_completable(self):
+        return self.completable_from() <= self.now_utc
+
+    def current_due_dt(self):
+
+        local_tz = pytz.timezone(self.timezone)
+
+        next_expiry = self.next_expiry_utc()
+        last_due=None
+        for d in self.iter_due_dates_utc():
+
+            if d > next_expiry:
+                if last_due:
+                    return local_tz.normalize(last_due.astimezone(local_tz))
+                else:
+                    return local_tz.normalize(d.astimezone(local_tz))
+
+            last_due = d
+
+
 
     def next_reminder_utc(self,after=None):
         """next reminder for a task
             -reminders are based on task due date, not expiry date"""
         if self.no_reminder:
-            logging.info('next reminder being called, but no_reminder is set')
+#            logging.error('next reminder being called, but no_reminder is set')
             return None
 
         if not after:
@@ -449,91 +635,45 @@ class RepeatedTask(ndb.Model):
         next_event = self.next_due_utc(after)
 
         if next_event:
-            for reminder in self.iter_reminders(next_event,None):
+            for reminder in self.iter_reminders(next_event):
                 if reminder > after:
                     return reminder
 
-    def completable_from(self):
-        """returns when the task completable from"""
+    def iter_reminders(self,dt_event):
+        """ returns datetime objects for reminders for an event occurring on dt_event """
 
-        if not self.repeat:
-            #tasks that dont repeat are completable from when they are created
-            return pytz.UTC.localize(self.created)
-        else:
-            next_due = self.next_due_utc()
-            prev_due = self.prev_due_utc(before=next_due)
-
-            if prev_due is None:
-                return self.now_utc
-
-            diff = timedelta(seconds = (next_due - prev_due).total_seconds()/2)
-            prev_half = next_due - diff
-
-            first_reminder = self.next_reminder_utc(after=prev_due)
-
-            if first_reminder and first_reminder < prev_half:
-                return first_reminder
-            else:
-                return prev_half
-
-
-    def is_completable(self):
-        return self.completable_from() <= self.now_utc
-
-    def iter_reminders(self,dt_event,max_reminders=21):
-        """ returns datetime objects for reminders for an event occuring on dt_event"""
-
-        sorted_reminders = sorted([self.calc_reminder_delta(r,dt_event) for r in self.reminders])#,key=lambda k: k.total_seconds())
-
-        n= 0
+        sorted_reminders = sorted([self.calc_reminder_delta(r,dt_event) for r in self.reminders])
 
         for r in sorted_reminders:
-            n+=1
-            yield  dt_event + r #+ timedelta(seconds=1)
+            yield  dt_event + r
 
-            if max_reminders and n > max_reminders:
-                return
-
-
-    def next_wd(self,weekdays,last_event):
-        eow = True
-        for d in weekdays:
-            if d > last_event.isoweekday():
-                last_event += timedelta(days=d-last_event.isoweekday())
-                eow = False
-                break
-        if eow:
-            #reset to the begining of the week
-            last_event += timedelta(days=weekdays[0] -last_event.isoweekday())
-
-            last_event += timedelta(weeks=self.repeat_freq)
-
-        return last_event
 
     def iter_due_dates_utc(self,max_events=10):
         """returns a list of UTC datetime objects for a repeating task"""
 
         utc = pytz.UTC
 
-        for e in self.iter_due_dates(max_events):
+        for e in self.iter_due_dates(self.now_utc + timedelta(days=800)):
             idd= utc.normalize(e.astimezone(utc))
             yield idd
 
-    def iter_due_dates(self,max_events=10):
-        """ returns a list of localized datetime due dates for a repeating task"""
+    def iter_due_dates(self,up_to=None):
+        """ returns a list of localized datetime due dates for a repeating task upto and including up_to"""
+
+        assert self.due_date, 'Cant iter due dates with no due date..'
 
         local_tz = pytz.timezone(self.timezone)
         last_event = datetime.combine( self.due_date , self.event_expiry_tm)
 
         if not self.repeat:
-            #doesn't repeat, so return just the event
+            #doesn't repeat, so return just the due date
             yield local_tz.localize( last_event )
             return
 
         if len(self.repeat_on) > 0:
             wd = sorted([self.weekdays_to_int(d) for  d in self.repeat_on])
             if last_event.isoweekday() not in wd:
-                last_event = self.next_wd(wd,last_event)
+                last_event = next_wd(wd,last_event,self.repeat_freq)
 
             original_dow = None
         else:
@@ -543,8 +683,14 @@ class RepeatedTask(ndb.Model):
         i=0
         while True:
 
-            if (max_events and i >= max_events) or (self.repeats_limited and i >= self.repeats_times):
-                return
+            if i > 0:
+                #always return the sole due date..
+
+                if self.repeats_limited and i >= self.repeats_times:
+                    return
+
+                if up_to is not None and local_tz.localize(last_event) > up_to:
+                    return
 
             i+=1
             yield local_tz.localize( last_event )
@@ -555,7 +701,7 @@ class RepeatedTask(ndb.Model):
 
             elif self.repeat_period == "Weekly":
                 if wd:
-                    last_event = self.next_wd(wd,last_event)
+                    last_event = next_wd(wd,last_event,self.repeat_freq)
                 else:
                     last_event += timedelta(weeks=self.repeat_freq)
 
@@ -573,19 +719,14 @@ class RepeatedTask(ndb.Model):
 
                     if original_dow['day'] > 28:
                         max_day = calendar.monthrange(last_event.year,last_event.month)[1]
-                        min_day = 0
                     elif original_dow['day'] > 21:
                         max_day = 28
-                        min_day = 22
                     elif original_dow['day'] > 14:
                         max_day = 21
-                        min_day = 15
                     elif original_dow['day'] > 7:
                         max_day = 14
-                        min_day = 8
                     else:
                         max_day = 7
-                        min_day = 1
 
                     if last_event.day + dd_f > max_day:
                         #logging.info('{3} le day {0} dow {1} going backwards {2} - f{4} b{5}'.format(last_event.day,last_event.isoweekday(),-dd_b,last_event.month,dd_f,dd_b))
@@ -602,77 +743,11 @@ class RepeatedTask(ndb.Model):
 
     #todo - pretty
     #todo localize
-
-
     def human_date(self,dt):
-        """Human readable format with precision ~1day"""
-
-        if not dt:
-            return '-'
-
-        local_tz = pytz.timezone(self.timezone)
-        localized_dt = local_tz.normalize(dt.astimezone(local_tz))
-        now = pytz.UTC.localize(datetime.now())
-
-        diff = localized_dt - now
-
-        if abs(diff).days ==0:
-            return 'today'
-        elif diff.days > 0:
-            if diff.days == 1:
-                return 'tomorrow'
-            else:
-                return '{0} days'.format(diff.days)
-        else:
-            if diff.days == -1:
-                return 'yesterday'
-            else:
-                return '{0} days ago'.format(diff.days)
-
+        return human_date(self.timezone,dt)
 
     def human_time(self,dt):
-        """Human readable format with precision the minute"""
-
-        if not dt:
-            return '-'
-
-        local_tz = pytz.timezone(self.timezone)
-        localized_dt = local_tz.normalize(dt.astimezone(local_tz))
-        now = pytz.UTC.localize(datetime.now())
-
-        assert localized_dt > now,'smart_date only works with dates in the future'
-        diff = localized_dt - now
-
-        end_of_today = local_tz.normalize(now.astimezone(local_tz)).replace(hour=23,minute=59,second=59)
-
-        # 2:00pm
-        # 20 minutes ago
-        # 2pm yesterday
-        # 2pm on X
-
-
-        #within 24 hours
-        if diff < timedelta(days=1):
-
-            if localized_dt < end_of_today:
-                fmt = "%I:%M%p"
-            else:
-                fmt = "%I:%M%p tomorrow"
-        elif abs(diff) < timedelta(days=6):
-            fmt = "%I:%M%p on %a"
-        else:
-            fmt = "%I:%M%p on %a %d %b"
-
-        r = localized_dt.strftime(fmt)
-        on = r.split('on')
-        if len(on) > 1:
-            r = on[0].lower() +' on '+ on[1]
-        else:
-            r=r.lower()
-        if r[0] == "0":
-            return r[1:]
-        else:
-            return r
+        return human_time(self.timezone,dt)
 
     def human_relative_time(self,dt):
         """relative time with precision to the second"""

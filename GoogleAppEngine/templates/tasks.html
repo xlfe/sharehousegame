@@ -28,7 +28,7 @@
                             {{ t.name }}
                         </td>
                         <td class="td-wider">
-                            {% set ne = t.next_due_utc() %}
+                            {% set ne = t.current_due_dt() %}
                             <span class="tt-right">
                                 {{t.human_date(ne)}}
                             </span>

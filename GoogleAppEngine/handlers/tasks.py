@@ -72,7 +72,7 @@ class Task(Jinja2Handler):
     #        sorted_reminders = sorted([self.calc_reminder_delta(r,dt_event) for r in self.reminders])
             #,key=lambda k: k.total_seconds())
             if tasks:
-                tasks = sorted(tasks,key=lambda k:k.next_due_utc() if k.next_due_utc() != None else pytz.UTC.localize(datetime(2100,1,1)) )
+                tasks = sorted(tasks,key=lambda k:k.current_due_dt() if k.current_due_dt() != None else pytz.UTC.localize(datetime(2100,1,1)) )
 
             return self.render_template('tasks.html',{'tasks':tasks})
         elif self.request.route.name =='standing':
@@ -117,7 +117,7 @@ class Task(Jinja2Handler):
         return self.render_template('repeating_task.html',{'task':self.task,'task_reminders':sp_rem})
 
     def get_create(self):
-        page_map = {'task':'repeating_task.html',
+        page_map = {'tasks':'repeating_task.html',
                     'standing':'standing_task.html'}
 
         return self.render_template(page_map[self.request.route.name])

@@ -16,8 +16,14 @@ class OAuth2(webapp2.RequestHandler):
 
     def auth_start(self,request,front_page=False):
         
+
+        for k,v in request.GET.iteritems():
+            logging.info('{0} - {1}'.format(k,v))
         provider = self.options['provider']
-        redirect_uri =  '{0}/auth/{1}/callback'.format(request.host_url,provider) if front_page is False else request.host_url + '/?fb_source=appcenter&fb_appcenter=1'
+        if front_page:
+            redirect_uri = request.host_url + '/?' + '&'.join( '{0}={1}'.format(v,request.get(v)) for v in request.GET if v in['fb_source','fb_appcenter','ref'])
+        else:
+            redirect_uri =  '{0}/auth/{1}/callback'.format(request.host_url,provider)
         flow = OAuth2WebServerFlow(            
             self.options['client_id'],
             self.options['client_secret'],
