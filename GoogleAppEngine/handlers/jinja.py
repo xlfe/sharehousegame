@@ -2,6 +2,27 @@ import webapp2
 import logging
 from webapp2_extras import jinja2
 #from models import house
+from gae_mini_profiler import profiler
+
+def get_request_id():
+
+    return profiler.request_id
+
+
+def jinja2_factory(app):
+    j = jinja2.Jinja2(app)
+    j.environment.filters.update({
+        # Set filters.
+        # ...
+    })
+    j.environment.globals.update({
+        # Set global variables.
+        'get_request_id': get_request_id
+        # ...
+    })
+    return j
+
+
 
 class Jinja2Handler(webapp2.RequestHandler):
     """
@@ -11,7 +32,8 @@ class Jinja2Handler(webapp2.RequestHandler):
     """
     @webapp2.cached_property
     def jinja2(self):
-        return jinja2.get_jinja2(app=self.app)
+
+        return jinja2.get_jinja2(app=self.app,factory=jinja2_factory)
 
     def get_messages(self, key='_messages'):
         try:

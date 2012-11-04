@@ -15,11 +15,17 @@
 
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/main.css">
-	
+
+
 	    <script src="/js/vendor/jquery-1.8.2.min.js"></script>
         <script src="/js/vendor/bootstrap.min.js"></script>
         <script src="/js/main.js"></script>
         <script src="/js/vendor/jquery.debug.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="/gae_mini_profiler/static/css/profiler.css" />
+        <script type="text/javascript" src="/gae_mini_profiler/static/js/profiler.js"></script>
+        <script type="text/javascript">GaeMiniProfiler.init("{{get_request_id()}}", false)</script>
+
     </head>
     <body>
         <!--[if lt IE 7]>

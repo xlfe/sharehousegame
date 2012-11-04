@@ -21,7 +21,7 @@ class OAuth2(webapp2.RequestHandler):
             logging.info('{0} - {1}'.format(k,v))
         provider = self.options['provider']
         if front_page:
-            redirect_uri = request.host_url + '/?' + '&'.join( '{0}={1}'.format(v,request.get(v)) for v in request.GET if v in['fb_source','fb_appcenter','ref'])
+            redirect_uri = request.host_url + '/?' + '&'.join( '{0}={1}'.format(v,request.get(v)) for v in request.GET )
         else:
             redirect_uri =  '{0}/auth/{1}/callback'.format(request.host_url,provider)
         flow = OAuth2WebServerFlow(            

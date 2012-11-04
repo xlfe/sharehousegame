@@ -15,6 +15,12 @@ indexes:
   properties:
   - name: when
 
+- kind: HouseLog
+  ancestor: yes
+  properties:
+  - name: when
+    direction: desc
+
 - kind: Points
   ancestor: yes
   properties:

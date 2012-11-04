@@ -300,13 +300,19 @@ class RepeatedTask(ndb.Model):
         TaskCompletion.query(ancestor=self.key).\
         filter(models.tasks.TaskCompletion.task_instance == task_instance).count()
 
-    def is_task_complete(self,task_instance=None,task_completions=None):
+    def is_task_complete(self,task_instance=None,task_completions=None,user_id=None):
         #todo - the task should stay completed, even if a new housemate joins..
 
         if task_completions == None:
             task_completions = self.get_task_completions(task_instance)
 
         if task_completions > 0:
+
+            if user_id:
+                hc = self.housemates_completed()
+                logging.info(hc)
+                if user_id in self.housemates_completed():
+                    return True
 
             if not self.shared_task:
                 return True
@@ -321,6 +327,7 @@ class RepeatedTask(ndb.Model):
 
         return False
 
+    @ndb.transactional(xg=True)
     def complete_task(self,task_instance_key,user_id):
 
         if task_instance_key == None:
@@ -336,11 +343,16 @@ class RepeatedTask(ndb.Model):
 
         u = user.User._get_user_from_id(user_id)
         u.insert_points_transaction(points=self.points,desc='Completed ' + self.name,reference=task_instance_key)
+        self.house.add_house_event(
+            user_id=user_id,
+            desc='completed ' + self.name,
+            points=self.points,
+            reference=task_instance_key)
+
         if self.is_task_complete(task_instance=None,task_completions=task_completions+1):
             self.house.add_house_event(
-                                user_id=user_id,
-                                desc='Completed ' + self.name,
-                                points=self.points,
+                                desc=self.name + ' is done.',
+                                points=0,
                                 reference=task_instance_key)
 
         return True
@@ -599,6 +611,9 @@ class RepeatedTask(ndb.Model):
                         logging.info('nopre: {0}'.format(e))
                         return now
                 prev_expiry = e
+
+
+
 
 
     def is_completable(self):

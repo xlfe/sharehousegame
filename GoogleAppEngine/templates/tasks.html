@@ -34,7 +34,7 @@
                             </span>
                         </td>
                         <td class="td-wider">
-                            {% if t.is_task_complete() %}
+                            {% if t.is_task_complete(user_id=user._get_id()) %}
                                 <i class="icon icon-ok-circle"></i>
                             {% else %}
                                 {% if t.is_completable() %}

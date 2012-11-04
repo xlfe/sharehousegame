@@ -154,10 +154,12 @@ class House(ndb.Model):
     def recent_activity(self):
         ra = []
         
-        for h in HouseLog.query(ancestor=self.key).order(HouseLog.when):
-            log_user = _user.User._get_user_from_id(h.user_id)
+        for h in HouseLog.query(ancestor=self.key).order(-HouseLog.when):
+
+
+            log_user = _user.User._get_user_from_id(h.user_id) if h.user_id else None
             
-            a = {'who': log_user.get_first_name() if log_user else 'Unknown'
+            a = {'who': log_user.get_first_name() if log_user else ''
                  ,'when':prettydate(h.when)
                  ,'desc':h.desc
                  ,'points':h.points
@@ -195,7 +197,7 @@ class House(ndb.Model):
 class HouseLog(ndb.Model):
     _default_indexed = False
 
-    user_id = ndb.IntegerProperty(required=True)
+    user_id = ndb.IntegerProperty()
     when = ndb.DateTimeProperty(auto_now_add=True,indexed=True)
     desc = ndb.StringProperty(required=True)
     link = ndb.StringProperty()

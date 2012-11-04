@@ -12,4 +12,5 @@ lib/
 pytz/
 img/
 jquery-ui*
+gae_mini_profiler/
 .idea/
