@@ -179,24 +179,6 @@ def dates_around(iterator,dt,need_post,need_prev=0):
     return dates_before[-need_prev:] + dates_after[:need_post]
 
 
-def cache_local(fn):
-    @wraps(fn)
-    def wrapper(self, *args, **kwargs):
-        name = '__' + str(fn.__name__)
-        return fn(self,*args,**kwargs)
-        key = cPickle.dumps((args, kwargs))
-        try:
-            rv = getattr(self,name)[key]
-        except:
-            rv = fn(self,*args,**kwargs)
-            if name not in self.__dict__:
-                setattr(self,name,{})
-            getattr(self,name)[key] = rv
-
-        return rv
-    return wrapper
-
-
 class RepeatedTask(ndb.Model):
 
     _default_indexed= False
@@ -378,7 +360,6 @@ class RepeatedTask(ndb.Model):
         return True
 
     @property
-    @cache_local
     def last_instance_key(self):
         """returns the last (most recent) task instance key for this task"""
 
@@ -387,7 +368,6 @@ class RepeatedTask(ndb.Model):
                 order(-models.tasks.TaskInstance.action_reqd).\
                 get()
 
-    @cache_local
     def instance_keys(self,limit=10):
         """returns a list of task_instance keys that belong to this task in reverse order (most recent first)"""
 
@@ -442,7 +422,6 @@ class RepeatedTask(ndb.Model):
             else:
                 logging.info('task instance would have expired by {0} - not adding a reminder {1}'.format(task_instance.get().action_reqd,next_reminder))
 
-    @cache_local
     def calc_reminder_delta(self,desc,dt_event):
         """take a reminder description and a datetime and calculate the offset"""
 
@@ -471,7 +450,6 @@ class RepeatedTask(ndb.Model):
         return self.house.users
 
     @property
-    @cache_local
     def house(self):
         return house.House.get_by_id(self.house_id)
 
@@ -532,7 +510,6 @@ class RepeatedTask(ndb.Model):
     def now_utc(self):
         return pytz.UTC.localize(datetime.now()) # + timedelta(seconds=1)
 
-    @cache_local
     def next_expiry_utc(self,now=None):
         """the next time the task expires based on:
             -the due date
@@ -583,7 +560,6 @@ class RepeatedTask(ndb.Model):
                 if dd > now:
                     return dd
 
-    @cache_local
     def next_due_utc(self,after=None):
         """the next datetime a task is due, after a certain datetime (defaults to now)"""
 
@@ -594,7 +570,6 @@ class RepeatedTask(ndb.Model):
             if event > after:
                 return event
 
-    @cache_local
     def completable_from(self):
         """returns when the task completable from"""
 
@@ -643,7 +618,6 @@ class RepeatedTask(ndb.Model):
     def is_completable(self):
         return self.completable_from() <= self.now_utc
 
-    @cache_local
     def current_due_dt(self):
 
         local_tz = pytz.timezone(self.timezone)
@@ -661,7 +635,6 @@ class RepeatedTask(ndb.Model):
             last_due = d
 
 
-    @cache_local
     def next_reminder_utc(self,after=None):
         """next reminder for a task
             -reminders are based on task due date, not expiry date"""
