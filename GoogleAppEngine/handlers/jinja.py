@@ -5,9 +5,7 @@ from webapp2_extras import jinja2
 from gae_mini_profiler import profiler
 
 def get_request_id():
-
     return profiler.request_id
-
 
 def jinja2_factory(app):
     j = jinja2.Jinja2(app)
@@ -17,7 +15,7 @@ def jinja2_factory(app):
     })
     j.environment.globals.update({
         # Set global variables.
-        'get_request_id': get_request_id
+        'get_request_id': get_request_id,
         # ...
     })
     return j
