@@ -26,6 +26,12 @@ indexes:
   properties:
   - name: when
 
+- kind: Points
+  ancestor: yes
+  properties:
+  - name: when
+    direction: desc
+
 - kind: TaskInstance
   ancestor: yes
   properties:

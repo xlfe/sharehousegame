@@ -545,11 +545,7 @@ class RepeatedTask(ndb.Model):
 
             logging.info('{0} expiries returned around {1}'.format(len(expiries),now))
 
-            for d in expiries:
-                logging.info(d)
-
             assert len(expiry_after) > 0,'No expiry found after'
-            #assert len(expiry_before) > 0,'No expiry found before'
 
             return expiry_after[0]
 
@@ -595,6 +591,7 @@ class RepeatedTask(ndb.Model):
             if len(expiry_before) >0:
                 return expiry_before[-1]
             else:
+                #todo - we can't currently go backward in time...
                 return now
         else:
             next_dd = self.next_due_utc()
@@ -623,6 +620,9 @@ class RepeatedTask(ndb.Model):
         local_tz = pytz.timezone(self.timezone)
 
         next_expiry = self.next_expiry_utc()
+        if not next_expiry:
+            return None
+
         last_due=None
         for d in self.iter_due_dates_utc():
 

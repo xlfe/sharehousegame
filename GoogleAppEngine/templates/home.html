@@ -6,10 +6,9 @@
     <div class="container-fluid">
  
     <div class="row-fluid">
-     
-     <div class="span2">
-      
-      <hr>
+
+
+     <div class="span3" id="no-scroll">
       <ul class="nav nav-list">
        
         {% set menu_links = [
@@ -30,9 +29,8 @@
        {% endfor %}
 
     </ul>
-    <hr>
     </div>
-     <div class="span10">
+     <div class="span9" id="main-content">
       {% block main %}
         
       {% endblock %}

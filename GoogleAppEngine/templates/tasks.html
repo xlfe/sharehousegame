@@ -3,7 +3,7 @@
 
 {%block main %}
 
- <div class="row span9">
+ <div class="row">
         <table class="table table-hover">
             <thead>
                 <tr>
@@ -66,7 +66,7 @@
                                 {% if t.doesnt_expire %}
                                     <i class="icon-ok tt-right" title="This task expires in {{ t.human_relative_time(t.next_expiry_utc()) }}"> </i>
                                 {% else %}
-                                    <span class="tt-right" title="Task expires in {{ t.human_relative_time(t.next_due_utc()) }}">-</span>
+                                    <i class="icon icon-ban-circle tt-right" title="Task expires in {{ t.human_relative_time(t.next_due_utc()) }}"></i>
                                 {% endif %}
                             </div>
 

@@ -153,9 +153,8 @@ class House(ndb.Model):
         
     def recent_activity(self):
         ra = []
-        
-        for h in HouseLog.query(ancestor=self.key).order(-HouseLog.when):
-
+        for h in HouseLog.query(ancestor=self.key).filter(HouseLog.when > datetime.now() + timedelta(days=-8)).\
+        order(-HouseLog.when):
 
             log_user = _user.User._get_user_from_id(h.user_id) if h.user_id else None
             

@@ -3,11 +3,6 @@
 
 {%block main %}
     <div class="row">
-        <div class="span1"></div>
-    </div>
-
-
-    <div class="row span8">
         <table class="table table-hover">
             <tbody>
             {% for u in house.get_users() %}
@@ -35,7 +30,7 @@
             </tbody>
         </table>
     </div>
-    <div class="row span8">
+    <div class="row">
         <h4>Recent activity</h4>
          <table class="table table-hover">
             <tbody>

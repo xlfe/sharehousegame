@@ -7,10 +7,28 @@
 html, body {
     height: 100%;
 }
+
+div#no-scroll{
+    position: fixed;
+    right: 0px;
+    background-color: white;
+}
+
+.control-label {
+    width: 110px !important;
+}
+
+.controls {
+    margin-left: 130px !important;
+}
+
+div#main-content{
+
+}
+
 body{
     padding-top: 40px;
     padding-bottom: 40px;
-    min-width: 960px;
 }
 .task-detail {
     display: none;
@@ -165,10 +183,6 @@ a.brand {
 .extra-bottom-margin {
     margin-bottom:40px;
 }
-
-
-
-
 
 
 
