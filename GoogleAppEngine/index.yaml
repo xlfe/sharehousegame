@@ -32,6 +32,18 @@ indexes:
   - name: when
     direction: desc
 
+- kind: TaskCompletion
+  properties:
+  - name: task_instance
+  - name: when
+    direction: desc
+
+- kind: TaskCompletion
+  ancestor: yes
+  properties:
+  - name: when
+    direction: desc
+
 - kind: TaskInstance
   ancestor: yes
   properties:

@@ -10,6 +10,7 @@ import models
 from models.email import EmailHash
 from handlers.jinja import Jinja2Handler
 from models.repeatedtask import RepeatedTask
+from models.tasks import StandingTask
 from pytz.gae import pytz
 from datetime import datetime, timedelta, time
 from time import sleep
@@ -31,7 +32,6 @@ class Task(Jinja2Handler):
             return self.generic_error(title='Not logged in',message="This page is only available to logged in users")
 
         #User must have valid house
-
         if self.request.session.user.house is None:
             self.redirect('/')
 
@@ -40,7 +40,10 @@ class Task(Jinja2Handler):
         if id is None:
             return getattr(self,action)()
         else:
-            task = ndb.Key('RepeatedTask',int(id)).get()
+            if self.request.route.name == 'tasks':
+                task = ndb.Key('RepeatedTask',int(id)).get()
+            elif self.request.route.name == 'standing':
+                task = ndb.Key('StandingTask',int(id)).get()
 
             if task and self.request.session.user.house.get_house_id() == task.house_id:
                 self.task = task
@@ -77,7 +80,9 @@ class Task(Jinja2Handler):
             return self.render_template('tasks.html',{'tasks':tasks})
         elif self.request.route.name =='standing':
 
-            return self.render_template('standing_tasks.html',{'tasks':[]})
+            tasks = StandingTask.query().filter(StandingTask.house_id == house_id,StandingTask.disabled==False).fetch()
+
+            return self.render_template('standing_tasks.html',{'tasks':tasks})
 
     def post_create(self):
 
@@ -85,36 +90,82 @@ class Task(Jinja2Handler):
         dict['created_by'] = self.request.session.user._get_id()
         dict['house_id'] = self.request.session.user.house_id
 
-        rt = RepeatedTask.create(dict)
+        if self.request.route.name == 'tasks':
 
-        hse = house.House.get_by_id(self.request.session.user.house_id)
-        hse.add_house_event(user_id = self.request.session.user._get_id(),
+            rt = RepeatedTask.create(dict)
+
+            hse = house.House.get_by_id(self.request.session.user.house_id)
+            hse.add_house_event(user_id = self.request.session.user._get_id(),
                             desc = 'created a task named {0}'.format(dict['name']),
                             points = 0,
                             reference=rt.key)
 
-        return self.json_response(json.dumps({'success':'Task created','redirect':'/tasks'}))
+            return self.json_response(json.dumps({'success':'Task created','redirect':'/tasks'}))
+        elif self.request.route.name == 'standing':
+            st = StandingTask()
+            dict = shg_utils.encapsulate_dict(self.request.POST,StandingTask)
+            st.populate(**dict)
+            st.put()
+
+            self.request.session.user.house.add_house_event(
+            user_id=self.request.session.user._get_id(),
+            desc="created standing task '"+ st.name + "'",
+            points=0,
+            reference=None)
+
+
+
+            return self.json_response(json.dumps({'success':'Task created','redirect':'/standing'}))
+
 
     def post_edit(self):
 
         dict = self.request.POST
         id = dict.pop('id')
 
-        if self.task.update(dict):
-            self.task.update_events()
-            return self.json_response(json.dumps({'success':'Task updated','redirect':'/tasks'}))
-        else:
-            return self.json_response(json.dumps({'failure':'Unable to update task'}))
+        if self.request.route.name == 'tasks':
+
+            if self.task.update(dict):
+                self.task.update_events()
+                return self.json_response(json.dumps({'success':'Task updated','redirect':'/tasks'}))
+            else:
+                return self.json_response(json.dumps({'failure':'Unable to update task'}))
+        elif self.request.route.name == 'standing':
+            dict = shg_utils.encapsulate_dict(dict,StandingTask)
+            self.task.populate(**dict)
+            self.task.put()
+
+            return self.json_response(json.dumps({'success':'Task updated','redirect':'/standing'}))
+
+
 
     def get_edit(self):
 
-        sp_rem = []
+        if self.request.route.name == 'tasks':
 
-        for r in self.task.reminders:
-            sp = r.split(' ')
-            sp_rem.append([sp[0],' '.join(s for s in sp[1:])])
+            sp_rem = []
 
-        return self.render_template('repeating_task.html',{'task':self.task,'task_reminders':sp_rem})
+            for r in self.task.reminders:
+                sp = r.split(' ')
+                sp_rem.append([sp[0],' '.join(s for s in sp[1:])])
+
+            return self.render_template('repeating_task.html',{'task':self.task,'task_reminders':sp_rem})
+        elif self.request.route.name == 'standing':
+
+            mins_delay = self.task.delay
+
+            if mins_delay < 60:
+                delay = mins_delay
+                delay_name = 1
+            elif mins_delay < 1440:
+                delay = mins_delay / 60
+                delay_name = 60
+            else:
+                delay = mins_delay / 1440
+                delay_name = 1440
+
+
+            return self.render_template('standing_task.html',{'task':self.task,'delay':delay,'delay_name':delay_name})
 
     def get_create(self):
         page_map = {'tasks':'repeating_task.html',
@@ -126,30 +177,53 @@ class Task(Jinja2Handler):
 
         if self.request.get('confirm'):
 
-            if self.task.is_completable() and not self.task.is_task_complete():
-                self.task.complete_task(task_instance_key=None,user_id=self.request.session.user._get_id())
-            else:
-                logging.error('task trying to be completed, but shouldnt be {0}'.format(self.task.key.id()))
-            return self.redirect('/tasks')
+            if self.request.route.name == 'tasks':
+
+                if self.task.is_completable() and not self.task.is_task_complete():
+                    self.task.complete_task(task_instance_key=None,user_id=self.request.session.user._get_id())
+                else:
+                    logging.error('task trying to be completed, but shouldnt be {0}'.format(self.task.key.id()))
+                return self.redirect('/tasks')
+            elif self.request.route.name == 'standing':
+
+                self.task.complete_task(user_id=self.request.session.user._get_id())
+                return self.redirect('/standing')
+
+
+
         else:
 
-            if self.request.session.user._get_id() in self.task.housemates_completed():
+            if self.request.route.name == 'tasks':
 
-                return self.generic_success(title='Already completed',
-                                            message="You've already completed this task!")
+                if self.request.session.user._get_id() in self.task.housemates_completed():
 
-            elif self.task.is_task_complete():
-                return self.generic_success(title='Already completed',
-                                            message="One of your housemates has already completed this task")
+                    return self.generic_success(title='Already completed',
+                                                message="You've already completed this task!")
 
-            elif self.task.is_completable() == False:
-                return self.generic_error(title="Task not yet completable",
-                message="You will be able to complete this task in {0}".format(self.task.human_relative_time(self.task.completable_from())))
+                elif self.task.is_task_complete():
+                    return self.generic_success(title='Already completed',
+                                                message="One of your housemates has already completed this task")
 
-            return self.generic_success(title=format(self.task.name),
-                         message="Please confirm you have completed this task",
-                            action="I have completed this task &raquo;",
-                            action_link="/task/complete?id={0}&confirm=yes".format(self.task.key.id()))
+                elif self.task.is_completable() == False:
+                    return self.generic_error(title="Task not yet completable",
+                    message="You will be able to complete this task in {0}".format(self.task.human_relative_time(self.task.completable_from())))
+
+                return self.generic_success(title=format(self.task.name),
+                    message="Please confirm you have completed this task",
+                    action="I have completed this task &raquo;",
+                    action_link="/task/complete?id={0}&confirm=yes".format(self.task.key.id()))
+
+            elif self.request.route.name == 'standing':
+                if not self.task.is_completable():
+
+                    return self.generic_error(title='Task not yet completable',
+                    message="You will have to wait...")
+
+
+                return self.generic_success(title=format(self.task.name),
+                             message="Please confirm you have completed this task",
+                                action="I have completed this task &raquo;",
+                                action_link="/standing/complete?id={0}&confirm=yes".format(self.task.key.id()))
 
 
     def get_delete(self):
@@ -157,29 +231,40 @@ class Task(Jinja2Handler):
 
         if self.request.get('confirm'):
 
+            if self.task.disabled is True:
+                return self.generic_error(title='Task is already deleted',message='This task has already been deleted')
+
             hse = house.House.get_by_id(self.request.session.user.house_id)
             hse.add_house_event(user_id = self.request.session.user._get_id(),
                                 desc = "deleted '{0}'".format(self.task.name),
                                 points=0,
                                 reference=self.task.key)
 
-            for instance in self.task.instance_keys(limit=None):
-                tasks.remove_children_of_instance(instance)
-
-            inst = self.task.last_instance_key.get()
-            inst.action_reqd = None
-            inst.put()
 
             self.task.disabled = True
             self.task.put()
-            sleep(1)
-            return self.redirect('/tasks?deleted')
+            if self.request.route.name =='tasks':
+
+                for instance in self.task.instance_keys(limit=None):
+                    tasks.remove_children_of_instance(instance)
+
+                inst = self.task.last_instance_key.get()
+                inst.action_reqd = None
+                inst.put()
+                sleep(1)
+                return self.redirect('/tasks?deleted')
+            elif self.request.route.name == 'standing':
+                return self.redirect('/standing?deleted')
         else:
+
+            if self.request.route.name == 'tasks':
+                action_link="/task/delete?id={0}&confirm=yes".format(self.task.key.id())
+            elif self.request.route.name == 'standing':
+                action_link="/standing/delete?id={0}&confirm=yes".format(self.task.key.id())
 
             return self.generic_error(title="Delete task '{0}?'".format(self.task.name),
                 message="Please confirm you want to delete this task",
-                action="Delete task &raquo;",
-                action_link="/task/delete?id={0}&confirm=yes".format(self.task.key.id()))
+                action="Delete task &raquo;", action_link=action_link)
 
 
     def get_info(self):

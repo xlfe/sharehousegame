@@ -8,10 +8,26 @@ html, body {
     height: 100%;
 }
 
-div#no-scroll{
-    position: fixed;
-    right: 0px;
-    background-color: white;
+#site-container {
+    width: 720px !important;
+}
+
+#header-btn {
+    background-repeat: no-repeat;
+    background-position: 2px 0px;
+    background-clip: padding-box;
+    height:32px;
+    width: 300px;
+    margin-top:-1px;
+    border: 1px solid #d3d3d3;
+    background-image: url('/img/header-logo.png');
+    background-color: #ffffff;
+}
+
+#header-menu li {
+    padding-top:2px;
+    width: 300px;
+
 }
 
 .control-label {
@@ -22,9 +38,6 @@ div#no-scroll{
     margin-left: 130px !important;
 }
 
-div#main-content{
-
-}
 
 body{
     padding-top: 40px;

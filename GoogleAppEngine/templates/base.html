@@ -16,9 +16,9 @@
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/main.css">
 
-
 	    <script src="/js/vendor/jquery-1.8.2.min.js"></script>
         <script src="/js/vendor/bootstrap.min.js"></script>
+
         <script src="/js/main.js"></script>
         <script src="/js/vendor/jquery.debug.js"></script>
         {% if user and user.verified_email == 'felixb@gmail.com' %}
@@ -32,28 +32,42 @@
             <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
         <![endif]-->
     
-        <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="navbar navbar-fixed-top">
             <div class="navbar-inner">
-                <div class="container">
+                <div id="site-container" class="container">
                     <div class="nav">
-                        <a class="brand" href="/">Sharehouse Game</a>
+                        {% if user %}
+                            <ul class="nav">
+            			    	<div class="btn-group">
+                                    <button id="header-btn" class="btn btn-link dropdown-toggle" data-toggle="dropdown">
+                                    </button>
+
+                                    <ul id="header-menu" class="dropdown-menu">
+                                        {% block menuitems %}
+                                        {% endblock %}
+                                    </ul>
+                                </div>
+                            </ul>
+                        {% else %}
+                            <a class="brand" href="/"><img src="/img/header-logo.png" style="height: 1.5em; margin-top:-70px;margin-bottom:-65px" ></a>
+                        {% endif %}
+
+
                         <ul class="nav">
                             
 			                {% if user %}
-            			    	<div class="btn-group">
-
-                                    <button class="btn-inverse btn">
+                                <div class="btn-group">
+                                    <button class="btn dropdown-toggle" data-toggle="dropdown">
                                         {{ points_helper.points(user.points_balance()) }}
                                         <span>{{user.display_name}}</span>
                                     </button>
-                                    <button class="btn btn-inverse dropdown-toggle" data-toggle="dropdown">
-                                        <i class="icon-white icon-globe"></i>
-                                    </button>
+
                                     <ul class="dropdown-menu">{% for p in user.points_log() %}
                                         <li> <a title="{{p.when}}"> {{ points_helper.points(p.points) }} {{p.desc}}</a></li>
                                     {%endfor%}
                                     </ul>
                                 </div>
+
                             {% endif %}
                         </ul>
                     </div>
@@ -62,7 +76,7 @@
 		            		<a href="/auth/facebook"><button class="btn btn-small btn-info">Add Facebook</button></a>
         			    {% endif %}
 
-		        	    <a href="/logout" class="btn btn-small btn-inverse pull-right">Logout</a>
+		        	    <a href="/logout" class="btn btn-small pull-right">Logout</a>
         			{% else %}
 		        	    <a href="#login" class="btn btn-small btn-success pull-right" data-toggle="modal" >Login</a>
         			{% endif %}
@@ -97,6 +111,10 @@
     
         
         {% block javascript %}
+        <script>
+
+
+        </script>
         {% endblock %}
 
         <script type="text/javascript">
@@ -110,7 +128,17 @@
                 ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
                 var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
             })();
-
+            !function ($) {
+                $(function(){
+                    // Fix for dropdowns on mobile devices
+                    $('body').on('touchstart.dropdown', '.dropdown-menu', function (e) {
+                        e.stopPropagation();
+                    });
+                    $(document).on('click','.dropdown-menu a',function(){
+                        document.location = $(this).attr('href');
+                    });
+                })
+            }(window.jQuery)
         </script>
     </body>
 </html>

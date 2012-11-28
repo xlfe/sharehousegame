@@ -15,22 +15,16 @@
 	<div class="control-group">
 	    <label class="control-label">Name</label>
 	    <div class="controls">
-		<input class="input-xxlarge required" type="text" name="name" placeholder="New Task">
+		<input class="input-xxlarge required" type="text" name="name" placeholder="New Task" value="{% if task %}{{ task.name }}{% endif %}">
 	    </div>
 	</div>
 	 <div class="control-group">
 	    <label class="control-label"> Description
 	    </label>
 	    <div class="controls"> 
-            {% if task %}
-                 <textarea rows="5" class="required input-xxlarge"
-                      placeholder="Describe what a housemate should do in order to complete the task."
-                      name="desc">{{ task.desc }}</textarea>
-            {% else %}
-                <textarea rows="5" class="required input-xxlarge"
-                      placeholder="Describe what a housemate should do in order to complete the task."
-                      name="desc"></textarea>
-           {% endif %}
+             <textarea rows="5" class="required input-xxlarge"
+                  placeholder="Describe what a housemate should do in order to complete the task."
+                  name="desc">{% if task %}{{ task.desc }}{% endif %}</textarea>
 	    </div>
 	</div>
 
@@ -39,19 +33,31 @@
         <label class="control-label"> Points
         </label>
         <div class="controls">
-            <input type="text" name="points" class="required number input-small" placeholder="How many?">
+            <input type="text" name="points" class="required number input-small" placeholder="How many?" value="{% if task %}{{ task.points }}{% endif %}">
         </div>
     </div>
 
-
-    <div class="control-group">
-
-        <label class="control-label"> Delay
-        </label>
-        <div class="controls">
-            <input type="text" name="points" class="required number input-small" placeholder="How many?">
-        </div>
-    </div>
+	<div id="delay-details">
+	    <div class="control-group">
+		<label class="control-label"> Refresh delay
+		</label>
+		<div class="controls">
+                    <input class="hidden" name="delay">
+                    <input type="text" class="input input-small number required" value="{% if delay %}{{ delay }}{% else %}1{% endif %}">
+		            <select class="select input-small">
+                        {% set options = [
+                        (1,'minutes'),(60,'hours'),(1440,'days')] %}{% for m,n in options %}
+                        {% if delay_name and delay_name == m %}
+                            <option value="{{ m }}" selected>{{ n }}</option>
+                        {% else %}
+                            <option value="{{ m }}">{{ n }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+		    <span id="date-info" class="inline-help"></span>
+		</div>
+	    </div>
+	</div>
 
 	<div class="control-group">
 	    <div class="controls">
@@ -71,395 +77,58 @@
     <script src="/js/vendor/jquery-validate/jquery.validate.min.js"></script>
 
     <script>
-       //@externs_url http://code.jquery.com/jquery-1.8.2.js
-       //@externs_url https://raw.github.com/eternicode/bootstrap-datepicker/master/js/bootstrap-datepicker.js
-       //@externs_url http://datejs.googlecode.com/svn/trunk/build/date-en-US.js
-       //@externs_url https://raw.github.com/jzaefferer/jquery-validation/master/jquery.validate.js
-       
-       var err_messages = ["Nope", "Keep Trying", "Nadda", "Sorry", "No one\'s home", "Arg", "Bummer", "Faux pas", "Whoops", "Snafu", "Blunder"];
 
-       function add_reminders(reminders) {
+    $('#delay-details input.hidden').hide();
 
-           $('#reminder_cb').attr('checked',null).change();
-           $('#reminder-details #rem_reminder:visible').click();
-           for (var i =0; i < reminders.length; i++) {
-               var tm = reminders[i][0];
-               var days = reminders[i][1];
+    $('#delay-details').change(function(){
+        var seconds = $('#delay-details input.required').val() ;//*
+        var multiplier = $('#delay-details select option:selected').attr('value');
+        $('#delay-details input.hidden').val(seconds*multiplier);
+   });
 
-               var rt = '#reminder-details .controls:nth('+i+')';
-
-               var rl = $(rt);
-
-               if (rl.length == 0) {
-                   $('#reminder-details .controls:last #add_reminder').click();
-                   var rl = $(rt);
-               }
-               if (typeof(days) == "number") {
-                    $(rt + ' select option:nth('+days+')').attr('selected','selected').change();
-               } else {
-                   $(rt + ' select option:contains("'+days+'")').attr('selected','selected').change();
-               }
-               $(rt + ' input').val(tm).keyup();
-           }
-       }
+    $('#delay-details').change();
 
 
-        $('.dropdown-menu a').click(function(){
-        
-            $('input[name=points]').val($(this).data('points')).keyup();
-            
-            if (typeof $(this).data('name') != 'undefined') {
-                $('input[name=name]').val($(this).data('name')).keyup();
-            } else {
-                $('input[name=name]').val($(this).text()).keyup();
-            }
-            
-            if (typeof $(this).data('doesnt_expire') != 'undefined') {
-                $('#expires_cb').attr('checked','checked').change();
-            } else {
-                $('#expires_cb').attr('checked',null).change();
-            }
-            
-            if ($(this).data('shared') == "Yes") {
-                $('#shared_task_cb').attr('checked','checked').change();
-            } else {
-                $('#shared_task_cb').attr('checked',null).change();
-            }
-            
-            var reminders = $(this).data('reminders');
-            
-            if (typeof reminders == 'undefined') {
 
-                $('#reminder_cb').attr('checked','checked').change();
-
-            } else {
-
-                add_reminders(reminders);
-
-            }
-            
-            var repeats = $(this).data('repeats');
-            
-            if (typeof repeats != 'undefined') {
-                $('#repeats_cb').attr('checked','checked').change();
-                
-                $('select[name=repeat_period] option:eq('+repeats[0]+')').attr('selected','selected').change();
-                $('select[name=repeat_freq] option:eq('+repeats[1]+')').attr('selected','selected').change();
-                
-                
-            } else {
-                $('#repeats_cb').attr('checked',null).change();
-            }
-            
-            $('.dropdown.open .dropdown-toggle').dropdown('toggle');
-            $('form').validate();
-        });
-        
-
-	
 	$('.tt-right').tooltip( {
 	    placement: 'right'
 	});
-        
-        $('.pop-below').popover({
-            placement: 'bottom',
-            trigger: 'hover',
-            delay: { show: 200, hide: 300 }
-        });
-        
-        $('.pop-right').popover({
-            placement: 'right',
-            trigger: 'hover',
-            delay: {show : 200, hide:0}
-        });
-        
-        function override_validate(element,success) {
-            if (success==true) {
-                var remove = "error";
-                var add="success";
-            } else {
-                var remove = "success";
-                var add = "error";
-            }
-            $(element).removeClass(remove).addClass(add);
-            $(element).parents('.control-group').removeClass(remove).addClass(add);
-        }
-	
-	$('#when').bind('keyup',function() {
-	    
-	    
-	    p = Date.parse($('#when').val());
-	    $('#date-info').remove();
-			   
-	    if (p == null) {
-		$('<span id="date-info" class="inline-help"> <i class="icon-exclamation-sign"></i> ' +
-		    err_messages[Math.round(err_messages.length * Math.random())] + "..." +
-		  '</span>')
-		    .insertAfter($('#when').parent());
-		    
-		    setTimeout(override_validate,5,$('#when'),false);
-		    
-	    } else {
-		    $('<span id="date-info" class="inline-help"> <i class="icon-ok"></i> ' +
-		    p.toString("dddd dd MMMM, yyyy") +
-		  '</span>')
-		    .insertAfter($('#when').parent());
-	    }
-	});
-	
-	$('#when').live('blur',function() {
-	    var di = $('#date-info');
-	   
-	    if (di != null) {
-		if (di.children('i').hasClass('icon-ok')) {
-		    $('#when').val($.trim(di.text()));
-		    $('#when').removeClass('error').addClass("success");
-                    setTimeout(override_validate,5,$('#when'),true);
-		    di.remove();
-		} else {
-                    setTimeout(override_validate,5,$('#when'),false);
-                }
- 	    }
-	    
-	});
-	
-	$('#cal-icon').attr('data-date',Date.today().toString('dd/MM/yyyy') );
-	
-	$('#cal-icon').datepicker()
-	    .on('changeDate', function(ev){
-		    $('#when').val(ev.date.toString('dddd dd MMMM, yyyy'));
-		    $('#date-info').remove();
-                    setTimeout(override_validate,5,$('#when'),true);
-                    $('.datepicker').hide();
-		    //startDate = new Date(ev.date);
-		    //$('#startDate').text($('#dp4').data('date'));
-		
-	    });
-	    
-	function checked(cb){
-	    return $(cb).attr("checked") != "undefined" && $(cb).attr("checked") == "checked"
-	}
-        
-        $('#repeat-times').change(function() {
-            if (checked($('#repeat-times-check')) ){
-                $('#repeat-times-input').addClass('required').addClass('number')
-                .parent().parent().parent().removeClass('error').removeClass('success');
-            } else {
-                $('#repeat-times-input').removeClass('required').removeClass('error').val('')
-                .parent().parent().parent().removeClass('error').removeClass('success').find('.inline-help').remove();
-            }
-        });
-        
-        $('#shared-num').change(function() {
-            if (checked($('#shared-num-check')) ){
-                $('#shared-num-input').addClass('required').addClass('number')
-                .parent().parent().parent().removeClass('error').removeClass('success');
-            } else {
-                $('#shared-num-input').removeClass('required').removeClass('error').val('')
-                .parent().parent().parent().removeClass('error').removeClass('success').find('.inline-help').remove();
-            }
-        });
-        
-	$('#repeats_cb').change(function() {
-	    if (checked(this)) {
-		$('#repeat-options').show();
-	    } else {
-		$('#repeat-options').hide();
-	    }
-	});
 
-	$('select[name=repeat_period]').change(function() {
-	    $('#freq-desc').parent().parent().show();
-	    $('#weekdays').hide();
-	    $('#monthday').hide();
-	    switch($(this).val()) {
-		case 'Daily':
-		    $('#freq-desc').text('days');
-		    break;
-		case 'Weekly':
-		    $('#freq-desc').text('weeks');
-		    $('#weekdays').show();
-		    break;
-		case 'Monthly':
-		    $('#freq-desc').text('months');
-		    $('#monthday').show();
-		    break;
-		case 'Yearly':
-		    $('#freq-desc').parent().parent().hide();
-		    break;	
-	    }
-	});
-        
-        
-        $('#shared_task_cb').change(function(){
-            if (checked(this)) {
-              $('#shared-options').show();  
-            } else {
-                $('#shared-options').hide();
-            }
-        });
-	
-	//Defaults to weekly with reminder
-	//$('#repeat-options').hide();
+    $('.pop-below').popover({
+        placement: 'bottom',
+        trigger: 'hover',
+        delay: { show: 200, hide: 300 }
+    });
 
-    {% if task and task.repeat %}
-    	$('#repeats_cb').attr('checked','checked').change();
-        $('select[name=repeat_period]').val('{{task.repeat_period}}').change();
-        $('select[name=repeat_freq]').val('{{task.repeat_freq}}').change();
-        {% for d in task.repeat_on %}
-            $('input[name=repeat_on][value={{ d }}]').attr('checked','checked').change();
-        {% endfor %}
-        $('input[name=repeat_by][value={{ task.repeat_by }}]').attr('checked','checked').change();
-        $('input[name=repeats_limited][value={{ task.repeats_limited }}]').attr('checked','checked').change();
-        $('input[name=repeats_limited][value={{ not (task.repeats_limited) }}]').attr('checked',null).change();
-        {% if task.repeats_times %}
-            $('input[name=repeats_times]').val({{ task.repeats_times }});
-        {% endif %}
-    {% else %}
-        $('#repeats_cb').attr('checked',null).change();
-        $('select[name=repeat_period]').val('Daily').change();
-    {% endif %}
+    $('.pop-right').popover({
+        placement: 'right',
+        trigger: 'hover',
+        delay: {show : 200, hide:0}
+    });
 
 
-    {% if task and task.shared_task %}
-        $('#shared_task_cb').attr('checked','checked').change();
-        $('input[name=shared_all_reqd][value={{ task.shared_all_reqd }}]').attr('checked','checked').change();
-        $('input[name=shared_all_reqd][value={{ not (task.shared_all_reqd ) }}]').attr('checked',null).change();
-        {% if task.shared_number %}
-            $('input[name=shared_number]').val({{ task.shared_number }});
-        {% endif %}
-    {% else %}
-        $('#shared_task_cb').attr('checked',null).change();
-    {% endif %}
+   $('form').validate({
+       errorElement: "span",
+       validClass: "success",
+       errorPlacement: function(error, element) {
+           var cg = $(element).parents('.control-group').removeClass('success').addClass("error");
+           $(error).appendTo( cg.children('.controls') ).addClass('inline-help');
+       },
+       success: function(label) {
+           $(label).parent().closest('.control-group').removeClass('error').addClass('success');
+           $(label).remove();
+       },
+       invalidHandler : function(form,validator) {
+           var alert = $('<div class="alert alert-error"><button type="button" class="close" data-dismiss="alert">×</button>' +
+                   'Please correct the errors above.</div>').insertAfter($(this)).fadeIn('slow');
 
-	$('#rem_reminder').hide();
-    $('input[name=reminders]').hide();
-	
-	$('#add_reminder').click(function(){
-            if ($('div[id=reminder-options]').length >= 4) {
-                alert("Sorry, there is a maximum of 4 reminders allowed.");
-            } else {
-                var ro  = $('#reminder-details > div :first').clone().insertAfter('#reminder-details > div :last');
-                $(ro).children('.control-label').remove();
-                $(ro).find('#add_reminder').remove();
-                $(ro).find('#rem_reminder').show();
-            }
-	});
-	
-	$('#rem_reminder').live('click',function() {
-	   $(this).parent().parent().remove();
-	});
-	
-	$('#reminder_cb').change(function(){
-	
-	    if (checked(this)) {
-		$('#reminder-details').hide();
-	    }else {
-		$('#reminder-details').show();
-	    }
-	    
-	});
-        
-        $('.time').live('keyup',function() {
-            
-                var input = $.trim($(this).val());
-                var isValid = /^(1[0-2]|[0]?[0-9])(?::|.)?([0-5][0-9])?[\s]*(am|pm)$/i.test(input);
-                
-                $(this).parent().find('#time-info').remove();
-                
-                if (isValid) {
-                    setTimeout(override_validate,5,$(this),true);
-                    
-                } else {
-                    if (input != '') {
-                        $('<span id="time-info" class="inline-help"> <i class="icon-exclamation-sign"></i> ' +
-                        err_messages[Math.round(err_messages.length * Math.random())] + "..." +
-                      ' (try 10:30pm or 9am)</span>')
-                        .insertAfter($(this).parent().children().last());
-                    }
-                    setTimeout(override_validate,5,$(this),false);
-                }
-        });
-        
-        $('.time').blur(function() { $(this).keyup(); });
-        
-        function fill_hidden(e) {
-
-            var hidden = $(e).parent().find('input[name=reminders]');
-            var tm = String($(e).parent().find('.input').val()).replace(/\s+/g,'').toLowerCase();
-            var days = $(e).parent().find('select option:selected').text();
-            
-            $(hidden).val(tm + ' ' + days);
-
-        }
-        
-        $('input[name=name]').focus();
-        
-        $('#reminder-details .input').live('keyup',function(){
-            fill_hidden(this);
-        });
-        
-        $('#reminder-details .select').live('change',function(){
-            fill_hidden(this);
-        });
-
-       {% if task %}
-           setTimeout(function() {
-
-               $('input[name=name]').val('{{ task.name }}');
-               $('input[name=points]').val('{{ task.points }}');
-               $('input[name=due_date]').val('{{ task.due_date }}');
-               $('#when').keyup();
-               $('#when').blur();
-
-
-               var reminders = Array();
-
-               {% for r,d in task_reminders %}
-
-                    reminders.push( ["{{ r|safe }}","{{ d|safe }}"] );
-
-               {% endfor %}
-
-               add_reminders(reminders);
-
-               {% if task.no_reminder %}
-                   $('#reminder_cb').attr('checked','checked').change();
-               {% else %}
-                   $('#reminder_cb').attr('checked',null).change();
-               {% endif %}
-
-               {% if task.doesnt_expire %}
-                   $('input#expires_cb').attr('checked','checked').change();
-               {% endif %}
-
-
-           },100);
-
-       {% endif %}
-
-       $('form').validate({
-           errorElement: "span",
-           validClass: "success",
-           errorPlacement: function(error, element) {
-               var cg = $(element).parents('.control-group').removeClass('success').addClass("error");
-               $(error).appendTo( cg.children('.controls') ).addClass('inline-help');
-           },
-           success: function(label) {
-               $(label).parent().closest('.control-group').removeClass('error').addClass('success');
-               $(label).remove();
-           },
-           invalidHandler : function(form,validator) {
-               var alert = $('<div class="alert alert-error"><button type="button" class="close" data-dismiss="alert">×</button>' +
-                       'Please correct the errors above.</div>').insertAfter($(this)).fadeIn('slow');
-
-               setTimeout(function(){
-                   $(alert).fadeOut('slow');
-               },2000);
-           },
-           submitHandler: function(form) {
-               post_form('',form,$('form'));
-           }
-       });
+           setTimeout(function(){
+               $(alert).fadeOut('slow');
+           },2000);
+       },
+       submitHandler: function(form) {
+           post_form('',form,$('form'));
+       }
+   });
     </script>
  {%endblock%}

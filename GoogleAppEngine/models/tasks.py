@@ -1,6 +1,6 @@
 from google.appengine.ext import ndb
 import logging
-from models.repeatedtask import RepeatedTask
+from models.repeatedtask import RepeatedTask, human_time
 from models import house,user
 from models.email import EmailHash
 from pytz.gae import pytz
@@ -16,11 +16,57 @@ class StandingTask(ndb.Model):
     name = ndb.StringProperty(required=True)
     desc = ndb.TextProperty(required=True)
     points = ndb.IntegerProperty(required=True)
+    delay = ndb.IntegerProperty(required=True)
 
     house_id = ndb.IntegerProperty(required=True, indexed=True)
     created_by = ndb.IntegerProperty(required=True)
     created = ndb.DateTimeProperty(auto_now_add=True)
+    disabled = ndb.BooleanProperty(default=False)
 
+    def get_last_completion(self):
+
+        return TaskCompletion().\
+        query(TaskCompletion.task_instance==self.key).\
+        order(-TaskCompletion.when).\
+        get()
+
+    def completable_from(self):
+
+        lc = self.get_last_completion()
+
+        cf = lc.when + timedelta(minutes = self.delay)
+
+        tz = house.House.get_by_id(self.house_id).timezone
+
+        return human_time(tz,pytz.UTC.localize(cf))
+
+    def is_completable(self):
+
+        lc = self.get_last_completion()
+
+        if lc is None:
+            return True
+
+        if lc.when + timedelta(minutes = self.delay) < datetime.now():
+            return True
+        else:
+            return False
+
+    def complete_task(self,user_id):
+
+        tc = TaskCompletion()
+        tc.task_instance = self.key
+        tc.user_id=user_id
+        tc.put()
+
+        u = user.User._get_user_from_id(user_id)
+        u.insert_points_transaction(points=self.points,desc='Completed ' + self.name,reference=tc.key)
+        hse = house.House.get_by_id(u.house_id)
+        hse.add_house_event(
+            user_id=user_id,
+            desc='completed ' + self.name,
+            points=self.points,
+            reference=tc.key)
 
 #Task Event is the base class for lightweight pointers for events
 #that need to happen at a certian utc DT

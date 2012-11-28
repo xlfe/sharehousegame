@@ -1,51 +1,39 @@
   
  {% extends "base.html" %}
- {% block content %}
-       
-       
-    <div class="container-fluid">
- 
-    <div class="row-fluid">
+
+ {% block menuitems %}
 
 
-     <div class="span3" id="no-scroll">
-      <ul class="nav nav-list">
-       
         {% set menu_links = [
-        ( house.name|truncate(length=18, killwords=False, end='...'), '','icon-home'),
-        ('Repeated tasks','tasks','icon-time'),
-        ('Your Details','profile','icon-user'),
+        ( house.name|truncate(length=18, killwords=False, end='...'), '','icon-home',''),
+        ('Standing tasks','standing','icon-refresh','A task that is repeated as required, eg washing up or taking the recycling out'),
+        ('Scheduled tasks','tasks','icon-time','Tasks that occur on a regular or scheduled basis (eg paying rent)'),
+        ('Your Details','profile','icon-user',''),
 
         ]-%}
-       {% for name, link, icon in menu_links %}
-         
+       {% for name, link, icon,help_text in menu_links %}
+
          {% if link == page_base %}
-           <li class="active"><a href="/{{ link }}"><i class="{{ icon }} icon-white"></i> {{ name }} </a></li>
+           <li class="active" title="{{ help_text }}"><a href="/{{ link }}"><i class="{{ icon }} icon-white"></i> {{ name }} </a></li>
            {% else %}
-             <li><a href="/{{ link }}"><i class="{{ icon }} icon-black"></i> {{ name }} </a></li>
+             <li class="" title="{{ help_text }}"><a href="/{{ link }}"><i class="{{ icon }} icon-black"></i> {{ name }} </a></li>
            {% endif %}
-           
-         
+
+
        {% endfor %}
 
-    </ul>
-    </div>
-     <div class="span9" id="main-content">
+ {% endblock %}
+
+ {% block content %}
+    <div id="site-container" class="container">
+ 
       {% block main %}
         
       {% endblock %}
      </div>
 
-   </div>
-   
-   </div>
+
+   <script>
+   </script>
 {% endblock %}
-
-{% block javascript %}
-<script>
-	
-</script>
-
-{% endblock %}
-
 

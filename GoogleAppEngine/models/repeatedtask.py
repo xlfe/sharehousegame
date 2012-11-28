@@ -134,7 +134,9 @@ def parse_time(delta_string):
 
     hours = int(tm.group(1))
 
-    if tm.group(3).lower() == "pm":
+    #h12pm is midday
+    if tm.group(3).lower() == "pm" and hours != 12:
+
         hours += 12
 
     minutes = int(tm.group(2)) if tm.group(2) else 0
@@ -351,7 +353,7 @@ class RepeatedTask(ndb.Model):
             points=self.points,
             reference=task_instance_key)
 
-        if self.is_task_complete(task_instance=None,task_completions=task_completions+1):
+        if self.shared_task and self.is_task_complete(task_instance=None,task_completions=task_completions+1):
             self.house.add_house_event(
                                 desc=self.name + ' is done.',
                                 points=0,

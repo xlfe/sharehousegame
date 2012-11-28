@@ -2,7 +2,7 @@
 {% extends "home.html" %}
 
 {%block main %}
-    <div class="row">
+<div class="row" xmlns="http://www.w3.org/1999/html">
         <div>
             {% if task %}
             <h4>Edit task</h4>
@@ -64,15 +64,9 @@
 	    <label class="control-label"> Description
 	    </label>
 	    <div class="controls"> 
-            {% if task %}
                  <textarea rows="5" class="required input-xxlarge"
                       placeholder="Describe what a housemate should do in order to complete the task."
-                      name="desc">{{ task.desc }}</textarea>
-            {% else %}
-                <textarea rows="5" class="required input-xxlarge"
-                      placeholder="Describe what a housemate should do in order to complete the task."
-                      name="desc"></textarea>
-           {% endif %}
+                      name="desc">{% if task %}{{ task.desc }}{% endif %}</textarea>
 	    </div>
 	</div>
          
