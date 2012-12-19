@@ -182,7 +182,7 @@ class Task(Jinja2Handler):
                 if self.task.is_completable() and not self.task.is_task_complete():
                     self.task.complete_task(task_instance_key=None,user_id=self.request.session.user._get_id())
                 else:
-                    logging.error('task trying to be completed, but shouldnt be {0}'.format(self.task.key.id()))
+                    logging.info('task trying to be completed, but shouldnt be {0}'.format(self.task.key.id()))
                 return self.redirect('/tasks')
             elif self.request.route.name == 'standing':
 
@@ -208,10 +208,12 @@ class Task(Jinja2Handler):
                     return self.generic_error(title="Task not yet completable",
                     message="You will be able to complete this task in {0}".format(self.task.human_relative_time(self.task.completable_from())))
 
-                return self.generic_success(title=format(self.task.name),
-                    message="Please confirm you have completed this task",
-                    action="I have completed this task &raquo;",
-                    action_link="/task/complete?id={0}&confirm=yes".format(self.task.key.id()))
+                tvars = {'title':format(self.task.name),
+                    'message':"Please confirm you have completed this task",
+                    'action':"I have completed this task &raquo;",
+                    'action_link':"/task/complete?id={0}&confirm=yes".format(self.task.key.id())}
+
+                return self.render_template('actions/complete_task.html',tvars)
 
             elif self.request.route.name == 'standing':
                 if not self.task.is_completable():

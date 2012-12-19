@@ -1,0 +1,27 @@
+
+{% extends "base.html" %}
+
+
+{% block content %}
+    <div class="container" xmlns="http://www.w3.org/1999/html">
+    <div class="hero-unit">
+    <h1>{{title}}</h1>
+    <p>{{message}}</p>
+    <p>
+        <a href="{{action_link|safe}}" class="btn btn-large btn-success">{{action|safe}}</a>
+    </p>
+    <button class="btn btn-small" id="more-options">More options &raquo;</button>
+    </div>
+  </div>
+
+   <script>
+
+       $('#more-options').bind('click',function() {
+           $('<div>.</div>').dropdown().insertAfter($(this));
+       })
+   </script>
+
+{% endblock %}
+
+
+
