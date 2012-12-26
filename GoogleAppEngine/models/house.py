@@ -14,7 +14,6 @@ def manage_house(fn):
     @_user.manage_user
     @wraps(fn)
     def wrapper(self, *args, **kwargs):
-        
         if self.request.session.user:
             if self.request.session.user.house_id:
                 self.request.session.user.house = House._get_house_by_id(self.request.session.user.house_id)

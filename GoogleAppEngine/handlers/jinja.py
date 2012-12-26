@@ -54,8 +54,7 @@ class Jinja2Handler(webapp2.RequestHandler):
                     template_values['house'] = self.request.session.user.house
                 else:
                     template_values['house'] = {'name':'Your sharehouse'}
-                
-                     
+
         template_values['page_base'] = self.request.route.name
         self.response.write(self.jinja2.render_template(
             template_name, **template_values))

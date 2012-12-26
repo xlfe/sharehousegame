@@ -14,8 +14,6 @@ class PageHandler(Jinja2Handler):
     @house.manage_house
     def main(self):
         
-        session = self.request.session
-
         fbauth = None
         if self.request.get('fb_source',None):
             code = self.request.get('code',None)
@@ -34,10 +32,10 @@ class PageHandler(Jinja2Handler):
 
                             if matched_at:
                                 self.request.session.upgrade_to_user_session(matched_at.user_id)
-                                session.user = user.User._get_user_from_id(matched_at.user_id)
+                                self.request.session.user = user.User._get_user_from_id(matched_at.user_id)
 
                                 auth_id = authprovider.AuthProvider.generate_auth_id('facebook',fbauth['user_info']['id'])
-                                new_fb_at = authprovider.AuthProvider._create(user=session.user,
+                                new_fb_at = authprovider.AuthProvider._create(user=self.request.session.user,
                                     auth_id=auth_id,
                                     user_info=fbauth['user_info'],
                                     credentials=fbauth['credentials'])
@@ -45,8 +43,8 @@ class PageHandler(Jinja2Handler):
                                 return self.redirect('/')
 
                             else:
-                                session.data['facebook_appcenter'] = pickle.dumps(fbauth)
-                                session.put()
+                                self.request.session.data['facebook_appcenter'] = pickle.dumps(fbauth)
+                                self.request.session.put_async()
 
 
                         else:
@@ -56,29 +54,29 @@ class PageHandler(Jinja2Handler):
                 except Exception as e:
                     logging.error(e.message)
                     pass
-
-        if not session.user:
-            if fbauth:
-                self.render_template('not_logged_in.html',template_values={'signup_fb':True,
-                                                                           'signup_email':fbauth['user_info']['email'],
-                                                                           'signup_name':fbauth['user_info']['displayName']})
+        else:
+            if not self.request.session.user:
+                if fbauth:
+                    self.render_template('not_logged_in.html',template_values={'signup_fb':True,
+                                                                               'signup_email':fbauth['user_info']['email'],
+                                                                               'signup_name':fbauth['user_info']['displayName']})
+                else:
+                    self.render_template('not_logged_in.html')
+                return
             else:
-                self.render_template('not_logged_in.html')
-            return
-        
-        hse_id = self.request.session.user._get_house_id()
-        
-        if hse_id is None:
-            #new user, hasn't setup a house yet -> setup wizzard
-            self.render_template('house_wizzard.html',{'user':session.user,'house':{'name':'Your House'}})
-            return
-        
-        hse = house.House._get_house_by_id(hse_id)
 
-        self.render_template('{0}.html'.format(self.request.route.name if self.request.route.name != '' else 'dashboard'),
-                             {'user':session.user,'house':hse})
-    
- 
+                hse_id = self.request.session.user._get_house_id()
+
+                if hse_id is None:
+                    #new user, hasn't setup a house yet -> setup wizzard
+                    self.render_template('house_wizzard.html',{'user':self.request.session.user,'house':{'name':'Your House'}})
+                    return
+
+                hse = self.request.session.user.house #house.House._get_house_by_id(hse_id)
+
+                self.render_template('{0}.html'.format(self.request.route.name if self.request.route.name != '' else 'dashboard'),template_values={'user':self.request.session.user,'house':hse})
+
+
 
 
 

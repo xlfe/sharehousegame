@@ -49,6 +49,7 @@ body{
 
 .td-fixed {
     width:20px;
+    white-space: nowrap;
 }
 
 .td-wider {

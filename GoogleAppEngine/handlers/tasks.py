@@ -9,7 +9,7 @@ from models import house, authprovider,user, tasks
 import models
 from models.email import EmailHash
 from handlers.jinja import Jinja2Handler
-from models.repeatedtask import RepeatedTask
+from models.repeatedtask import RepeatedTask, request_last_instance_key,request_last_instance_keys,request_completions,request_hse
 from models.tasks import StandingTask
 from pytz.gae import pytz
 from datetime import datetime, timedelta, time
@@ -70,12 +70,76 @@ class Task(Jinja2Handler):
             return self.generic_error(title='Registration not complete',message='You must complete your Sharehouse setup prior to continuing...')
 
         if self.request.route.name == 'tasks':
-            tasks = RepeatedTask.query().filter(RepeatedTask.house_id == house_id,RepeatedTask.disabled==False).fetch()
+            task_objects = RepeatedTask.query().filter(RepeatedTask.house_id == house_id,RepeatedTask.disabled==False).fetch()
 
-    #        sorted_reminders = sorted([self.calc_reminder_delta(r,dt_event) for r in self.reminders])
-            #,key=lambda k: k.total_seconds())
+            lik=[]
+            liks =[]
+            hses=[]
+            cmpls=[]
+
+            for t in task_objects:
+                lik.append(request_last_instance_key(t))
+                liks.append(request_last_instance_keys(t))
+                hses.append(request_hse(t))
+
+            for (t,li,lis) in zip(task_objects,lik,liks):
+                t._last_instance_key = li.get_result()
+                t._instance_keys = lis.get_result()
+
+            for t in task_objects:
+                cmpls.append(request_completions(t))
+
+            for (t,c,h) in zip(task_objects,cmpls,hses):
+                t._house = h.get_result()
+                t._task_completions = {t._last_instance_key:c.get_result()}
+
+            tasks = []
+
+            for t in task_objects:
+                hc = t.housemates_completed()
+                tc = 0
+                if t.shared_task:
+                    if t.shared_all_reqd:
+                        tc = len(t.house.users)
+                    else:
+                        tc = t.shared_number
+                else:
+                    tc=1
+
+                task = {'user_has_completed':t.is_task_complete(user_id=self.request.session.user._get_id()),
+                        'current_due_dt':t.current_due_dt(),
+                        'id':t.key.id(),
+                        'points':t.points,
+                        'name':t.name,
+                        'is_completable':t.is_completable(),
+                        'been_completed':t.is_task_complete(),
+                        'describe_repeat':t.describe_repeat(),
+                        'shared_task':t.shared_task,
+                        'shared_desc':t.shared_desc,
+                        'doesnt_expire':t.doesnt_expire,
+                        'no_reminder':t.no_reminder,
+                        'reminders':t.reminders,
+                        'desc':t.desc,
+                        'completions':len(hc),
+                        'total_completions': tc
+                        }
+                hc = t.housemates_completed()
+
+                if task['is_completable'] is False:
+                    task['human_cf'] = t.human_relative_time(t.completable_from())
+                if task['doesnt_expire'] is True:
+                    task['human_neu'] = t.human_relative_time(t.next_expiry_utc())
+                else:
+                    task['human_ndu'] = t.human_relative_time(t.next_due_utc())
+
+                task['human_nru'] = t.human_relative_time(t.next_reminder_utc())
+
+                task['human_cdd'] = t.human_date(task['current_due_dt'])
+
+                tasks.append(task)
+
             if tasks:
-                tasks = sorted(tasks,key=lambda k:k.current_due_dt() if k.current_due_dt() != None else pytz.UTC.localize(datetime(2100,1,1)) )
+                tasks = sorted(tasks,key=lambda k:k['current_due_dt'] if k['current_due_dt'] != None else pytz.UTC.localize(datetime(2100,1,1)) )
 
             return self.render_template('tasks.html',{'tasks':tasks})
         elif self.request.route.name =='standing':
@@ -180,8 +244,22 @@ class Task(Jinja2Handler):
             if self.request.route.name == 'tasks':
 
                 if self.task.is_completable() and not self.task.is_task_complete():
-                    self.task.complete_task(task_instance_key=None,user_id=self.request.session.user._get_id())
+
+                    who = self.request.get('who',None)
+                    if who is not None:
+                        try:
+                            who=int(who)
+                            hse = house.House.get_by_id(self.request.session.user.house_id)
+                            assert who in hse.users,'{0} not in house {1}'.format(who,self.request.session.user.house_id)
+                        except:
+                            who=None
+
+                    if who is None:
+                        self.task.complete_task(task_instance_key=None,user_id=self.request.session.user._get_id())
+                    else:
+                        self.task.complete_task(task_instance_key=None,user_id=who,thanking=self.request.session.user.display_name.split(' ')[0])
                 else:
+                    return self.generic_error(title='Unable to continue',message="Sorry, you're not able to perform that action")
                     logging.info('task trying to be completed, but shouldnt be {0}'.format(self.task.key.id()))
                 return self.redirect('/tasks')
             elif self.request.route.name == 'standing':
@@ -195,23 +273,42 @@ class Task(Jinja2Handler):
 
             if self.request.route.name == 'tasks':
 
-                if self.request.session.user._get_id() in self.task.housemates_completed():
+                completed_housemates = self.task.housemates_completed()
+                task_completed = self.task.is_task_complete()
+                user_completed_task = self.request.session.user._get_id() in completed_housemates
+                total_completions = len(self.task.house.users) if self.task.shared_all_reqd else self.task.shared_number,
 
-                    return self.generic_success(title='Already completed',
-                                                message="You've already completed this task!")
+                if task_completed:
 
-                elif self.task.is_task_complete():
-                    return self.generic_success(title='Already completed',
-                                                message="One of your housemates has already completed this task")
+                    if len(completed_housemates) >= total_completions:
+
+                        return self.generic_success(title='Already completed',
+                                    message=
+                                                "You've already completed this task!"
+                                                if user_completed_task else "One of your housemates has already completed this task!")
 
                 elif self.task.is_completable() == False:
                     return self.generic_error(title="Task not yet completable",
                     message="You will be able to complete this task in {0}".format(self.task.human_relative_time(self.task.completable_from())))
 
+
+                hse = house.House.get_by_id(self.request.session.user.house_id)
+
+                housemates = []
+
+                #only show other housemates who haven't already completed the task...
+                for u in hse.users:
+                    if self.request.session.user_id == u or u in completed_housemates:
+                        continue
+                    housemates.append((u,user.User.get_by_id(u).display_name.split(' ')[0]))
+
                 tvars = {'title':format(self.task.name),
-                    'message':"Please confirm you have completed this task",
-                    'action':"I have completed this task &raquo;",
-                    'action_link':"/task/complete?id={0}&confirm=yes".format(self.task.key.id())}
+                    'message':"Please confirm who completed this task" if not user_completed_task else "Please confirm who completed this task",
+                    'action':"I have completed this task &raquo;" if not user_completed_task else "Select housemate &raquo;",
+                    'action_link':"/task/complete?id={0}&confirm=yes".format(self.task.key.id()),
+                    'housemates':housemates,
+                    'user_completed_task':user_completed_task,
+                }
 
                 return self.render_template('actions/complete_task.html',tvars)
 

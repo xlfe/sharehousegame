@@ -33,9 +33,7 @@ class StandingTask(ndb.Model):
     def completable_from(self):
 
         lc = self.get_last_completion()
-
         cf = lc.when + timedelta(minutes = self.delay)
-
         tz = house.House.get_by_id(self.house_id).timezone
 
         return human_time(tz,pytz.UTC.localize(cf))

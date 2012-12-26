@@ -12,12 +12,14 @@
                     <th>Name</th>
                     <th>Due</th>
                     <th>Done?</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 
                 {% for t in tasks %}
-                    <tr value="{{ t.key.id() }}" class="info-task">
+
+                    <tr value="{{ t.id }}" class="info-task">
                         <td class="toggle-icon td-fixed">
                             <i class="icon icon-chevron-right" title='Show details'></i>
                         </td>
@@ -27,20 +29,27 @@
                         <td class="td-resize">
                             {{ t.name }}
                         </td>
-                        <td class="td-wider">
-                            {% set ne = t.current_due_dt() %}
+                        <td class="td-fixed">
                             <span class="tt-right">
-                                {{t.human_date(ne)}}
+                                {{t.human_cdd}}
                             </span>
                         </td>
-                        <td class="td-wider">
-                            {% if t.is_task_complete(user_id=user._get_id()) %}
+                        <td class="td-fixed">
+                            {{ t.completions }} / {{ t.total_completions }}
+                        </td>
+                        <td class="td-fixed">
+                            {% if t.been_completed %}
                                 <i class="icon icon-ok-circle"></i>
                             {% else %}
-                                {% if t.is_completable() %}
-                                    <button class="btn btn-mini btn-success complete">Complete</button>
+
+                                {% if t.is_completable %}
+                                    {% if t.user_has_completed %}
+                                        <button class="btn btn-mini btn-success complete">Thank</button>
+                                    {% else %}
+                                        <button class="btn btn-mini btn-success complete">Complete</button>
+                                    {% endif %}
                                 {% else %}
-                                    <button class="btn btn-mini tt-right disabled" title="You will be able to complete this task in {{ t.human_relative_time(t.completable_from()) }}">Complete</button>
+                                    <button class="btn btn-mini tt-right disabled" title="You will be able to complete this task in {{ t.human_cf }}">Complete</button>
                                 {% endif %}
                             {% endif %}
                         </td>
@@ -51,7 +60,7 @@
 
                             <div>
                                 <span class="details-label">Repeats:</span>
-                                {{t.describe_repeat()|safe}}
+                                {{t.describe_repeat|safe}}
                             </div>
                             <div>
                                 <span class="details-label">Shared:</span>
@@ -64,9 +73,9 @@
                             <div>
                                 <span class="details-label">Extended expiry:</span>
                                 {% if t.doesnt_expire %}
-                                    <i class="icon-ok tt-right" title="This task expires in {{ t.human_relative_time(t.next_expiry_utc()) }}"> </i>
+                                    <i class="icon-ok tt-right" title="This task expires in {{ t.human_neu }}"> </i>
                                 {% else %}
-                                    <i class="icon icon-ban-circle tt-right" title="Task expires in {{ t.human_relative_time(t.next_due_utc()) }}"></i>
+                                    <i class="icon icon-ban-circle tt-right" title="Task expires in {{ t.human_ndu }}"></i>
                                 {% endif %}
                             </div>
 
@@ -80,9 +89,8 @@
                             </div>
                             <div>
                                 <span class="details-label">Next reminder:</span>
-                                {% set ne = t.next_reminder_utc() %}
-                                    <span class="tt-right" title="{{t.human_time(ne)}}">
-                                        {{t.human_relative_time(ne)}}
+                                    <span class="tt-right" title="{{t.human_nru}}">
+                                        {{t.human_nru}}
                                     </span>
                             </div>
                             <br/>
@@ -93,14 +101,19 @@
                             <div>
                                 <span class="details-label">Action:</span>
 
-                                {% if t.is_task_complete(user_id=user._get_id()) %}
+                                {% if t.user_has_completed %}
                                     <button class="btn btn-success tt-below disabled" title="Task has already been completed">
                                         Complete &nbsp <i class="icon icon-ok"></i></button>
-                                {% elif t.is_completable() %}
+                                {% elif t.is_completable %}
                                     <button class="btn btn-success dc-btn">Complete &nbsp; <i class="icon icon-ok"></i></button>
                                 {% else %}
-                                    <button class="btn btn-success tt-below disabled" title="You will be able to complete this task in {{ t.human_relative_time(t.completable_from()) }}">
+                                    <button class="btn btn-success tt-below disabled" title="You will be able to complete this task in {{ t.human_cf }}">
                                         Complete &nbsp <i class="icon icon-ok"></i></button>
+                                {% endif %}
+                                {% if not t.been_completed and t.is_completable %}
+                                    <button class="btn btn-success dc-btn">Thank &nbsp; <i class="icon icon-thumbs-up"></i></button>
+                                {% else %}
+                                    <button class="btn btn-success tt-below disabled">Thank &nbsp; <i class="icon icon-thumbs-up"></i></button>
                                 {% endif %}
                                 <button class="btn btn-info de-btn">Edit &nbsp; <i class="icon icon-edit"></i></button>
                                 <button class="btn btn-danger dd-btn">Delete &nbsp; <i class="icon icon-trash"></i></button>

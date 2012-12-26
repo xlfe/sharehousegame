@@ -181,6 +181,21 @@ def dates_around(iterator,dt,need_post,need_prev=0):
     return dates_before[-need_prev:] + dates_after[:need_post]
 
 
+def request_last_instance_key(t):
+    return models.tasks.TaskInstance.query(ancestor=t.key,default_options=ndb.QueryOptions(keys_only=True)).\
+        order(-models.tasks.TaskInstance.action_reqd).get_async()
+
+def request_last_instance_keys(t):
+    return models.tasks.TaskInstance.query(ancestor=t.key,default_options=ndb.QueryOptions(keys_only=True)).\
+        order(-models.tasks.TaskInstance.updated).fetch_async(limit=10)
+
+def request_hse(t):
+    return house.House.get_by_id_async(t.house_id)
+
+def request_completions(t):
+    return models.tasks.TaskCompletion.query(ancestor=t.key).\
+    filter(models.tasks.TaskCompletion.task_instance == t._last_instance_key).fetch_async()
+
 class RepeatedTask(ndb.Model):
 
     _default_indexed= False
@@ -228,6 +243,22 @@ class RepeatedTask(ndb.Model):
     event_expiry_tm = time(23,59,59)
     #event_expiry_tm = time(14,30,59)
 
+    def request_properties(self):
+        """places the async requests for various properties that aren't stored as part of this object
+        house
+        """
+
+        lik = request_last_instance_key(self)
+        liks = request_last_instance_keys(self)
+        hs = request_hse(self)
+
+        self._last_instance_key = lik.get_result()
+        self._instance_keys = liks.get_result()
+
+        tc = request_completions(self)
+
+        self._task_completions = {self._last_instance_key:tc.get_result()}
+        self._house = hs.get_result()
 
     @property
     def due_in(self):
@@ -281,11 +312,10 @@ class RepeatedTask(ndb.Model):
         rt.setup_events()
 
         return rt
+
     def completed_info(self,task_instance):
 
-        task_completions = models.tasks.TaskCompletion.query(ancestor=self.key).\
-        filter(models.tasks.TaskCompletion.task_instance == task_instance).fetch()
-
+        task_completions = self.actual_task_completions(task_instance)
         return [{'housemate':tc.user_id,'when':tc.when} for tc in task_completions]
 
     def housemates_completed(self,task_instance=None):
@@ -297,12 +327,19 @@ class RepeatedTask(ndb.Model):
         return [tc['housemate'] for tc in task_completions]
 
     def get_task_completions(self,task_instance=None):
+        return len(self.actual_task_completions(task_instance))
+
+    def actual_task_completions(self,task_instance=None):
         if not task_instance:
             task_instance = self.last_instance_key
 
-        return models.tasks.\
-        TaskCompletion.query(ancestor=self.key).\
-        filter(models.tasks.TaskCompletion.task_instance == task_instance).count()
+        #self.last_instance_key triggers the async retreival for the default last_instance_key
+        try:
+            return self._task_completions[task_instance]
+        except AttributeError:
+            self._task_completions[task_instance] = models.tasks.TaskCompletion.query(ancestor=self.key).\
+                filter(models.tasks.TaskCompletion.task_instance == task_instance).fetch()
+            return self._task_completions[task_instance]
 
     def is_task_complete(self,task_instance=None,task_completions=None,user_id=None):
         #todo - the task should stay completed, even if a new housemate joins..
@@ -314,7 +351,6 @@ class RepeatedTask(ndb.Model):
 
             if user_id:
                 hc = self.housemates_completed()
-                logging.info(hc)
                 if user_id in self.housemates_completed():
                     return True
 
@@ -332,7 +368,7 @@ class RepeatedTask(ndb.Model):
         return False
 
     @ndb.transactional(xg=True)
-    def complete_task(self,task_instance_key,user_id):
+    def complete_task(self,task_instance_key,user_id,thanking=None):
 
         if task_instance_key == None:
             task_instance_key = self.last_instance_key
@@ -343,13 +379,18 @@ class RepeatedTask(ndb.Model):
         task_completions = self.get_task_completions()
 
         tc = models.tasks.TaskCompletion(parent=self.key,user_id=user_id,task_instance=task_instance_key)
-        tc.put()
+        tc.put_async()
+
+        if thanking:
+            post_desc = ' (thanked by ' + thanking + ')'
+        else:
+            post_desc=''
 
         u = user.User._get_user_from_id(user_id)
-        u.insert_points_transaction(points=self.points,desc='Completed ' + self.name,reference=task_instance_key)
+        u.insert_points_transaction(points=self.points,desc='Completed ' + self.name + post_desc,reference=task_instance_key)
         self.house.add_house_event(
             user_id=user_id,
-            desc='completed ' + self.name,
+            desc=' completed ' + self.name + post_desc,
             points=self.points,
             reference=task_instance_key)
 
@@ -364,20 +405,19 @@ class RepeatedTask(ndb.Model):
     @property
     def last_instance_key(self):
         """returns the last (most recent) task instance key for this task"""
-
-        return models.tasks.TaskInstance.\
-                query(ancestor=self.key,default_options=ndb.QueryOptions(keys_only=True)).\
-                order(-models.tasks.TaskInstance.action_reqd).\
-                get()
+        try:
+            return self._last_instance_key
+        except AttributeError:
+            self.request_properties()
+            return self._last_instance_key
 
     def instance_keys(self,limit=10):
         """returns a list of task_instance keys that belong to this task in reverse order (most recent first)"""
-
-        return models.tasks.TaskInstance.\
-            query(ancestor=self.key,
-            default_options=ndb.QueryOptions(keys_only=True)).\
-            order(-models.tasks.TaskInstance.updated).\
-            fetch(limit=limit)
+        try:
+            return self._instance_keys
+        except AttributeError:
+            self.request_properties()
+            return self._instance_keys
 
     def update_events(self):
         last_ti = self.last_instance_key.get()
@@ -453,7 +493,13 @@ class RepeatedTask(ndb.Model):
 
     @property
     def house(self):
-        return house.House.get_by_id(self.house_id)
+
+        try:
+            return self._house
+        except AttributeError:
+            self.request_properties()
+            return self._house
+
 
     def describe_repeat(self):
 
@@ -545,8 +591,6 @@ class RepeatedTask(ndb.Model):
             expiry_before = [e for e in expiries if e <= now]
             expiry_after = [e for e in expiries if e > now]
 
-            logging.info('{0} expiries returned around {1}'.format(len(expiries),now))
-
             assert len(expiry_after) > 0,'No expiry found after'
 
             return expiry_after[0]
@@ -597,16 +641,13 @@ class RepeatedTask(ndb.Model):
                 return now
         else:
             next_dd = self.next_due_utc()
-            logging.info('nextdd: {0}'.format(next_dd))
             prev_expiry = None
 
             for e in expiries:
                 if e >= next_dd:
                     if prev_expiry:
-                        logging.info('prevex: {0}'.format(prev_expiry))
                         return prev_expiry
                     else:
-                        logging.info('nopre: {0}'.format(e))
                         return now
                 prev_expiry = e
 
@@ -628,7 +669,7 @@ class RepeatedTask(ndb.Model):
         last_due=None
         for d in self.iter_due_dates_utc():
 
-            if d > next_expiry:
+            if d >= next_expiry:
                 if last_due:
                     return local_tz.normalize(last_due.astimezone(local_tz))
                 else:
@@ -636,6 +677,7 @@ class RepeatedTask(ndb.Model):
 
             last_due = d
 
+        logging.error('no current_due_dt returned self.name')
 
     def next_reminder_utc(self,after=None):
         """next reminder for a task

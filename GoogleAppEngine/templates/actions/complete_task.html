@@ -7,17 +7,30 @@
     <div class="hero-unit">
     <h1>{{title}}</h1>
     <p>{{message}}</p>
-    <p>
-        <a href="{{action_link|safe}}" class="btn btn-large btn-success">{{action|safe}}</a>
-    </p>
-    <button class="btn btn-small" id="more-options">More options &raquo;</button>
+        <div id="completions" class="btn-group">
+            <button data-who="me" class="btn btn-large btn-success{% if user_completed_task %} no-action{% endif %}">{{ action|safe }}</button>
+            <button class="btn btn-large btn-success dropdown-toggle" data-toggle="dropdown">
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+                {% for (id,name) in housemates %}
+                <li><a data-who="{{ id }}" href="#">{{ name }} completed this task &raquo;</a></li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
   </div>
 
    <script>
+        var who = '';
+        var bse = '';
 
-       $('#more-options').bind('click',function() {
-           $('<div>.</div>').dropdown().insertAfter($(this));
+        $(document).ready(function() {
+                bse = ''+document.location;
+        });
+
+       $('#completions .btn:not(.dropdown-toggle, .no-action),a').bind('click',function() {
+           document.location = bse + '&confirm=yes&who=' + $(this).data('who');
        })
    </script>
 
