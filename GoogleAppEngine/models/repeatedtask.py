@@ -337,8 +337,12 @@ class RepeatedTask(ndb.Model):
         try:
             return self._task_completions[task_instance]
         except AttributeError:
-            self._task_completions[task_instance] = models.tasks.TaskCompletion.query(ancestor=self.key).\
+
+            tc = getattr(self,'_task_completions',{})
+            tc[task_instance] = models.tasks.TaskCompletion.query(ancestor=self.key).\
                 filter(models.tasks.TaskCompletion.task_instance == task_instance).fetch()
+            self._task_completions = tc
+
             return self._task_completions[task_instance]
 
     def is_task_complete(self,task_instance=None,task_completions=None,user_id=None):
@@ -669,7 +673,7 @@ class RepeatedTask(ndb.Model):
         last_due=None
         for d in self.iter_due_dates_utc():
 
-            if d >= next_expiry:
+            if d > next_expiry:
                 if last_due:
                     return local_tz.normalize(last_due.astimezone(local_tz))
                 else:
@@ -678,6 +682,8 @@ class RepeatedTask(ndb.Model):
             last_due = d
 
         logging.error('no current_due_dt returned self.name')
+        return d
+
 
     def next_reminder_utc(self,after=None):
         """next reminder for a task
