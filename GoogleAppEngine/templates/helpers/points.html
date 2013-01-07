@@ -4,5 +4,7 @@
     <span class="badge badge-warning">{{pts}} pts</span>
   {%elif pts < 0 %}
     <span class="badge badge-important">{{pts}} pts</span>
+  {% else %}
+    <span class="badge badge-warning">0</span>
   {%endif%}
 {%- endmacro %}

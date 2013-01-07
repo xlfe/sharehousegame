@@ -1,7 +1,12 @@
 
 {% extends "home.html" %}
 
+
 {%block main %}
+
+    <div id="chart" class="row">
+    </div>
+
     <div class="row">
         <table class="table table-hover">
             <tbody>
@@ -44,7 +49,150 @@
             </tbody>
         </table>
     </div>
+    <script src="/js/vendor/d3.v3.min.js"></script>
+    <link rel="stylesheet" href="/css/dashboard.css">
 
+    <script>
+
+        var data = [
+            {% for u in house.get_users() %}{% for p in u.points_log_json() %}    {{ p|safe }},
+            {% endfor %}{% endfor %}];
+
+        var housemates = [{% for u in house.get_users() %}
+            {"name":"{{ u.get_first_name() }}","points":{{ u.points_balance() }}},{% endfor %}
+        ];
+
+        var margin = {top: 20, right: 80, bottom: 30, left: 50},
+                width = 740 - margin.left - margin.right,
+                height = 300 - margin.top - margin.bottom;
+
+        var now = new Date();
+
+        var ticks = {
+            'a month ago':d3.time.month.offset(now,-1),
+            '3 weeks ago':d3.time.day.offset(now,-21),
+            '2 weeks ago':d3.time.day.offset(now,-14),
+            '1 week ago' :d3.time.day.offset(now,-7),
+            'now':now
+        }
+
+        var k = function(v,n) {
+            return v[d3.keys(v)[n]];
+        }
+
+        var x = d3.time.scale()
+                .range([0, width])
+                .domain([k(ticks,0),now]);
+
+        var y = d3.scale.linear()
+                .nice()
+                .range([height, 0]);
+
+        function timeFormat() {
+            return function(date) {
+                return d3.keys(ticks)[d3.values(ticks).indexOf(date)];
+            };
+        }
+
+        var ctf = d3.map(ticks).entries();
+
+        var xAxis = d3.svg.axis()
+                .scale(x)
+                .tickFormat(timeFormat())
+                .tickValues(d3.values(ticks))
+                .orient("bottom");
+
+        var yAxis = d3.svg.axis()
+                .scale(y)
+                .orient("right");
+
+        var stack = d3.layout.stack()
+                .values(function(d) { return d.values; });
+
+        var area = d3.svg.area()
+                .x(function(d) { return x(d.x); })
+                .y0(function(d) { return y(d.y0); })
+                .y1(function(d) { return y(d.y0 + d.y); });
+
+        var svg = d3.select("#chart").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var residual_pts = function(initial_pts,hours_elapsed) {
+            var decay_const = -5.0;
+            var proportion = ( decay_const / initial_pts ) * ( initial_pts - hours_elapsed )
+            return Math.round(Math.max(0,initial_pts - Math.exp(proportion) * initial_pts),0)
+        };
+
+        var data_pts = {};
+        housemates.forEach(function(d) {
+            data_pts[d.name] = new Array();
+        });
+
+        var hm_color = d3.scale.category10()
+            .domain(housemates.map(function(h){
+            return h.name;
+        }));
+
+        var rp=0;
+        data.forEach(function(d) {
+
+            d['values'] = new Array();
+
+            for (var i = 0; i < d.hours_elapsed; i++) {
+                rp = residual_pts(d.points, d.hours_elapsed - i);
+
+                if (rp > 0) {
+                    d['values'].push({'hours_ago':i,'residual_points':rp});
+                }
+            }
+       });
+
+
+        y.domain([0,1500]);
+       //     d3.max(users, function(c) { return c[1]; });
+       // ]);
+
+        svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+
+        svg.append("g")
+                .attr("class", "y axis")
+                .attr("transform","translate(" + width + ")")
+                .call(yAxis);
+
+        var layers = stack(color.domain().map(function(name){
+
+
+            return {
+                name: name,
+                values: data_pts[name][0].values
+            };
+        }));
+
+        var task = svg.selectAll(".task")
+                .data(layers)
+                .enter().append("g")
+                .attr("class", "task");
+
+        task.append("path")
+                .attr("class", "area")
+                .attr("d", function(d) { return area(d.values); })
+                .style("fill", function(d) { return color(d.who); });
+
+        if (false) {task.append("text")
+                .datum(function(d) { return {name: d.name, value: 0}; })
+                .attr("transform", function(d) { return "translate(" + x(d.value.date) + "," + y(d.value.temperature) + ")"; })
+                .attr("x", 3)
+                .attr("dy", ".35em")
+                .text(function(d) { return d.name; });
+        }
+
+    </script>
     <script>
 
     $('#add-housemate').live('click','',function() {
