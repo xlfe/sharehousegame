@@ -167,9 +167,10 @@
                 .nice();
 
         svg.append("g")
+                .call(yAxis)
+                .transition()
                 .attr("class", "y axis")
-                .attr("transform","translate(" + width + ")")
-                .call(yAxis);
+                .attr("transform","translate(" + width + ")");
 
         var hm = svg.selectAll(".hm")
                 .data(pts_entries)
@@ -177,15 +178,17 @@
                 .attr("class","hm");
 
         hm.append("path")
+                .style("stroke",function(d) { return hm_color(d['key']);})
+                .transition().delay(500)
                 .attr("class", "line")
                 .attr("id",function(d) {return d['key'];})
-                .attr("d", function(d) {return line(d.values); })
-                .style("stroke",function(d) { return hm_color(d['key']);});
+                .attr("d", function(d) {return line(d.values); });
 
         svg.append("g")
+                .call(xAxis)
+                .transition()
                 .attr("class", "x axis")
-                .attr("transform", "translate(0," + height + ")")
-                .call(xAxis);
+                .attr("transform", "translate(0," + height + ")");
 
         var completions = svg.selectAll('.completions')
                 .data(data
@@ -196,6 +199,7 @@
                         x(d3.time.hour.offset(now,-d.hours_elapsed)) + ","
                         + y(pts_map[d.name][d.hours_elapsed]) + ")";
                 });
+
 
          var myMouseOutFunction = function() {
             var circle = d3.select(this);
@@ -232,12 +236,13 @@
         })();
 
         completions.append("circle")
+                 .on("mouseover", myMouseOverFunction)
+                .on("click",clicked)
+                .on("mouseout", myMouseOutFunction)
+               .transition().delay(1000)
                 .attr("r",4)
                 .style("fill",function(d) { return hm_color(d.name); })
-                .attr("data-desc",function(d) {return d.name + " " + d.desc + " for " + d.points + " pts";})
-                .on("mouseover", myMouseOverFunction)
-                .on("click",clicked)
-                .on("mouseout", myMouseOutFunction);
+                .attr("data-desc",function(d) {return d.name + " " + d.desc + " for " + d.points + " pts";});
 
 
     </script>
