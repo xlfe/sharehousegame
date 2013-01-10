@@ -10,15 +10,22 @@
 fill: none;
     stroke: #000;
     shape-rendering: crispEdges;
-}
-}
-
-g.task {
-    stroke-width:2px;
-    fill:none;
+    stroke-width: 1.5px;
 }
 
 .tick {
     stroke: black;
+}
+
+.circle {
+}
+
+.infobox {
+    position: absolute;
+    display: none;
+    border: solid #696969 1px;
+    width: 200px;
+    padding: 10px;
+    background-color: rgba(255,255,255,.90);
 }
 

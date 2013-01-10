@@ -11,7 +11,7 @@
         <table class="table table-hover">
             <tbody>
             {% for u in house.get_users() %}
-                <tr>
+                <tr class="housemate-points" data-name="{{ u.get_first_name() }}">
                     <td>{{u.get_first_name()}}</td>
                     <td>{{ points_helper.points(u.points_balance())}}</td>
                     <td></td>
@@ -62,6 +62,10 @@
             {"name":"{{ u.get_first_name() }}","points":{{ u.points_balance() }}},{% endfor %}
         ];
 
+        {% if false %}
+        var data=[{"hours_elapsed":0,"points":150,"name":"Felix","desc":"Completed Take the bins out"},{"hours_elapsed":502,"points":150,"name":"Felix","desc":"Completed Take the bins out"},{"hours_elapsed":620,"points":15,"name":"Felix","desc":"Completed Washing up"},{"hours_elapsed":620,"points":200,"name":"Felix","desc":"Completed clean floors"},{"hours_elapsed":620,"points":500,"name":"Felix","desc":"Completed Clean the bathroom"},{"hours_elapsed":837,"points":150,"name":"Felix","desc":"Completed Take the bins out"},{"hours_elapsed":862,"points":1000,"name":"Felix","desc":"Completed Pay Rent ($721)"},{"hours_elapsed":1298,"points":1000,"name":"Felix","desc":"Completed Mow the lawn"},{"hours_elapsed":1594,"points":1000,"name":"Felix","desc":"Completed Electricity and Gas bill for November"},{"hours_elapsed":1594,"points":1000,"name":"Felix","desc":"Completed Pay Rent ($721)"},{"hours_elapsed":1728,"points":1000,"name":"Felix","desc":"Completed Mow the lawn"},{"hours_elapsed":67,"points":200,"name":"Bec","desc":"Completed kitchen tidy and clean (thanked by Felix)"},{"hours_elapsed":67,"points":500,"name":"Bec","desc":"Completed Clean the bathroom (thanked by Felix)"},{"hours_elapsed":176,"points":1000,"name":"Bec","desc":"Completed Pay Rent ($721) (thanked by Felix)"},{"hours_elapsed":1735,"points":1000,"name":"Bec","desc":"Completed Electricity and Gas bill for November"},{"hours_elapsed":121,"points":1000,"name":"Lizzie","desc":"Completed Pay Rent ($721) (thanked by Felix)"},{"hours_elapsed":1608,"points":1000,"name":"Lizzie","desc":"Completed Electricity and Gas bill for November"},{"hours_elapsed":1608,"points":1000,"name":"Lizzie","desc":"Completed Pay Rent ($721)"},];var housemates=[{"name":"Felix","points":370},{"name":"Daniel","points":0},{"name":"Bec","points":1365},{"name":"Lizzie","points":827},];
+        {% endif %}
+
         var margin = {top: 20, right: 80, bottom: 30, left: 50},
                 width = 740 - margin.left - margin.right,
                 height = 300 - margin.top - margin.bottom;
@@ -86,7 +90,6 @@
                 .domain([k(ticks,0),now]);
 
         var y = d3.scale.linear()
-                .nice()
                 .range([height, 0]);
 
         function timeFormat() {
@@ -103,21 +106,33 @@
 
         var yAxis = d3.svg.axis()
                 .scale(y)
+                .ticks(5)
                 .orient("right");
 
         var line = d3.svg.line()
                 .x(function(d) { return x(d3.time.hour.offset(now,-d['key'])); })
                 .y(function(d) { return y(d['values']);} );
 
+        var myMouseMoveFunction = function() {
+            // save selection of infobox so that we can later change it's position
+            var infobox = d3.select(".infobox");
+            // this returns x,y coordinates of the mouse in relation to our svg canvas
+            var coord = d3.mouse(this);
+            // now we just position the infobox roughly where our mouse is
+            infobox.style("left", coord[0]  -6 + margin['left'] + margin['right']  + "px" );
+            infobox.style("top", coord[1] -20 + margin['bottom'] + margin['top'] + "px");
+        }
+
 
         var svg = d3.select("#chart").append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                .on('mousemove', myMouseMoveFunction);
 
         var residual_pts = function(initial_pts,hours_elapsed) {
-            var decay_const = -5.0;
+            var decay_const = -2.0;
             var proportion = ( decay_const / initial_pts ) * ( initial_pts - hours_elapsed )
             return Math.round(Math.max(0,initial_pts - Math.exp(proportion) * initial_pts),0)
         };
@@ -131,42 +146,115 @@
 
         data.forEach(function(d) {
 
-            for (var i = 0; i < d.hours_elapsed; i++) {
-                var rp = residual_pts(d.points, d.hours_elapsed - i);
-
-                if (rp > 0) {
-                    data_flat.push({hours_ago:i,'residual_points':rp,desc:d.desc,name:d.name,points:d.points,hours_elapsed:d.hours_elapsed});
+            for (var i = 0; i < 31*24; i++) {
+                var rp = 0;
+                if (i <= d.hours_elapsed) {
+                    var rp = residual_pts(d.points, d.hours_elapsed - i);
                 }
+                data_flat.push({hours_ago:i,'residual_points':rp,desc:d.desc,name:d.name,points:d.points,hours_elapsed:d.hours_elapsed});
             }
        });
 
        var pts_by_user = d3.nest()
                .key(function(d){return d.name;})
                .key(function(d){return d.hours_ago})
-               .rollup(function(d) { return d3.sum(d,function(d){return d.residual_points;}); } )
-               .entries(data_flat);
+               .rollup(function(d) { return d3.sum(d,function(d){return d.residual_points;}); } );
 
-        y.domain([0,1600]);
-       //     d3.max(users, function(c) { return c[1]; });
-       // ]);
+        var pts_entries = pts_by_user.entries(data_flat);
+        var pts_map = pts_by_user.map(data_flat);
 
-        svg.append("g")
-                .attr("class", "x axis")
-                .attr("transform", "translate(0," + height + ")")
-                .call(xAxis);
+        y.domain([0,d3.max(pts_entries,function(d){return d3.max(d.values,function(d){return d.values;});})])
+                .nice();
 
         svg.append("g")
                 .attr("class", "y axis")
                 .attr("transform","translate(" + width + ")")
                 .call(yAxis);
 
-        svg.append("path")
-                .datum(pts_by_user[0].values)
-                .attr("d", line)
-                .attr("class", "line");
+        var hm = svg.selectAll(".hm")
+                .data(pts_entries)
+                .enter().append("g")
+                .attr("class","hm");
+
+        hm.append("path")
+                .attr("class", "line")
+                .attr("id",function(d) {return d['key'];})
+                .attr("d", function(d) {return line(d.values); })
+                .style("stroke",function(d) { return hm_color(d['key']);});
+
+        svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+
+        var completions = svg.selectAll('.completions')
+                .data(data
+                .filter(function(d) {return (d.hours_elapsed <= 24*31);}))
+                .enter().append("g")
+                .attr("class","completion")
+                .attr("transform",function(d) { return "translate("+
+                        x(d3.time.hour.offset(now,-d.hours_elapsed)) + ","
+                        + y(pts_map[d.name][d.hours_elapsed]) + ")";
+                });
+
+         var myMouseOutFunction = function() {
+            var circle = d3.select(this);
+             if (circle.attr("clicked") == "true"){ return; }
+            circle.attr("stroke", "none" );
+
+            // display none removes element totally, whereas visibilty in last example just hid it
+            d3.select(".infobox").style("display", "none");
+        }
+
+        var myMouseOverFunction = function() {
+            var circle = d3.select(this);
+            circle.attr("stroke", "black" )
+                  .attr("stroke-width","3px");
+
+            // show infobox div on mouseover.
+            // block means sorta "render on the page" whereas none would mean "don't render at all"
+            d3.select(".infobox").style("display", "block");
+            // add test to p tag in infobox
+            d3.select("span#desc").text(d3.select(this).attr('data-desc'));
+        }
+
+        var clicked = (function(){
+            var currentclicked = false;
+
+            return function(){
+                currentclicked = currentclicked == false ? true : false;
+                d3.select(this).attr("clicked", currentclicked);
+                if (currentclicked == false) {
+                    d3.select(this).attr("stroke","none");
+                    d3.select(".infobox").style("display","none");
+                }
+            }
+        })();
+
+        completions.append("circle")
+                .attr("r",4)
+                .style("fill",function(d) { return hm_color(d.name); })
+                .attr("data-desc",function(d) {return d.name + " " + d.desc + " for " + d.points + " pts";})
+                .on("mouseover", myMouseOverFunction)
+                .on("click",clicked)
+                .on("mouseout", myMouseOutFunction);
+
 
     </script>
+    <div class="infobox">
+        <span id="desc"></span>
+    </div>
     <script>
+
+    $('.housemate-points').mouseover(function() {
+       var who  = $(this).attr('data-name');
+       $('.line#'+who).css("stroke-opacity",".5").css('stroke-width',"5px");
+    });
+
+    $('.housemate-points').mouseout(function(){
+        var who = $(this).attr('data-name');
+        $('.line#'+who).css("stroke-opacity","1").css('stroke-width','2px');
+    })
 
     $('#add-housemate').live('click','',function() {
         var element = $('<tr><td><input class="input input-low required" placeholder="Name" name="name" type="text"></td>' +
