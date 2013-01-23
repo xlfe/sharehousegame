@@ -50,19 +50,27 @@ class StandingTask(ndb.Model):
         else:
             return False
 
-    def complete_task(self,user_id):
+    def is_task_complete(self):
+        return not self.is_completable()
+
+    def complete_task(self,user_id,task_instance_key,thanking=None):
 
         tc = TaskCompletion()
         tc.task_instance = self.key
         tc.user_id=user_id
         tc.put()
 
+        msg = 'Completed ' + self.name
+
+        if thanking:
+            msg += ' (thanked by ' + thanking + ')'
+
         u = user.User._get_user_from_id(user_id)
-        u.insert_points_transaction(points=self.points,desc='Completed ' + self.name,reference=tc.key)
+        u.insert_points_transaction(points=self.points,desc=msg,reference=tc.key)
         hse = house.House.get_by_id(u.house_id)
         hse.add_house_event(
             user_id=user_id,
-            desc='completed ' + self.name,
+            desc=msg,
             points=self.points,
             reference=tc.key)
 

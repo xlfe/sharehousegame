@@ -134,7 +134,7 @@
         var residual_pts = function(initial_pts,hours_elapsed) {
             var decay_const = -2.0;
             var proportion = ( decay_const / initial_pts ) * ( initial_pts - hours_elapsed )
-            return Math.round(Math.max(0,initial_pts - Math.exp(proportion) * initial_pts),0)
+            return Math.round(Math.max(0,initial_pts +Math.exp(decay_const)*initial_pts - Math.exp(proportion) * initial_pts),0)
         };
 
         var hm_color = d3.scale.category10()
@@ -266,8 +266,6 @@
                 '<td><input class="input input-low required email" placeholder="Email address" name="email" type="text"></td>' +
                 '<td><button id="add-hm-btn" class="btn btn-success btn-mini">Add</button></td></tr>')
                 .insertBefore($(this).parents('tr'));
-
-
     });
 
     $('#add-hm-btn').live('click','',function() {

@@ -241,31 +241,25 @@ class Task(Jinja2Handler):
 
         if self.request.get('confirm'):
 
-            if self.request.route.name == 'tasks':
+            if self.task.is_completable() and not self.task.is_task_complete():
 
-                if self.task.is_completable() and not self.task.is_task_complete():
+                who = self.request.get('who',None)
+                if who is not None:
+                    try:
+                        who=int(who)
+                        hse = house.House.get_by_id(self.request.session.user.house_id)
+                        assert who in hse.users,'{0} not in house {1}'.format(who,self.request.session.user.house_id)
+                    except:
+                        who=None
 
-                    who = self.request.get('who',None)
-                    if who is not None:
-                        try:
-                            who=int(who)
-                            hse = house.House.get_by_id(self.request.session.user.house_id)
-                            assert who in hse.users,'{0} not in house {1}'.format(who,self.request.session.user.house_id)
-                        except:
-                            who=None
-
-                    if who is None:
-                        self.task.complete_task(task_instance_key=None,user_id=self.request.session.user._get_id())
-                    else:
-                        self.task.complete_task(task_instance_key=None,user_id=who,thanking=self.request.session.user.display_name.split(' ')[0])
+                if who is None:
+                    self.task.complete_task(task_instance_key=None,user_id=self.request.session.user._get_id())
                 else:
-                    return self.generic_error(title='Unable to continue',message="Sorry, you're not able to perform that action")
-                    logging.info('task trying to be completed, but shouldnt be {0}'.format(self.task.key.id()))
-                return self.redirect('/tasks')
-            elif self.request.route.name == 'standing':
-
-                self.task.complete_task(user_id=self.request.session.user._get_id())
-                return self.redirect('/standing')
+                    self.task.complete_task(task_instance_key=None,user_id=who,thanking=self.request.session.user.display_name.split(' ')[0])
+            else:
+                return self.generic_error(title='Unable to continue',message="Sorry, you're not able to perform that action")
+                logging.info('task trying to be completed, but shouldnt be {0}'.format(self.task.key.id()))
+            return self.redirect('/'+self.request.route.name)
 
 
 
@@ -318,11 +312,23 @@ class Task(Jinja2Handler):
                     return self.generic_error(title='Task not yet completable',
                     message="You will have to wait...")
 
+                hse = house.House.get_by_id(self.request.session.user.house_id)
 
-                return self.generic_success(title=format(self.task.name),
-                             message="Please confirm you have completed this task",
-                                action="I have completed this task &raquo;",
-                                action_link="/standing/complete?id={0}&confirm=yes".format(self.task.key.id()))
+                housemates = []
+                for u in hse.users:
+                    if u == self.request.session.user_id:
+                        continue
+                    housemates.append((u,user.User.get_by_id(u).display_name.split(' ')[0]))
+
+                tvars = {'title':format(self.task.name),
+                         'message':"Please confirm who completed this task",
+                         'action':"I have completed this task &raquo;",
+                         'action_link':"/standing/complete?id={0}&confirm=yes".format(self.task.key.id()),
+                         'housemates':housemates,
+                         'user_completed_task':False,
+                         }
+
+                return self.render_template('actions/complete_task.html',tvars)
 
 
     def get_delete(self):
