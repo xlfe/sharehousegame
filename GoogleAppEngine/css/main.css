@@ -56,6 +56,10 @@ body{
     width: 70px;
 }
 
+#myCarousel img {
+    width:1366px;
+}
+
 .td-resize {
     min-width: 100px;
 }

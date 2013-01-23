@@ -8,6 +8,60 @@
   <div class="container">    
     <h1>Sharehouse Game</h1>
     <p class="lead">Take the pain out of sharehouse living.</p>
+
+      <div id="myCarousel" class="carousel slide">
+          <div class="carousel-inner">
+              <div class="item">
+                  <img src="/img/carousel/shg1.jpg">
+                  <div class="carousel-caption">
+                      <h4>The mobile interface is easy to use</h4>
+                  </div>
+              </div>
+
+
+              <div class="item">
+                  <img src="/img/carousel/shg9.jpg">
+                  <div class="carousel-caption">
+                      <h4>so what are you waiting for?</h4>
+                  </div>
+              </div>
+
+
+              <div class="item active">
+                  <img src="/img/carousel/shg4.jpg">
+                  <div class="carousel-caption">
+                      <h4>You start by defining the shared tasks in your house</h4>
+                  </div>
+              </div>
+
+              <div class="item">
+                  <img src="/img/carousel/shg6.jpg">
+                  <div class="carousel-caption">
+                      <h4>Housemates receive emails when a task is due (unless they've already completed it!)</h4>
+                  </div>
+              </div>
+
+              <div class="item">
+                  <img src="/img/carousel/shg2.jpg">
+                  <div class="carousel-caption">
+                      <h4>Its simple to 'Complete a task'</h4>
+                  </div>
+              </div>
+
+              <div class="item">
+                  <img src="/img/carousel/shg8.jpg">
+                  <div class="carousel-caption">
+                      <h4>... and claim the points!</h4>
+                  </div>
+              </div>
+
+          </div>
+          <!-- Carousel nav -->
+          <a class="carousel-control left" href="#myCarousel" data-slide="prev">&lsaquo;</a>
+          <a class="carousel-control right" href="#myCarousel" data-slide="next">&rsaquo;</a>
+      </div>
+
+
     <p><a href="#signup" class="btn btn-primary btn-large">&raquo; Sign up</a></p>
   </div>
 </header>
@@ -127,6 +181,11 @@
 $('.tt-hover').tooltip({
     placement:'right'
 });
+
+$('.carousel').carousel({
+    interval: 4000,
+    pause: "hover",
+})
 
     $('#verify-details').validate({
 	    errorElement: "span",

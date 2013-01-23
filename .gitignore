@@ -1,5 +1,6 @@
 .DS*
 *.pyc
+*.jpg
 latest.zip*
 *Conflict*
 commit.msg
