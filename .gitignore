@@ -5,6 +5,7 @@ latest.zip*
 *Conflict*
 commit.msg
 *.pdf
+secrets.py
 Docs/
 mindnode/
 bootstrap*css
