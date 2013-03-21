@@ -13,6 +13,7 @@ from shg_utils import prettydate
 import shg_utils
 from models.email import EmailHash
 from models import authprovider
+from auth_helpers import facebook
 from handlers.session import manage_session
 from google.appengine.api import users
 
@@ -195,6 +196,31 @@ class User(ndb.Model):
             nfb = False
 
         return nfb
+
+    def post_if_facebook(self,post_desc):
+        creds= None
+        for ap in authprovider.AuthProvider.query().filter(authprovider.AuthProvider.user_id == self._get_id()).iter():
+            if str(ap.key.id())[:8] == "facebook":
+                creds = ap.credentials
+                break
+
+        if creds is None:
+            return False
+
+        req ={'credentials':creds}
+        authed = facebook.FacebookAuth().http(req)
+
+        url = "https://graph.facebook.com/me/feed?access_token=" + req.credentials.access_token
+
+        res, results = self.http(req).request(url)
+
+        if res.status is not 200:
+            raise Exception('There was an error contacting Facebook. Please try again.')
+
+        user = json.loads(results)
+
+
+
 
     def insert_points_transaction(self,points,desc,link=None,**kwargs):
         pl = Points(parent=self.key,desc=desc,points=points,link=link)

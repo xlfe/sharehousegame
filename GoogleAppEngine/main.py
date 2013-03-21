@@ -2,6 +2,7 @@ import os,sys
 import webapp2
 from webapp2 import Route
 from webapp2_extras import routes as Routes
+from auth_helpers.secrets import wsgi_config
 #from google.appengine.ext.webapp import template
 #import logging
 #from google.appengine.api import oauth

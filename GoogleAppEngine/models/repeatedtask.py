@@ -392,6 +392,7 @@ class RepeatedTask(ndb.Model):
 
         u = user.User._get_user_from_id(user_id)
         u.insert_points_transaction(points=self.points,desc='Completed ' + self.name + post_desc,reference=task_instance_key)
+        u.post_if_facebook(post_desc)
         self.house.add_house_event(
             user_id=user_id,
             desc=' completed ' + self.name + post_desc,

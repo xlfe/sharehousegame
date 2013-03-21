@@ -3,7 +3,7 @@ import json
 from auth_helpers.oauth2 import OAuth2
 from models import authprovider
 import os
-from auth_helpers import secrets
+from auth_helpers.secrets import FACEBOOK_APP_KEY,FACEBOOK_APP_SECRET
 
 ON_DEV = os.environ.get('SERVER_SOFTWARE', '').startswith('Dev')
 

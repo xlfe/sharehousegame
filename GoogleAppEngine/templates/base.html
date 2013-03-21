@@ -75,6 +75,7 @@
                                         <li> <a title="{{p.when}}"> {{ points_helper.points(p.points) }} {{p.desc}}</a></li>
                                     {%endfor%}
                                     </ul>
+
                                 </div>
 
                             {% endif %}
@@ -82,7 +83,7 @@
                     </div>
 			        {% if user %}
         			    {% if user.needs_facebook() %}
-		            		<a href="/auth/facebook"><button class="btn btn-small btn-info">Add Facebook</button></a>
+		            		<a href="/auth/facebook"><button class="btn btn-mini btn-info">Facebook {{ points_helper.points(500) }}</button></a>
         			    {% endif %}
 
 		        	    <a href="/logout" class="btn btn-small pull-right">Logout</a>

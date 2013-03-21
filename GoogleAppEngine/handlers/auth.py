@@ -13,6 +13,7 @@ from models import authprovider
 import shg_utils
 from handlers.jinja import Jinja2Handler
 from models.email import EmailHash
+from auth_helpers.secrets import password_pepper
 
 
 class EmailPwReset(EmailHash):
@@ -50,7 +51,7 @@ class EmailPwReset(EmailHash):
             auth_id = authprovider.AuthProvider.generate_auth_id('password', self.email)
 
             at = authprovider.AuthProvider.get_by_auth_id(auth_id)
-            at.password_hash = security.generate_password_hash(password=new_password,pepper=shg_utils.password_pepper)
+            at.password_hash = security.generate_password_hash(password=new_password,pepper=password_pepper)
             at.put()
             self.key.delete()
 
@@ -80,7 +81,7 @@ class PasswordAuth(Jinja2Handler):
 
         auth_token = authprovider.AuthProvider._get_by_auth_id(auth_id)
 
-        if auth_token is None or not security.check_password_hash(password=password,pwhash=auth_token.password_hash,pepper=shg_utils.password_pepper):
+        if auth_token is None or not security.check_password_hash(password=password,pwhash=auth_token.password_hash,pepper=password_pepper):
             return self.generic_error(title='Error logging in',message=error_msg,action='Password reset &raquo;',
                       action_link="""#login" data-toggle="modal" onclick="$('#password-reset').click();" """)
 
@@ -168,7 +169,7 @@ class FacebookAuth(Jinja2Handler):
                 #at_user = _user.User._create(name=callback['user_info']['displayName'])
 
             new_at = authprovider.AuthProvider._create(user=at_user,auth_id=auth_id,user_info=callback['user_info'],credentials=callback['credentials'])
-
+            at_user.insert_points_transaction(points=500,desc=" Added Facebook ")
             #self.request.session.upgrade_to_user_session(at_user._get_id())
         sleep(1)
         return self.redirect('/')

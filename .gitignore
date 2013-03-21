@@ -4,6 +4,7 @@
 latest.zip*
 *Conflict*
 commit.msg
+commit.sh
 *.pdf
 secrets.py
 Docs/

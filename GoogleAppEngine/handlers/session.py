@@ -20,7 +20,7 @@ import logging
 from models import authprovider
 from handlers.jinja import Jinja2Handler
 from datetime import datetime, timedelta
-from auth_helpers import secrets
+from auth_helpers.secrets import serializer_secret
 
 def manage_session(fn):
     @wraps(fn)
